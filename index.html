@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Travel Inquiry — Let's plan your trip</title>
+<style>
+  :root {
+    --bg: #f5f1ea;
+    --card: #ffffff;
+    --ink: #2a2a2a;
+    --muted: #777;
+    --accent: #1f6f8b;
+    --accent-soft: #e3eef2;
+    --bubble-bot: #f0eae0;
+    --bubble-user: #1f6f8b;
+    --bubble-user-ink: #fff;
+    --border: #e4ddd0;
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 16px 120px;
+  }
+  header.hero {
+    text-align: center;
+    padding: 24px 0 12px;
+  }
+  header.hero h1 {
+    margin: 8px 0 4px;
+    font-size: 1.5rem;
+    letter-spacing: 0.3px;
+  }
+  header.hero p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+  .chat {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 16px;
+    margin-top: 16px;
+    box-shadow: 0 2px 18px rgba(0,0,0,0.04);
+    min-height: 380px;
+  }
+  .progress {
+    height: 4px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.35s ease;
+  }
+  .row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 12px;
+    animation: fadeIn 0.35s ease;
+  }
+  .row.user {
+    flex-direction: row-reverse;
+  }
+  .avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--accent-soft) center/cover no-repeat;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: var(--accent);
+  }
+  .row.user .avatar {
+    background: var(--accent);
+    color: #fff;
+  }
+  .bubble {
+    background: var(--bubble-bot);
+    padding: 10px 14px;
+    border-radius: 14px;
+    max-width: 78%;
+    line-height: 1.4;
+    font-size: 0.97rem;
+    white-space: pre-wrap;
+  }
+  .row.user .bubble {
+    background: var(--bubble-user);
+    color: var(--bubble-user-ink);
+  }
+  .input-area {
+    margin-top: 20px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .field {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .field input[type="text"],
+  .field input[type="email"],
+  .field input[type="tel"],
+  .field input[type="number"],
+  .field select,
+  .field textarea {
+    flex: 1;
+    min-width: 200px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font: inherit;
+    background: #fff;
+  }
+  .field textarea {
+    resize: vertical;
+    min-height: 70px;
+  }
+  .field button {
+    padding: 10px 20px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font: inherit;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .field button:hover { opacity: 0.9; }
+  .field button.ghost {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chip {
+    padding: 8px 14px;
+    background: #fff;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    border-radius: 999px;
+    cursor: pointer;
+    font: inherit;
+    transition: all 0.15s ease;
+  }
+  .chip:hover { background: var(--accent-soft); }
+  .chip.selected {
+    background: var(--accent);
+    color: #fff;
+  }
+  .multi-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  .summary {
+    background: var(--accent-soft);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 8px;
+  }
+  .summary h3 {
+    margin: 0 0 10px;
+    color: var(--accent);
+  }
+  .summary dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 6px 14px;
+    font-size: 0.92rem;
+  }
+  .summary dt { color: var(--muted); }
+  .summary dd { margin: 0; }
+  .actions-final {
+    margin-top: 14px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .pill-note {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .typing {
+    display: inline-flex;
+    gap: 3px;
+    padding: 4px 0;
+  }
+  .typing span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+    animation: blink 1.2s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink {
+    0%, 60%, 100% { opacity: 0.25; }
+    30%           { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hero">
+    <h1>Travel Inquiry</h1>
+    <p>Chat with us so we can build a trip tailored to you.</p>
+  </header>
+
+  <div class="chat" id="chat">
+    <div class="progress"><div class="progress-bar" id="progress"></div></div>
+    <div id="messages"></div>
+    <div class="input-area" id="inputArea"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   AVATAR — swap this URL for your own image (square, ~80x80px).
+   Leave as null to use the initial letter fallback.
+   ============================================================ */
+const AGENT_AVATAR_URL = null;   // e.g. "https://yoursite.com/agent.jpg"
+const AGENT_INITIAL    = "C";    // shown if no image set
+const AGENT_NAME       = "Cruise the Creek";
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const answers = {};
+let stepIndex = 0;
+let steps = [];
+
+/* ============================================================
+   QUESTION BUILDER
+   Each question = { id, ask, type, options?, required?, when?, validate? }
+   - type: text | email | tel | number | select | chips-single | chips-multi | yesno | textarea | summary
+   - when(answers): optional gate — return true to include
+   ============================================================ */
+
+function buildSteps() {
+  const s = [];
+
+  // ---------- INTRO ----------
+  s.push({ id: "_intro", type: "intro",
+    ask: `Hi! I'm ${AGENT_NAME}. I'll ask a few questions so we can craft the perfect trip for you. Ready?`,
+    cta: "Let's go" });
+
+  // ---------- OVERVIEW ----------
+  s.push({ id: "destinations", type: "text", required: true,
+    ask: "First — where are you dreaming of going? (e.g. Maldives, Italy, Disney World, or 'open to suggestions')" });
+
+  s.push({ id: "dates", type: "text", required: true,
+    ask: "When would you like to travel? Specific dates or 'flexible' both work." });
+
+  s.push({ id: "adults", type: "chips-single", required: true,
+    ask: "How many adults are traveling?",
+    options: ["1", "2", "3", "4"] });
+
+  s.push({ id: "children", type: "chips-single", required: true,
+    ask: "How many children?",
+    options: ["0", "1", "2", "3", "4"] });
+
+  // ---------- ADULT NAMES (dynamic, one step per adult) ----------
+  for (let i = 1; i <= 4; i++) {
+    s.push({
+      id: `adult_${i}_name`,
+      type: "text",
+      when: a => parseInt(a.adults || 0) >= i,
+      ask: ctx => {
+        const n = parseInt(ctx.adults);
+        if (n === 1) return "What's your full name?";
+        return `Great — name of Adult ${i} of ${n}?`;
+      }
+    });
+  }
+
+  // ---------- CHILD NAMES + AGES (dynamic) ----------
+  for (let i = 1; i <= 4; i++) {
+    s.push({
+      id: `child_${i}_name`,
+      type: "text",
+      when: a => parseInt(a.children || 0) >= i,
+      ask: ctx => {
+        const n = parseInt(ctx.children);
+        if (n === 1) return "What's your child's name?";
+        return `Name of Child ${i} of ${n}?`;
+      }
+    });
+    s.push({
+      id: `child_${i}_age`,
+      type: "number",
+      when: a => parseInt(a.children || 0) >= i,
+      ask: ctx => `And how old is ${ctx[`child_${i}_name`] || `child ${i}`}?`
+    });
+  }
+
+  // ---------- BUDGET + VIBE ----------
+  s.push({ id: "budget", type: "chips-single", required: true,
+    ask: "What's your budget per person?",
+    options: ["Under $2,000", "$2,000–$4,000", "$4,000–$7,000", "$7,000–$12,000", "$12,000+"] });
+
+  s.push({ id: "vibe", type: "chips-single", required: true,
+    ask: ctx => {
+      const kids = parseInt(ctx.children || 0);
+      if (kids > 0) return "What's the vibe for this family trip?";
+      const adults = parseInt(ctx.adults || 0);
+      if (adults === 2) return "What's the vibe for the two of you?";
+      return "What's the vibe you're going for?";
+    },
+    options: ["Romantic", "Family fun", "Adventure", "Relaxing", "Luxury", "Cultural", "Bucket-list"] });
+
+  s.push({ id: "insurance", type: "yesno",
+    ask: "Would you like a quote for travel insurance?" });
+
+  // ---------- TRIP COMPONENTS (drives branching) ----------
+  s.push({ id: "components", type: "chips-multi", required: true,
+    ask: "What kind of trip components are we planning? (Pick all that apply)",
+    options: ["Cruise", "Hotel / Resort", "All-Inclusive Resort", "Package Tour", "Car Rental", "Air Travel"] });
+
+  // ---------- CONTACT ----------
+  s.push({ id: "email", type: "email", required: true,
+    ask: "What's the best email to reach you?",
+    validate: v => /\S+@\S+\.\S+/.test(v) || "Hmm, that doesn't look like a valid email — try again?" });
+
+  s.push({ id: "phone", type: "tel",
+    ask: "And a phone number? (optional — feel free to skip)" });
+
+  s.push({ id: "address", type: "text",
+    ask: "Your main address? (optional — used for booking docs)" });
+
+  // ---------- TIMING ----------
+  s.push({ id: "travel_time", type: "chips-single",
+    ask: "Any preference on travel time?",
+    options: ["Weekends", "Weekdays", "Holidays", "School breaks", "No preference"] });
+
+  s.push({ id: "flexible", type: "yesno",
+    ask: "Are your dates flexible?" });
+
+  // ---------- AIR TRAVEL (only if selected) ----------
+  s.push({ id: "_air_header", type: "info",
+    when: a => a.components?.includes("Air Travel"),
+    ask: "Now a few quick questions about your flights ✈️" });
+
+  s.push({ id: "departure_city", type: "text",
+    when: a => a.components?.includes("Air Travel"),
+    ask: "What's your departure city or airport?" });
+
+  s.push({ id: "departure_city_2", type: "text",
+    when: a => a.components?.includes("Air Travel"),
+    ask: "Any second departure city as a backup? (optional)" });
+
+  s.push({ id: "airline_pref", type: "text",
+    when: a => a.components?.includes("Air Travel"),
+    ask: "Airline preference or frequent flyer programs? (e.g. Delta SkyMiles)" });
+
+  s.push({ id: "seat_class", type: "chips-single",
+    when: a => a.components?.includes("Air Travel"),
+    ask: "Preferred seat class?",
+    options: ["Economy", "Premium Economy", "Business", "First"] });
+
+  s.push({ id: "seat_location", type: "chips-single",
+    when: a => a.components?.includes("Air Travel"),
+    ask: "Seat location?",
+    options: ["Window", "Aisle", "No preference"] });
+
+  // ---------- CRUISE (only if selected) ----------
+  s.push({ id: "_cruise_header", type: "info",
+    when: a => a.components?.includes("Cruise"),
+    ask: "Let's talk about the cruise 🚢" });
+
+  s.push({ id: "cruise_pref", type: "text",
+    when: a => a.components?.includes("Cruise"),
+    ask: "Any cruise line preferences or loyalty programs? (e.g. Royal Caribbean Crown & Anchor)" });
+
+  s.push({ id: "cruise_itinerary", type: "text",
+    when: a => a.components?.includes("Cruise"),
+    ask: "Which region are you eyeing? (e.g. Caribbean, Mediterranean, Alaska)" });
+
+  s.push({ id: "cruise_length", type: "chips-single",
+    when: a => a.components?.includes("Cruise"),
+    ask: "How long should the cruise be?",
+    options: ["3–4 nights", "5–7 nights", "8–10 nights", "11+ nights"] });
+
+  s.push({ id: "cabin_class", type: "chips-single",
+    when: a => a.components?.includes("Cruise"),
+    ask: "Cabin class?",
+    options: ["Interior", "Oceanview", "Balcony", "Suite"] });
+
+  s.push({ id: "pre_post_nights", type: "text",
+    when: a => a.components?.includes("Cruise"),
+    ask: "Any pre or post-cruise hotel nights? (e.g. '2 nights before in Miami')" });
+
+  s.push({ id: "beverage_plan", type: "yesno",
+    when: a => a.components?.includes("Cruise"),
+    ask: "Interested in a beverage package?" });
+
+  s.push({ id: "beverage_type", type: "chips-single",
+    when: a => a.components?.includes("Cruise") && a.beverage_plan === "Yes",
+    ask: "Which beverage package style?",
+    options: ["Soda only", "Refreshment (non-alcoholic)", "Premium (alcohol included)", "Top-shelf / Deluxe"] });
+
+  s.push({ id: "past_lines", type: "text",
+    when: a => a.components?.includes("Cruise"),
+    ask: "Any cruise lines or resorts you've enjoyed in the past? (helps us match your style)" });
+
+  // ---------- HOTEL / RESORT (skip if Cruise-only) ----------
+  const wantsLandStay = a => {
+    const hasHotel = a.components?.includes("Hotel / Resort") || a.components?.includes("All-Inclusive Resort");
+    return hasHotel;
+  };
+
+  s.push({ id: "_hotel_header", type: "info",
+    when: wantsLandStay,
+    ask: "Now for the hotel side 🏨" });
+
+  s.push({ id: "nights", type: "chips-single",
+    when: wantsLandStay,
+    ask: "How many nights at the hotel/resort?",
+    options: ["1–3", "4–6", "7–10", "11–14", "15+"] });
+
+  s.push({ id: "hotel_pref", type: "text",
+    when: wantsLandStay,
+    ask: "Hotel preferences or loyalty programs? (e.g. Marriott Bonvoy, Hilton Honors)" });
+
+  s.push({ id: "rooms_arrangement", type: "text",
+    when: wantsLandStay,
+    ask: ctx => {
+      const kids = parseInt(ctx.children || 0);
+      if (kids > 0) return "How many rooms and any arrangement preference? (e.g. connecting rooms for the kids, a suite)";
+      return "How many rooms? Any arrangement preference?";
+    } });
+
+  s.push({ id: "room_type", type: "chips-single",
+    when: wantsLandStay,
+    ask: "Preferred room type?",
+    options: ["Standard", "Ocean view", "Suite", "Villa / Bungalow", "Connecting rooms"] });
+
+  s.push({ id: "property_features", type: "chips-multi",
+    when: wantsLandStay,
+    ask: "Which property features matter to you?",
+    options: ["Pool", "Beach access", "Spa", "Kids' club", "Adults-only", "All-inclusive", "Fine dining", "Fitness center", "Golf"] });
+
+  // ---------- CAR RENTAL ----------
+  s.push({ id: "_car_header", type: "info",
+    when: a => a.components?.includes("Car Rental"),
+    ask: "Quick car rental details 🚗" });
+
+  s.push({ id: "car_pref", type: "text",
+    when: a => a.components?.includes("Car Rental"),
+    ask: "Car rental preferences or loyalty programs? (e.g. Hertz Gold)" });
+
+  s.push({ id: "car_addons", type: "chips-multi",
+    when: a => a.components?.includes("Car Rental"),
+    ask: "Any add-ons?",
+    options: ["GPS", "Car seat", "Insurance", "Additional driver", "Toll pass"] });
+
+  s.push({ id: "car_category", type: "chips-single",
+    when: a => a.components?.includes("Car Rental"),
+    ask: "Vehicle category?",
+    options: ["Economy", "Compact", "Midsize", "SUV", "Luxury", "Convertible", "Minivan"] });
+
+  // ---------- PACKAGE TOUR ----------
+  s.push({ id: "_tour_header", type: "info",
+    when: a => a.components?.includes("Package Tour"),
+    ask: "Let's talk about the tour 🗺️" });
+
+  s.push({ id: "tour_countries", type: "text",
+    when: a => a.components?.includes("Package Tour"),
+    ask: "Which countries are you interested in?" });
+
+  s.push({ id: "activity_level", type: "chips-single",
+    when: a => a.components?.includes("Package Tour"),
+    ask: "What activity level fits the group?",
+    options: ["Light (mostly sightseeing)", "Moderate (some walking)", "Active (hiking, biking)", "Challenging (multi-day treks)"] });
+
+  s.push({ id: "tour_type", type: "chips-single",
+    when: a => a.components?.includes("Package Tour"),
+    ask: "Tour style?",
+    options: ["Escorted group", "Private guide", "Self-guided", "Small group"] });
+
+  // ---------- PREFERENCES & EXPERIENCE ----------
+  s.push({ id: "past_hotels", type: "text",
+    ask: "Any hotels you've stayed in and loved? (helps us calibrate)" });
+
+  s.push({ id: "activities", type: "chips-multi",
+    ask: "What do you love doing while traveling?",
+    options: ["Beach time", "Snorkel / Dive", "Food & wine", "Museums", "Hiking", "Shopping", "Nightlife", "Wildlife", "Spa", "Photography", "Theme parks"] });
+
+  s.push({ id: "notes", type: "textarea",
+    ask: "Last one — anything else we should know? Celebrations, dietary needs, accessibility, etc." });
+
+  // ---------- SUMMARY ----------
+  s.push({ id: "_summary", type: "summary",
+    ask: "Here's everything I've got — does this look right?" });
+
+  return s;
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+const messagesEl = document.getElementById("messages");
+const inputAreaEl = document.getElementById("inputArea");
+const progressEl  = document.getElementById("progress");
+
+function avatarHtml(who) {
+  if (who === "user") {
+    return `<div class="avatar">You</div>`;
+  }
+  if (AGENT_AVATAR_URL) {
+    return `<div class="avatar" style="background-image:url('${AGENT_AVATAR_URL}')"></div>`;
+  }
+  return `<div class="avatar">${AGENT_INITIAL}</div>`;
+}
+
+function addMessage(who, text) {
+  const row = document.createElement("div");
+  row.className = `row ${who}`;
+  row.innerHTML = `${avatarHtml(who)}<div class="bubble">${escapeHtml(text)}</div>`;
+  messagesEl.appendChild(row);
+  row.scrollIntoView({ behavior: "smooth", block: "end" });
+}
+
+function showTyping() {
+  const row = document.createElement("div");
+  row.className = "row bot";
+  row.id = "typingRow";
+  row.innerHTML = `${avatarHtml("bot")}<div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  messagesEl.appendChild(row);
+  row.scrollIntoView({ behavior: "smooth", block: "end" });
+}
+function hideTyping() {
+  const row = document.getElementById("typingRow");
+  if (row) row.remove();
+}
+
+function escapeHtml(str) {
+  return String(str ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
+}
+
+function updateProgress() {
+  const total = steps.length;
+  const done  = Math.min(stepIndex, total);
+  progressEl.style.width = `${(done / total) * 100}%`;
+}
+
+/* ============================================================
+   STEP RUNNER
+   ============================================================ */
+function advance() {
+  // Skip steps whose `when` returns false
+  while (stepIndex < steps.length) {
+    const step = steps[stepIndex];
+    if (step.when && !step.when(answers)) {
+      stepIndex++;
+      continue;
+    }
+    break;
+  }
+  if (stepIndex >= steps.length) return;
+  renderStep(steps[stepIndex]);
+}
+
+function renderStep(step) {
+  updateProgress();
+  inputAreaEl.innerHTML = "";
+
+  const askText = typeof step.ask === "function" ? step.ask(answers) : step.ask;
+
+  showTyping();
+  setTimeout(() => {
+    hideTyping();
+    addMessage("bot", askText);
+    renderInput(step);
+  }, 380);
+}
+
+function renderInput(step) {
+  inputAreaEl.innerHTML = "";
+
+  switch (step.type) {
+    case "intro": return renderIntro(step);
+    case "info":  return renderInfo(step);
+    case "text":
+    case "email":
+    case "tel":
+    case "number":
+      return renderTextInput(step);
+    case "textarea": return renderTextarea(step);
+    case "chips-single": return renderChipsSingle(step);
+    case "chips-multi":  return renderChipsMulti(step);
+    case "yesno":        return renderYesNo(step);
+    case "summary":      return renderSummary(step);
+  }
+}
+
+function renderIntro(step) {
+  const div = document.createElement("div");
+  div.className = "field";
+  const btn = document.createElement("button");
+  btn.textContent = step.cta || "Start";
+  btn.onclick = () => { stepIndex++; advance(); };
+  div.appendChild(btn);
+  inputAreaEl.appendChild(div);
+}
+
+function renderInfo(step) {
+  // Auto-advance after a beat — no input needed
+  setTimeout(() => { stepIndex++; advance(); }, 600);
+}
+
+function renderTextInput(step) {
+  const div = document.createElement("div");
+  div.className = "field";
+  const input = document.createElement("input");
+  input.type = step.type === "number" ? "number" : step.type;
+  input.placeholder = step.required ? "Required" : "Type your answer (or skip)";
+  if (step.type === "number") { input.min = "0"; input.max = "120"; }
+
+  const sendBtn = document.createElement("button");
+  sendBtn.textContent = "Send";
+  const skipBtn = document.createElement("button");
+  skipBtn.textContent = "Skip";
+  skipBtn.className = "ghost";
+
+  const submit = () => {
+    const val = input.value.trim();
+    if (!val && step.required) {
+      input.focus();
+      input.style.borderColor = "#c44";
+      return;
+    }
+    if (val && step.validate) {
+      const res = step.validate(val);
+      if (res !== true) {
+        addMessage("bot", res);
+        input.focus();
+        return;
+      }
+    }
+    answers[step.id] = val;
+    if (val) addMessage("user", val);
+    else     addMessage("user", "(skipped)");
+    stepIndex++;
+    advance();
+  };
+
+  input.addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); submit(); }
+  });
+  sendBtn.onclick = submit;
+  skipBtn.onclick = () => {
+    if (step.required) { input.focus(); return; }
+    answers[step.id] = "";
+    addMessage("user", "(skipped)");
+    stepIndex++;
+    advance();
+  };
+
+  div.appendChild(input);
+  div.appendChild(sendBtn);
+  if (!step.required) div.appendChild(skipBtn);
+  inputAreaEl.appendChild(div);
+  setTimeout(() => input.focus(), 50);
+}
+
+function renderTextarea(step) {
+  const div = document.createElement("div");
+  div.className = "field";
+  const ta = document.createElement("textarea");
+  ta.placeholder = "Type here…";
+  const sendBtn = document.createElement("button");
+  sendBtn.textContent = "Send";
+  const skipBtn = document.createElement("button");
+  skipBtn.textContent = "Skip";
+  skipBtn.className = "ghost";
+
+  const submit = () => {
+    const val = ta.value.trim();
+    answers[step.id] = val;
+    addMessage("user", val || "(skipped)");
+    stepIndex++;
+    advance();
+  };
+  sendBtn.onclick = submit;
+  skipBtn.onclick = submit;
+
+  div.appendChild(ta);
+  div.appendChild(sendBtn);
+  div.appendChild(skipBtn);
+  inputAreaEl.appendChild(div);
+  setTimeout(() => ta.focus(), 50);
+}
+
+function renderChipsSingle(step) {
+  const wrap = document.createElement("div");
+  wrap.className = "chips";
+  step.options.forEach(opt => {
+    const chip = document.createElement("button");
+    chip.className = "chip";
+    chip.textContent = opt;
+    chip.onclick = () => {
+      answers[step.id] = opt;
+      addMessage("user", opt);
+      stepIndex++;
+      advance();
+    };
+    wrap.appendChild(chip);
+  });
+  inputAreaEl.appendChild(wrap);
+}
+
+function renderChipsMulti(step) {
+  const selected = new Set();
+  const wrap = document.createElement("div");
+  wrap.className = "chips";
+  step.options.forEach(opt => {
+    const chip = document.createElement("button");
+    chip.className = "chip";
+    chip.textContent = opt;
+    chip.onclick = () => {
+      if (selected.has(opt)) {
+        selected.delete(opt);
+        chip.classList.remove("selected");
+      } else {
+        selected.add(opt);
+        chip.classList.add("selected");
+      }
+    };
+    wrap.appendChild(chip);
+  });
+
+  const actions = document.createElement("div");
+  actions.className = "multi-actions";
+  const done = document.createElement("button");
+  done.textContent = "Done";
+  done.onclick = () => {
+    if (step.required && selected.size === 0) return;
+    const arr = [...selected];
+    answers[step.id] = arr;
+    addMessage("user", arr.length ? arr.join(", ") : "(none)");
+    stepIndex++;
+    advance();
+  };
+  actions.appendChild(done);
+
+  inputAreaEl.appendChild(wrap);
+  inputAreaEl.appendChild(actions);
+}
+
+function renderYesNo(step) {
+  const wrap = document.createElement("div");
+  wrap.className = "chips";
+  ["Yes", "No"].forEach(opt => {
+    const chip = document.createElement("button");
+    chip.className = "chip";
+    chip.textContent = opt;
+    chip.onclick = () => {
+      answers[step.id] = opt;
+      addMessage("user", opt);
+      stepIndex++;
+      advance();
+    };
+    wrap.appendChild(chip);
+  });
+  inputAreaEl.appendChild(wrap);
+}
+
+/* ============================================================
+   SUMMARY
+   ============================================================ */
+const LABELS = {
+  destinations: "Destinations",
+  dates: "Dates",
+  adults: "Adults",
+  children: "Children",
+  budget: "Budget / person",
+  vibe: "Trip vibe",
+  insurance: "Travel insurance",
+  components: "Trip includes",
+  email: "Email",
+  phone: "Phone",
+  address: "Address",
+  travel_time: "Preferred timing",
+  flexible: "Flexible dates",
+  departure_city: "Departure city",
+  departure_city_2: "Backup departure",
+  airline_pref: "Airline preference",
+  seat_class: "Seat class",
+  seat_location: "Seat location",
+  cruise_pref: "Cruise line preference",
+  cruise_itinerary: "Cruise region",
+  cruise_length: "Cruise length",
+  cabin_class: "Cabin class",
+  pre_post_nights: "Pre/post nights",
+  beverage_plan: "Beverage package",
+  beverage_type: "Beverage type",
+  past_lines: "Past lines/resorts",
+  nights: "Hotel nights",
+  hotel_pref: "Hotel preference",
+  rooms_arrangement: "Rooms",
+  room_type: "Room type",
+  property_features: "Property features",
+  car_pref: "Car rental preference",
+  car_addons: "Car add-ons",
+  car_category: "Car category",
+  tour_countries: "Tour countries",
+  activity_level: "Activity level",
+  tour_type: "Tour type",
+  past_hotels: "Past hotels enjoyed",
+  activities: "Activities loved",
+  notes: "Additional notes"
+};
+
+function renderSummary(step) {
+  // Collect traveler names separately for clarity
+  const adultNames = [];
+  for (let i = 1; i <= 4; i++) if (answers[`adult_${i}_name`]) adultNames.push(answers[`adult_${i}_name`]);
+  const childList = [];
+  for (let i = 1; i <= 4; i++) {
+    const n = answers[`child_${i}_name`];
+    const a = answers[`child_${i}_age`];
+    if (n) childList.push(`${n}${a ? ` (age ${a})` : ""}`);
+  }
+
+  const summary = document.createElement("div");
+  summary.className = "summary";
+
+  const dl = document.createElement("dl");
+  const add = (label, val) => {
+    if (!val || (Array.isArray(val) && val.length === 0)) return;
+    const dt = document.createElement("dt");  dt.textContent = label;
+    const dd = document.createElement("dd");  dd.textContent = Array.isArray(val) ? val.join(", ") : val;
+    dl.appendChild(dt); dl.appendChild(dd);
+  };
+
+  add("Destinations", answers.destinations);
+  add("Dates", answers.dates);
+  add("Adults", adultNames.length ? `${answers.adults} (${adultNames.join(", ")})` : answers.adults);
+  if (parseInt(answers.children || 0) > 0) {
+    add("Children", childList.length ? `${answers.children} (${childList.join(", ")})` : answers.children);
+  }
+  add("Budget / person", answers.budget);
+  add("Trip vibe", answers.vibe);
+  add("Travel insurance", answers.insurance);
+  add("Trip includes", answers.components);
+
+  // Contact
+  add("Email", answers.email);
+  add("Phone", answers.phone);
+  add("Address", answers.address);
+  add("Preferred timing", answers.travel_time);
+  add("Flexible dates", answers.flexible);
+
+  // Conditional sections
+  if (answers.components?.includes("Air Travel")) {
+    add("Departure city", answers.departure_city);
+    add("Backup departure", answers.departure_city_2);
+    add("Airline preference", answers.airline_pref);
+    add("Seat class", answers.seat_class);
+    add("Seat location", answers.seat_location);
+  }
+  if (answers.components?.includes("Cruise")) {
+    add("Cruise line preference", answers.cruise_pref);
+    add("Cruise region", answers.cruise_itinerary);
+    add("Cruise length", answers.cruise_length);
+    add("Cabin class", answers.cabin_class);
+    add("Pre/post nights", answers.pre_post_nights);
+    add("Beverage package", answers.beverage_plan);
+    add("Beverage type", answers.beverage_type);
+    add("Past lines/resorts", answers.past_lines);
+  }
+  if (answers.components?.includes("Hotel / Resort") || answers.components?.includes("All-Inclusive Resort")) {
+    add("Hotel nights", answers.nights);
+    add("Hotel preference", answers.hotel_pref);
+    add("Rooms", answers.rooms_arrangement);
+    add("Room type", answers.room_type);
+    add("Property features", answers.property_features);
+  }
+  if (answers.components?.includes("Car Rental")) {
+    add("Car rental preference", answers.car_pref);
+    add("Car add-ons", answers.car_addons);
+    add("Car category", answers.car_category);
+  }
+  if (answers.components?.includes("Package Tour")) {
+    add("Tour countries", answers.tour_countries);
+    add("Activity level", answers.activity_level);
+    add("Tour type", answers.tour_type);
+  }
+  add("Past hotels enjoyed", answers.past_hotels);
+  add("Activities loved", answers.activities);
+  add("Additional notes", answers.notes);
+
+  summary.innerHTML = `<h3>Your trip summary</h3>`;
+  summary.appendChild(dl);
+
+  const actions = document.createElement("div");
+  actions.className = "actions-final";
+
+  const editBtn = document.createElement("button");
+  editBtn.className = "chip";
+  editBtn.textContent = "Start over";
+  editBtn.onclick = () => location.reload();
+
+  const submitBtn = document.createElement("button");
+  submitBtn.textContent = "Submit inquiry";
+  submitBtn.style.cssText = "padding:10px 20px;background:var(--accent);color:#fff;border:none;border-radius:10px;font:inherit;font-weight:600;cursor:pointer;";
+  submitBtn.onclick = () => onSubmit();
+
+  actions.appendChild(submitBtn);
+  actions.appendChild(editBtn);
+
+  inputAreaEl.appendChild(summary);
+  inputAreaEl.appendChild(actions);
+
+  const note = document.createElement("div");
+  note.className = "pill-note";
+  note.textContent = "On submit, your answers are made available to the page (window.travelInquiryAnswers). Wire up your delivery method when ready.";
+  inputAreaEl.appendChild(note);
+
+  progressEl.style.width = "100%";
+}
+
+/* ============================================================
+   SUBMIT HOOK — replace this with your real delivery later.
+   For now it stashes answers on window and shows a confirmation.
+   ============================================================ */
+function onSubmit() {
+  window.travelInquiryAnswers = { ...answers };
+  console.log("Travel inquiry submitted:", window.travelInquiryAnswers);
+
+  inputAreaEl.innerHTML = "";
+  addMessage("bot", "Thank you! Your inquiry has been received. We'll be in touch within 24–48 hours. ✨");
+
+  // Example mailto fallback — uncomment + edit when ready:
+  // const body = encodeURIComponent(JSON.stringify(window.travelInquiryAnswers, null, 2));
+  // window.location.href = `mailto:cruisethecreek@gmail.com?subject=New Travel Inquiry&body=${body}`;
+}
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+steps = buildSteps();
+advance();
+</script>
+</body>
+</html>
