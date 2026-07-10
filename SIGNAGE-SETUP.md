@@ -54,15 +54,64 @@ don't need per-slide options.
 
 ## Putting it on the TVs (Fire Stick)
 
-1. On each Fire Stick, install **Fully Kiosk Browser** (or **Fully Kiosk Browser Lite**,
-   free) from the Amazon Appstore.
-2. Open it and set the **Start URL** to your deployed page, e.g.
-   `https://YOUR-SITE.vercel.app/signage.html`
-3. Enable **Launch on Boot** and **Screensaver/Sleep off** so the TV shows signage 24/7.
-4. Repeat on all four Fire Sticks — they can all point at the same URL, or you can make
+You need **one browser app** on each Fire Stick, pointed at your `signage.html` URL.
+If the app you want is in the Fire TV Appstore, just install it (search for it on the
+home screen) and skip to step 6. If it is **not** in your Stick's Appstore, sideload it
+using the free **Downloader** app — that is Option B below.
+
+### Option B — Sideload the kiosk browser (Downloader method)
+
+You never move a file to a computer or use a cable. The Fire Stick downloads and installs
+the app itself. Do this once per Stick.
+
+1. **Install Downloader.** On the Fire Stick home screen, search for **"Downloader"**
+   (by AFTVnews) and install it. This app is always in the Fire TV Appstore.
+
+2. **Allow installs from Downloader.** Go to
+   **Settings → My Fire TV → Developer options → Install unknown apps**, find
+   **Downloader** in the list, and switch it **ON**.
+   *(If you don't see "Developer options," open Settings → My Fire TV → About, and click
+   the device name 7 times to unlock it.)*
+
+3. **Open Downloader** and select the **Browser** / URL box.
+
+4. **Enter the app's APK link** and download it. Good options:
+   - **TV Bro** (free, open-source, built for Fire TV) — get the APK from its official
+     GitHub releases page: `https://github.com/truefedex/tv-bro/releases`
+     (open that page in Downloader's built-in browser and pick the latest `.apk`).
+   - **Fully Kiosk Browser** — from the official site: `https://www.fully-kiosk.com`
+     (its download page links the Fire OS / Android APK).
+   > Only install APKs from the developer's official site or GitHub — never a random
+   > "APK download" site.
+
+5. **Install** when Downloader finishes the download (just click through the prompt).
+   After it installs, Downloader offers to **delete the APK file** — say yes to save space.
+
+6. **Point it at your page.** Open the browser app and set its **Start URL / home page** to
+   your deployed page, e.g. `https://YOUR-SITE.vercel.app/signage.html`
+
+7. **Make it run 24/7.** Enable the app's **Launch on Boot** (auto-start) and
+   **keep-screen-awake / disable screensaver** options so the TV shows signage all day.
+   In **TV Bro**: set your URL as the home page and enable kiosk/auto-start in its settings.
+   In **Fully Kiosk**: use *Start URL*, *Launch on Boot*, and *Keep Screen On*.
+
+8. **Repeat on all four Fire Sticks.** They can all point at the same URL, or you can make
    per-screen versions (see below).
 
-That's it. Change `content.json`, push, and every screen updates itself.
+That's it. From here on you never touch the Sticks again — change `content.json`, push,
+and every screen updates itself within a minute.
+
+### Troubleshooting the sideload
+
+- **"App not installed" / blocked:** re-check step 2 — Downloader must be allowed to
+  install unknown apps.
+- **Can't find Developer options:** click the device name 7× under
+  Settings → My Fire TV → About to reveal it.
+- **Remote can't navigate the browser:** Fire TV remotes work best with apps built for TV
+  (TV Bro). If a browser is hard to control, TV Bro is the more remote-friendly choice.
+- **Screen goes to sleep:** also set the Fire Stick itself —
+  Settings → Display & Sounds / Screensaver → set screensaver start time to the longest
+  option (or "Never" if available).
 
 ---
 
