@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Signage Display</title>
+<style>
+  :root {
+    --ticker-h: 8vh;
+    --ticker-bg: #111;
+    --ticker-ink: #fff;
+    --ticker-accent: #ffcb05;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: #000;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    cursor: none;               /* hide the pointer on kiosk TVs */
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* ---------- Stage (media area) ---------- */
+  #stage {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    bottom: 0;                  /* filled dynamically when a ticker is present */
+    background: #000;
+  }
+  .slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+  }
+  .slide.active { opacity: 1; }
+  .slide img,
+  .slide video {
+    width: 100%;
+    height: 100%;
+  }
+  /* fit: contain (letterbox) vs cover (fill/crop) — set per-slide or globally */
+  .fit-contain img, .fit-contain video { object-fit: contain; }
+  .fit-cover img,   .fit-cover video   { object-fit: cover; }
+
+  /* Optional caption overlay on a slide */
+  .caption {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    padding: 3vh 4vw;
+    background: linear-gradient(to top, rgba(0,0,0,0.75), rgba(0,0,0,0));
+    color: #fff;
+    font-size: 3.2vh;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  }
+
+  /* ---------- Ticker ---------- */
+  #ticker {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: var(--ticker-h);
+    background: var(--ticker-bg);
+    color: var(--ticker-ink);
+    display: none;              /* shown when tickerText is present */
+    align-items: center;
+    overflow: hidden;
+    border-top: 3px solid var(--ticker-accent);
+  }
+  #ticker.on { display: flex; }
+  #ticker .label {
+    flex: 0 0 auto;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0 2.2vw;
+    background: var(--ticker-accent);
+    color: #111;
+    font-weight: 800;
+    font-size: 3.2vh;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  #ticker .track {
+    flex: 1 1 auto;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  #ticker .track span {
+    display: inline-block;
+    padding-left: 100%;
+    font-size: 3.6vh;
+    font-weight: 600;
+    animation: scroll-left linear infinite;
+  }
+  @keyframes scroll-left {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-100%); }
+  }
+
+  /* ---------- Clock (optional corner) ---------- */
+  #clock {
+    position: absolute;
+    top: 2.2vh; right: 2.4vw;
+    color: #fff;
+    font-size: 3.4vh;
+    font-weight: 700;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+    letter-spacing: 1px;
+    display: none;
+    z-index: 5;
+  }
+  #clock.on { display: block; }
+
+  /* ---------- First-run / error message ---------- */
+  #message {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #ddd;
+    padding: 6vw;
+    z-index: 10;
+  }
+  #message.on { display: flex; }
+  #message h1 { font-size: 4vh; margin-bottom: 2vh; color: #fff; }
+  #message p  { font-size: 2.4vh; line-height: 1.5; max-width: 40ch; color: #aaa; }
+  #message code {
+    background: #1c1c1c;
+    color: var(--ticker-accent);
+    padding: 0.2em 0.5em;
+    border-radius: 6px;
+    font-size: 2.2vh;
+  }
+</style>
+</head>
+<body>
+  <div id="stage"></div>
+  <div id="clock"></div>
+
+  <div id="ticker">
+    <div class="label" id="tickerLabel">NEWS</div>
+    <div class="track"><span id="tickerText"></span></div>
+  </div>
+
+  <div id="message">
+    <h1>Signage is ready 🎉</h1>
+    <p>Add images to <code>images/</code> and list them in <code>content.json</code>,
+       then refresh. This screen updates itself automatically.</p>
+  </div>
+
+<script>
+/* =========================================================================
+   DIY digital signage — reads content.json and runs a fullscreen playlist.
+   Point a kiosk browser (e.g. Fully Kiosk on a Fire Stick) at this page.
+   No build step, no dependencies, no subscription.
+   ========================================================================= */
+
+const CONFIG_URL   = "content.json";
+const RELOAD_MS    = 60 * 1000;   // re-check content.json every 60s (live updates)
+const DEFAULT_SECS = 8;           // seconds per image if not specified
+
+const stage      = document.getElementById("stage");
+const tickerEl   = document.getElementById("ticker");
+const tickerText = document.getElementById("tickerText");
+const tickerLabel= document.getElementById("tickerLabel");
+const clockEl    = document.getElementById("clock");
+const messageEl  = document.getElementById("message");
+
+let slides = [];          // DOM nodes, one per playlist item
+let items  = [];          // normalized playlist data
+let idx    = -1;
+let timer  = null;
+let lastSignature = "";   // detect content.json changes without flicker
+
+/* ---------- Load + normalize config ---------- */
+async function loadConfig() {
+  try {
+    // cache-bust so TVs always pull the newest content
+    const res = await fetch(CONFIG_URL + "?t=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const cfg = await res.json();
+    applyConfig(cfg);
+  } catch (err) {
+    // First run / missing file: show the helper message but keep trying.
+    if (!items.length) messageEl.classList.add("on");
+    console.warn("content.json not loaded:", err.message);
+  }
+}
+
+function applyConfig(cfg) {
+  const list = Array.isArray(cfg) ? cfg : (cfg.slides || cfg.items || []);
+  const signature = JSON.stringify({ list, t: cfg.tickerText, l: cfg.tickerLabel, f: cfg.fit });
+  if (signature === lastSignature) return;   // nothing changed; leave playback alone
+  lastSignature = signature;
+
+  const globalFit = cfg.fit === "cover" ? "cover" : "contain";
+
+  // Ticker
+  if (cfg.tickerText) {
+    const speed = Number(cfg.tickerSpeed) || 30;       // seconds per full pass
+    tickerText.textContent = cfg.tickerText;
+    tickerText.style.animationDuration = speed + "s";
+    tickerLabel.textContent = cfg.tickerLabel || "INFO";
+    tickerEl.classList.add("on");
+    stage.style.bottom = "var(--ticker-h)";
+  } else {
+    tickerEl.classList.remove("on");
+    stage.style.bottom = "0";
+  }
+
+  // Clock
+  clockEl.classList.toggle("on", !!cfg.showClock);
+
+  // Build playlist
+  items = list.map(raw => {
+    const it = (typeof raw === "string") ? { src: raw } : (raw || {});
+    const src = it.src || it.url || it.image || it.video || "";
+    const isVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(src) || it.type === "video";
+    return {
+      src,
+      isVideo,
+      seconds: Number(it.seconds || it.duration) || DEFAULT_SECS,
+      caption: it.caption || "",
+      fit: it.fit === "cover" ? "cover" : (it.fit === "contain" ? "contain" : globalFit),
+    };
+  }).filter(it => it.src);
+
+  rebuildSlides();
+}
+
+/* ---------- Build slide DOM ---------- */
+function rebuildSlides() {
+  clearTimeout(timer);
+  stage.innerHTML = "";
+  slides = [];
+
+  if (!items.length) {
+    messageEl.classList.add("on");
+    return;
+  }
+  messageEl.classList.remove("on");
+
+  items.forEach(it => {
+    const el = document.createElement("div");
+    el.className = "slide fit-" + it.fit;
+    if (it.isVideo) {
+      const v = document.createElement("video");
+      v.src = it.src;
+      v.muted = true;
+      v.playsInline = true;
+      v.preload = "auto";
+      el.appendChild(v);
+    } else {
+      const img = document.createElement("img");
+      img.src = it.src;
+      el.appendChild(img);
+    }
+    if (it.caption) {
+      const c = document.createElement("div");
+      c.className = "caption";
+      c.textContent = it.caption;
+      el.appendChild(c);
+    }
+    stage.appendChild(el);
+    slides.push(el);
+  });
+
+  idx = -1;
+  next();
+}
+
+/* ---------- Playback loop ---------- */
+function next() {
+  clearTimeout(timer);
+  if (!slides.length) return;
+
+  if (idx >= 0) slides[idx].classList.remove("active");
+  idx = (idx + 1) % slides.length;
+  const el = slides[idx];
+  const it = items[idx];
+  el.classList.add("active");
+
+  if (it.isVideo) {
+    const v = el.querySelector("video");
+    v.currentTime = 0;
+    // advance when the clip ends; fall back to a timeout if metadata is odd
+    v.onended = next;
+    const p = v.play();
+    if (p && p.catch) p.catch(() => { timer = setTimeout(next, it.seconds * 1000); });
+    // safety net in case 'ended' never fires
+    timer = setTimeout(next, (v.duration ? v.duration + 1 : it.seconds + 30) * 1000);
+  } else {
+    timer = setTimeout(next, it.seconds * 1000);
+  }
+}
+
+/* ---------- Clock ---------- */
+function tickClock() {
+  if (!clockEl.classList.contains("on")) return;
+  const d = new Date();
+  let h = d.getHours(), m = d.getMinutes();
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12 || 12;
+  clockEl.textContent = h + ":" + String(m).padStart(2, "0") + " " + ampm;
+}
+
+/* ---------- Keep the screen awake (best-effort) ---------- */
+async function keepAwake() {
+  try {
+    if ("wakeLock" in navigator) {
+      await navigator.wakeLock.request("screen");
+    }
+  } catch (_) { /* not supported / not permitted — kiosk app handles it */ }
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") keepAwake();
+});
+
+/* ---------- Boot ---------- */
+loadConfig();
+setInterval(loadConfig, RELOAD_MS);
+setInterval(tickClock, 1000);
+tickClock();
+keepAwake();
+</script>
+</body>
+</html>
