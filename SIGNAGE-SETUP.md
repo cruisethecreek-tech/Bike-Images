@@ -11,6 +11,8 @@ scrolling ticker. Point any TV's kiosk browser at it and you're done.
 - **`signage.html`** — the display page. It reads `content.json` and plays the slideshow.
 - **`content.json`** — your content. Edit this to change what's on screen.
 - **`images/`** — put your photos and videos here.
+- **`admin.html`** — an optional drag-and-drop panel to manage all of the above from a
+  web page, so you never touch GitHub or JSON by hand. See **"The admin panel"** below.
 
 Every 60 seconds each TV re-checks `content.json`, so when you push a change,
 **all your screens update on their own within a minute** — no reboot, no re-pairing.
@@ -124,9 +126,60 @@ simplest, duplicate `signage.html` (e.g. `screen2.html`) and change the one line
 
 ---
 
+## The admin panel (no GitHub, no JSON)
+
+`admin.html` is a web page for managing the signage without editing files by hand.
+Open `https://YOUR-SITE.vercel.app/admin` and you can:
+
+- **Drag and drop** photos/videos to upload them,
+- **Reorder** slides (↑ / ↓), set **captions** and **seconds** per slide,
+- Edit the **ticker** text, label, and speed, toggle the **clock** and **image fit**,
+- Hit **Save & publish** — it writes everything to the repo in one commit, Vercel
+  redeploys, and every screen updates within a minute.
+
+It works in two modes. **Secure mode is recommended.**
+
+### Secure mode (recommended) — token stays on the server
+
+The panel saves through a serverless function (`api/commit.mjs`) that keeps your GitHub
+token as a Vercel secret, so it's never exposed in the browser.
+
+**One-time setup in Vercel:**
+
+1. **Create a GitHub token.** GitHub → Settings → Developer settings →
+   **Fine-grained personal access tokens** → *Generate new token*.
+   - Repository access: **Only select repositories** → this repo.
+   - Permissions: **Contents → Read and write**.
+   - Copy the token (starts with `github_pat_...`).
+2. **Add environment variables in Vercel.** Your project → **Settings → Environment
+   Variables** → add:
+   | Name | Value |
+   |------|-------|
+   | `GITHUB_TOKEN` | the token from step 1 |
+   | `GITHUB_REPO` | `cruisethecreek-tech/Bike-Images` |
+   | `GITHUB_BRANCH` | `main` (or whichever branch Vercel deploys) |
+   | `ADMIN_PASSWORD` | a password you choose for the panel |
+3. **Redeploy** (Vercel does this automatically when you save env vars, or trigger it).
+4. Open `/admin`, enter the **admin password**, and start uploading.
+
+> Keep `/admin` to yourself — the password is what protects it. Anyone with the password
+> can publish to your screens.
+
+### Token mode (Option 1) — quick / no server
+
+If you'd rather not set up the serverless function (e.g. testing locally, or a host
+that isn't Vercel), open `admin.html`, expand **"Advanced: use a GitHub token directly,"**
+tick the box, and paste your GitHub token + `owner/name` + branch. The token is held only
+in that browser tab (cleared when you close it). Simpler, but the token lives in the
+browser — fine for just you, not for a shared/kiosk machine.
+
+---
+
 ## Why this beats a paid tool for you
 
 - **$0 forever** — no per-screen fees, no watermark, no account.
 - **Same publish flow you already use** — GitHub → Vercel.
 - **Total design control** — it's your HTML/CSS.
 - **Self-updating screens** — push once, all TVs follow.
+- **Your own upload panel** — `admin.html` gives you drag-and-drop management with none
+  of the subscription.
