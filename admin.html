@@ -420,6 +420,11 @@ async function commitViaServer(files){
 async function commitViaToken(files){
   const token=el("ghToken").value.trim(), repo=el("ghRepo").value.trim(), branch=el("ghBranch").value.trim()||"main";
   if(!token||!repo) throw new Error("Enter a GitHub token and repository (owner/name).");
+  // Catch the common mistake of pasting non-token text into the token box, which
+  // otherwise fails with a cryptic "invalid header value" error.
+  if(/\s/.test(token) || !/^(gh[pousr]_|github_pat_)/.test(token)){
+    throw new Error("That doesn't look like a GitHub token. If you set an admin password in Vercel, untick “Use a GitHub token” and use the Admin password field instead.");
+  }
   const api=(p,opts={})=>fetch(GH+p,{...opts,headers:{Authorization:"Bearer "+token,
     Accept:"application/vnd.github+json","Content-Type":"application/json",...(opts.headers||{})}})
     .then(async r=>{const d=await r.json().catch(()=>({})); if(!r.ok) throw new Error(d.message||("GitHub "+r.status)); return d;});
