@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") { res.status(204).end(); return; }
   if (req.method !== "POST") { res.status(405).json({ error: "POST only" }); return; }
 
-  const url = process.env.SUPABASE_URL;
+  const url = (process.env.SUPABASE_URL || "").replace(/\/+$/, "");  // tolerate trailing slash
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   // Not configured yet — reply 200 so screens don't log errors.
   if (!url || !key) { res.status(200).json({ ok: false, note: "monitoring not configured" }); return; }

@@ -11,7 +11,7 @@ export default async function handler(req, res) {
   if (req.method !== "POST") { res.status(405).json({ error: "POST only" }); return; }
 
   const adminPw = process.env.ADMIN_PASSWORD;
-  const url = process.env.SUPABASE_URL;
+  const url = (process.env.SUPABASE_URL || "").replace(/\/+$/, "");  // tolerate trailing slash
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   let body = req.body || {};
