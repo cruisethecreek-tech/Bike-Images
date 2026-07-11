@@ -275,6 +275,30 @@ lights up with live status.
 
 ---
 
+## Large videos (Supabase Storage)
+
+Photos are auto-shrunk and stored in the repo, but **videos** can't be shrunk in the
+browser and would exceed Vercel's ~4.5 MB request cap. So videos upload **straight to
+Supabase Storage** (files up to 50 MB+) and play from Supabase's CDN. Uses the same
+Supabase project as monitoring above — just add one storage bucket.
+
+### 1. Create a public bucket
+Supabase → **Storage** → **New bucket** → name it **`media`** → toggle **Public** on →
+create. (If you use a different name, set a `SUPABASE_BUCKET` env var in Vercel to match.)
+
+### 2. That's it
+The `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` you already set power this too. Now in
+the dashboard's **Media** tab, drop a video — it uploads directly (with a progress %),
+appears in your library, and can be added to any playlist like a photo.
+
+> How it works: the browser asks `api/storage.mjs` for a one-time signed upload URL
+> (authorized by the server-side key), then uploads the file straight to Supabase —
+> nothing large passes through Vercel. Videos live under `media/videos/` and the playlist
+> references their public CDN URL. Deleting a video in the dashboard removes it from
+> storage immediately.
+
+---
+
 ## Why this beats a paid tool for you
 
 - **$0 forever** — no per-screen fees, no watermark, no account.
