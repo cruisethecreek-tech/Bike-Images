@@ -24,6 +24,9 @@
       "name": "Sales",
       "fit": "cover",
       "showClock": true,
+      "tickerLabel": "INFO",
+      "tickerText": "Schedule A Test Ride or Request an Order at www.cruisethecreek.com or by Texting 330-406-9682",
+      "tickerSpeed": 30,
       "slides": [
         {
           "src": "https://hqkdphrtxjhqestnvome.supabase.co/storage/v1/object/public/Store Media/videos/velotric-bike-deck.mp4",
