@@ -9,20 +9,6 @@
       "tickerSpeed": 30,
       "slides": [
         {
-          "src": "images/photo1.jpg",
-          "seconds": 8,
-          "caption": "Explore the creek"
-        },
-        {
-          "src": "images/photo2.jpg",
-          "seconds": 8,
-          "caption": "Rentals available now"
-        },
-        {
-          "src": "images/photo3.jpg",
-          "seconds": 8
-        },
-        {
           "src": "images/mascot.jpg",
           "seconds": 8
         },
