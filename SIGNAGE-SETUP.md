@@ -306,6 +306,11 @@ which slide should be on from the wall clock and the playlist's slide lengths, s
 playlists naturally line up. Fire TV clocks are internet-synced, so screens stay within about
 a second of each other. (Different playlists on different screens just run independently.)
 
+Videos are **preloaded into the TV's memory** (downloaded once, then played from memory), so
+after the first download they play and seek with no buffering — which also keeps synced TVs
+tight. Very large files (over ~150 MB) skip the cache and stream instead, so keep video
+exports reasonable (1080p at a few Mbps is plenty for signage).
+
 ## Large videos (Supabase Storage)
 
 Photos are auto-shrunk and stored in the repo, but **videos** can't be shrunk in the
