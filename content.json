@@ -10,17 +10,21 @@
       "slides": [
         {
           "src": "images/mascot.jpg",
-          "seconds": 8
+          "seconds": 10,
+          "caption": "Have Questions? Chat With Me On The Website!"
         },
         {
           "src": "images/gemini_generated_image_o8ptr1o8ptr1o8pt.jpg",
-          "seconds": 8
-        },
-        {
-          "src": "https://hqkdphrtxjhqestnvome.supabase.co/storage/v1/object/public/Store Media/videos/velotric-bike-deck.mp4",
-          "fit": "contain"
+          "seconds": 10,
+          "caption": "Check Out Our Adventure Map To Explore the Park!"
         }
       ]
+    },
+    "sales": {
+      "name": "Sales",
+      "fit": "cover",
+      "showClock": true,
+      "slides": []
     }
   },
   "screens": [
