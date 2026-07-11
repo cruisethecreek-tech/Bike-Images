@@ -252,6 +252,22 @@ const CONFIG_URL   = "content.json";
 const RELOAD_MS    = 60 * 1000;   // re-check content.json every 60s (live updates)
 const DEFAULT_SECS = 8;           // seconds per image if not specified
 
+// Bump this whenever signage.html changes, and set the same value in signage-version.json.
+// A running TV compares the two and reloads itself to pull the new code — so feature
+// updates reach every TV automatically instead of needing a manual relaunch.
+const APP_VERSION  = "2026-07-11-sync1";
+async function checkForUpdate() {
+  try {
+    const r = await fetch("signage-version.json?t=" + Date.now(), { cache: "no-store" });
+    if (!r.ok) return;
+    const v = (await r.json()).version;
+    if (v && v !== APP_VERSION && sessionStorage.getItem("sg_upd") !== v) {
+      sessionStorage.setItem("sg_upd", v);   // reload at most once per new version (no loops)
+      location.reload();
+    }
+  } catch (_) { /* offline / missing file — ignore */ }
+}
+
 const stage      = document.getElementById("stage");
 const tickerEl   = document.getElementById("ticker");
 const tickerText = document.getElementById("tickerText");
@@ -322,6 +338,7 @@ let syncMode = true;      // clock-driven playback so identical playlists stay i
 let currentConfig = null;   // last good config, re-evaluated on a timer for schedules
 
 async function loadConfig() {
+  checkForUpdate();   // pull new display code automatically when a new version ships
   try {
     // cache-bust so TVs always pull the newest content
     const res = await fetch(CONFIG_URL + "?t=" + Date.now(), { cache: "no-store" });
