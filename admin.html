@@ -68,6 +68,9 @@
   .asset .tags{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
   .badge{font-size:.66rem;font-weight:700;padding:2px 7px;border-radius:20px;}
   .badge.inshow{background:#e5f4ea;color:#1e7d43;} .badge.new{background:#fdf4d6;color:#8a6d00;}
+  .asset .plchips{display:flex;gap:5px;flex-wrap:wrap;}
+  .asset .plchip{padding:4px 9px;font-size:.72rem;border-radius:20px;background:#ece6da;color:#5a534a;border:1px solid var(--line);font-weight:700;}
+  .asset .plchip.on{background:#e5f4ea;color:#1e7d43;border-color:#bfe6cd;}
   .asset .acts{display:flex;gap:6px;} .asset .acts button{flex:1;}
   .empty{text-align:center;color:var(--muted);padding:30px 10px;}
   #slideList{display:flex;flex-direction:column;gap:10px;}
@@ -103,7 +106,7 @@
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand">Signage <span class="build">build 10 ✓</span></div>
+    <div class="brand">Signage <span class="build">build 11 ✓</span></div>
     <div class="status"><span class="dot" id="connDot"></span><span id="connLabel">Not connected</span></div>
     <span class="spacer"></span>
     <span id="dirty"></span>
@@ -155,7 +158,7 @@
         <h2>Slideshow</h2>
         <p class="lede">The order this playlist plays. Add captions, timing, reorder with ↑ ↓.</p>
         <div id="slideList"></div>
-        <div id="slidesEmpty" class="empty">No slides in this playlist. Go to <strong>🖼 Media</strong> and click <em>Add to show</em> on the photos you want.</div>
+        <div id="slidesEmpty" class="empty">No slides in this playlist yet. Go to <strong>🖼 Media</strong> and click this playlist’s chip on the photos you want.</div>
       </section>
 
       <!-- TICKER & DISPLAY -->
@@ -232,7 +235,7 @@
 <div id="status"></div>
 
 <script>
-/* ===================== Signage Dashboard — build 10 (import from link) ===================== */
+/* ===================== Signage Dashboard — build 11 (per-playlist chips) ===================== */
 const GH="https://api.github.com";
 const MAX_EDGE=1920, JPEG_QUALITY=0.82, MAX_BATCH_BYTES=3_500_000;
 const ONLINE_MS=3*60*1000;   // seen within 3 min = online
@@ -374,21 +377,30 @@ function deleteAsset(path){
   setDirty(true); renderMedia(); renderSlides(); counts();
 }
 
+/* Toggle an asset in/out of a specific playlist (from the Media card chips). */
+function togglePlaylist(plId,path){
+  const P=config.playlists[plId], a=assets.find(x=>x.path===path); if(!P||!a) return;
+  if(P.slides.some(s=>s.path===path)) P.slides=P.slides.filter(s=>s.path!==path);
+  else P.slides.push({path:a.path,name:a.name,isVideo:a.isVideo,seconds:8,caption:"",fit:"",previewUrl:a.previewUrl});
+  setDirty(true); renderMedia(); renderSlides(); counts();
+}
+
 /* ---------- render media ---------- */
 function renderMedia(){
   const g=el("mediaGrid"); g.innerHTML=""; el("mediaEmpty").style.display=assets.length?"none":"block";
   assets.forEach(a=>{
     const card=document.createElement("div"); card.className="asset";
     const thumb=a.isVideo?`<div class="thumb vid">🎬</div>`:`<img class="thumb" src="${a.previewUrl||a.path}" loading="lazy" onerror="this.style.opacity=.25"/>`;
-    const shown=inShow(a.path);
-    card.innerHTML=`${thumb}<div class="meta"><div class="nm">${a.name}</div>
-      <div class="tags">${shown?'<span class="badge inshow">In show</span>':''}${a.pending?'<span class="badge new">new</span>':''}</div>
-      <div class="acts">${shown?`<button class="small ghost" data-remove="${a.path}">Remove</button>`:`<button class="small solid" data-add="${a.path}">＋ Add to show</button>`}
-      <button class="small danger" data-del="${a.path}">🗑</button></div></div>`;
+    const chips=Object.entries(config.playlists).map(([id,p])=>{
+      const on=p.slides.some(s=>s.path===a.path);
+      return `<button class="plchip${on?' on':''}" data-pl="${id}" data-path="${a.path}" title="${on?'Remove from':'Add to'} ${(p.name||id)}">${on?'✓ ':'+ '}${p.name||id}</button>`;
+    }).join("");
+    card.innerHTML=`${thumb}<div class="meta"><div class="nm">${a.name}${a.pending?' <span class="badge new">new</span>':''}</div>
+      <div class="plchips">${chips}</div>
+      <div class="acts"><button class="small danger" data-del="${a.path}">🗑 Delete</button></div></div>`;
     g.appendChild(card);
   });
-  g.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{ addToShow(assets.find(a=>a.path===b.dataset.add)); renderMedia(); renderSlides(); counts(); });
-  g.querySelectorAll("[data-remove]").forEach(b=>b.onclick=()=>{ removeFromShow(b.dataset.remove); renderMedia(); renderSlides(); counts(); });
+  g.querySelectorAll("[data-pl]").forEach(b=>b.onclick=()=>togglePlaylist(b.dataset.pl,b.dataset.path));
   g.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>deleteAsset(b.dataset.del));
 }
 
@@ -664,7 +676,7 @@ async function commitViaToken(files,deletions){
 }
 
 /* ---------- boot ---------- */
-console.log("Signage Dashboard — build 10 (import from link)");
+console.log("Signage Dashboard — build 11 (per-playlist chips)");
 loadPrefs();
 loadContent();
 if(el("adminPw").value){ loadAssets(); loadScreenStatus(); } else setConn("","Enter your admin password in Connection");
