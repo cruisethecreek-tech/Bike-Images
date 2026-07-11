@@ -3,7 +3,7 @@
     <!-- Your white-label app name, shown on the Fire TV home screen. -->
     <string name="app_name">Cruise the Creek Signage</string>
 
-    <!-- The page each TV displays. CHANGE THIS to your deployed signage URL,
+    <!-- The page each TV displays. Change this if your deployed URL differs,
          then rebuild the APK. -->
-    <string name="signage_url">https://YOUR-SITE.vercel.app/signage.html</string>
+    <string name="signage_url">https://bike-images.vercel.app/signage.html</string>
 </resources>
