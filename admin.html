@@ -83,6 +83,15 @@
   .screen .top>div{flex:1 1 160px;}
   .urlrow{display:flex;gap:8px;margin-top:10px;align-items:center;}
   .urlrow input{background:#f7f4ee;font-size:.82rem;}
+  .sched{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px;}
+  .sched .sctitle{font-size:.8rem;font-weight:700;color:#5a534a;margin-bottom:8px;}
+  .rule{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#faf8f3;border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px;}
+  .rule select{width:auto;min-width:130px;padding:6px 8px;}
+  .rule input[type=time]{width:auto;padding:6px 8px;}
+  .days{display:flex;gap:3px;}
+  .days button{width:26px;height:26px;padding:0;border-radius:6px;background:#e7e0d3;color:#6b6357;font-size:.72rem;font-weight:700;}
+  .days button.on{background:var(--accent);color:#fff;}
+  .rule .sep{color:var(--muted);}
   #status{position:fixed;left:50%;transform:translate(-50%,140%);bottom:18px;padding:12px 20px;border-radius:12px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.18);transition:.25s;z-index:60;max-width:90vw;}
   #status.show{transform:translate(-50%,0);}
   #status.ok{background:#e5f4ea;color:#1e7d43;} #status.err{background:#f9e4e2;color:var(--err);} #status.busy{background:#eef3f6;color:var(--accent);}
@@ -92,7 +101,7 @@
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand">Signage <span class="build">build 5 ✓</span></div>
+    <div class="brand">Signage <span class="build">build 6 ✓</span></div>
     <div class="status"><span class="dot" id="connDot"></span><span id="connLabel">Not connected</span></div>
     <span class="spacer"></span>
     <span id="dirty"></span>
@@ -199,7 +208,7 @@
 <div id="status"></div>
 
 <script>
-/* ===================== Signage Dashboard — build 5 (playlists) ===================== */
+/* ===================== Signage Dashboard — build 6 (scheduling) ===================== */
 const GH="https://api.github.com";
 const MAX_EDGE=1920, JPEG_QUALITY=0.82, MAX_BATCH_BYTES=3_500_000;
 const SIGNAGE_BASE = location.origin + location.pathname.replace(/admin(\.html)?$/,"signage.html");
@@ -344,27 +353,57 @@ el("plDelete").onclick=()=>{ if(Object.keys(config.playlists).length<=1){ alert(
 
 /* ---------- screens ---------- */
 function nextScreenId(){ let n=1; const ids=new Set(config.screens.map(s=>String(s.id))); while(ids.has(String(n)))n++; return String(n); }
+const DAY_LABELS=["S","M","T","W","T","F","S"];
+function plOptions(sel){ return Object.entries(config.playlists).map(([id,p])=>`<option value="${id}"${id===sel?' selected':''}>${p.name||id}</option>`).join(""); }
 function renderScreens(){
   const box=el("screenList"); box.innerHTML="";
   config.screens.forEach((s,i)=>{
-    const opts=Object.entries(config.playlists).map(([id,p])=>`<option value="${id}"${id===s.playlist?' selected':''}>${p.name||id}</option>`).join("");
+    if(!Array.isArray(s.rules)) s.rules=[];
+    const rulesHtml=s.rules.map((r,j)=>{
+      const days=Array.isArray(r.days)?r.days:[];
+      const dayBtns=DAY_LABELS.map((d,idx)=>`<button type="button" data-day="${idx}" data-i="${i}" data-j="${j}" class="${days.includes(idx)?'on':''}">${d}</button>`).join("");
+      return `<div class="rule">
+        <select data-rk="playlist" data-i="${i}" data-j="${j}">${plOptions(r.playlist)}</select>
+        <div class="days">${dayBtns}</div>
+        <input type="time" data-rk="start" data-i="${i}" data-j="${j}" value="${r.start||''}"/>
+        <span class="sep">–</span>
+        <input type="time" data-rk="end" data-i="${i}" data-j="${j}" value="${r.end||''}"/>
+        <button class="small danger" data-rmr="${i}" data-j="${j}">✕</button>
+      </div>`;
+    }).join("");
     const div=document.createElement("div"); div.className="screen";
     div.innerHTML=`<div class="top">
       <div><label>Screen name</label><input type="text" data-sk="name" data-i="${i}" value="${(s.name||'').replace(/"/g,'&quot;')}"/></div>
-      <div><label>Plays playlist</label><select data-sk="playlist" data-i="${i}">${opts}</select></div>
+      <div><label>Default playlist (when no schedule matches)</label><select data-sk="playlist" data-i="${i}">${plOptions(s.playlist)}</select></div>
       <div style="flex:0 0 auto;"><label>&nbsp;</label>${config.screens.length>1?`<button class="small danger" data-rms="${i}">Remove</button>`:''}</div>
       </div>
-      <div class="urlrow"><input type="text" readonly value="${screenUrl(s.id)}" data-url="${s.id}"/>
+      <div class="urlrow"><input type="text" readonly value="${screenUrl(s.id)}"/>
         <button class="small chip" data-copy="${s.id}">Copy</button>
-        <a href="${screenUrl(s.id)}" target="_blank"><button class="small ghost" type="button">Open</button></a></div>`;
+        <a href="${screenUrl(s.id)}" target="_blank"><button class="small ghost" type="button">Open</button></a></div>
+      <div class="sched">
+        <div class="sctitle">Schedule (optional) — override the default playlist at set times</div>
+        ${rulesHtml}
+        <button class="small chip" data-addrule="${i}">＋ Add schedule rule</button>
+      </div>`;
     box.appendChild(div);
   });
   box.querySelectorAll("input[data-sk],select[data-sk]").forEach(inp=>inp.addEventListener("input",e=>{
-    const i=+e.target.dataset.i,k=e.target.dataset.sk; config.screens[i][k]=e.target.value; setDirty(true); if(k==="name"){} }));
-  box.querySelectorAll("[data-copy]").forEach(b=>b.onclick=()=>{ navigator.clipboard.writeText(screenUrl(b.dataset.copy)).then(()=>status("Link copied","ok")); });
+    config.screens[+e.target.dataset.i][e.target.dataset.sk]=e.target.value; setDirty(true); }));
+  box.querySelectorAll("[data-rk]").forEach(inp=>inp.addEventListener("input",e=>{
+    config.screens[+e.target.dataset.i].rules[+e.target.dataset.j][e.target.dataset.rk]=e.target.value; setDirty(true); }));
+  box.querySelectorAll("[data-day]").forEach(b=>b.onclick=e=>{
+    const i=+e.target.dataset.i,j=+e.target.dataset.j,d=+e.target.dataset.day;
+    const days=config.screens[i].rules[j].days; const k=days.indexOf(d);
+    if(k>=0) days.splice(k,1); else days.push(d);
+    setDirty(true); renderScreens(); });
+  box.querySelectorAll("[data-copy]").forEach(b=>b.onclick=()=>navigator.clipboard.writeText(screenUrl(b.dataset.copy)).then(()=>status("Link copied","ok")));
   box.querySelectorAll("[data-rms]").forEach(b=>b.onclick=e=>{ config.screens.splice(+e.target.dataset.rms,1); setDirty(true); renderScreens(); counts(); });
+  box.querySelectorAll("[data-addrule]").forEach(b=>b.onclick=e=>{
+    const i=+e.target.dataset.addrule; const first=Object.keys(config.playlists)[0];
+    config.screens[i].rules.push({playlist:first,days:[0,1,2,3,4,5,6],start:"09:00",end:"17:00"}); setDirty(true); renderScreens(); });
+  box.querySelectorAll("[data-rmr]").forEach(b=>b.onclick=e=>{ config.screens[+e.target.dataset.rmr].rules.splice(+e.target.dataset.j,1); setDirty(true); renderScreens(); });
 }
-el("addScreen").onclick=()=>{ const id=nextScreenId(); config.screens.push({id,name:"Screen "+id,playlist:curPl||Object.keys(config.playlists)[0]}); setDirty(true); renderScreens(); counts(); };
+el("addScreen").onclick=()=>{ const id=nextScreenId(); config.screens.push({id,name:"Screen "+id,playlist:curPl||Object.keys(config.playlists)[0],rules:[]}); setDirty(true); renderScreens(); counts(); };
 
 /* ---------- ticker/display inputs -> current playlist ---------- */
 el("fit").addEventListener("change",()=>{ pl().fit=el("fit").value; setDirty(true); });
@@ -388,7 +427,8 @@ function normSlides(list){ return (list||[]).map(raw=>{ const it=typeof raw==="s
   return { path:src, name:src.split("/").pop(), isVideo:isVideoName(src)||it.type==="video", seconds:Number(it.seconds||it.duration)||8, caption:it.caption||"", fit:it.fit||"", previewUrl:src }; }).filter(s=>s.path); }
 function migrate(cfg){
   if(cfg && cfg.playlists && typeof cfg.playlists==="object"){
-    const out={ playlists:{}, screens:Array.isArray(cfg.screens)?cfg.screens.map(s=>({id:String(s.id),name:s.name||("Screen "+s.id),playlist:s.playlist})):[] };
+    const out={ playlists:{}, screens:Array.isArray(cfg.screens)?cfg.screens.map(s=>({id:String(s.id),name:s.name||("Screen "+s.id),playlist:s.playlist,
+      rules:Array.isArray(s.rules)?s.rules.map(r=>({playlist:r.playlist,days:Array.isArray(r.days)?r.days.slice():[0,1,2,3,4,5,6],start:r.start||"",end:r.end||""})):[]})):[] };
     for(const [id,p] of Object.entries(cfg.playlists)){
       out.playlists[id]={ name:p.name||id, fit:p.fit==="contain"?"contain":"cover", showClock:!!p.showClock,
         tickerLabel:p.tickerLabel||"", tickerText:p.tickerText||"", tickerSpeed:Number(p.tickerSpeed)||30, slides:normSlides(p.slides||p.items||[]) }; }
@@ -400,7 +440,7 @@ function migrate(cfg){
   const p={ name:"Main", fit:flat.fit==="contain"?"contain":"cover", showClock:!!flat.showClock,
     tickerLabel:flat.tickerLabel||"", tickerText:flat.tickerText||"", tickerSpeed:Number(flat.tickerSpeed)||30,
     slides:normSlides(Array.isArray(flat)?flat:(flat.slides||flat.items||[])) };
-  return { playlists:{ main:p }, screens:[{id:"1",name:"Screen 1",playlist:"main"}] };
+  return { playlists:{ main:p }, screens:[{id:"1",name:"Screen 1",playlist:"main",rules:[]}] };
 }
 async function loadContent(){
   let cfg={};
@@ -427,7 +467,14 @@ async function loadAssets(){
 
 /* ---------- build content.json ---------- */
 function buildContent(){
-  const out={ playlists:{}, screens:config.screens.map(s=>({id:s.id,name:s.name,playlist:s.playlist})) };
+  const out={ playlists:{}, screens:config.screens.map(s=>{
+    const o={ id:s.id, name:s.name, playlist:s.playlist };
+    const rules=(s.rules||[]).filter(r=>r.playlist).map(r=>{
+      const x={ playlist:r.playlist }; const days=Array.isArray(r.days)?r.days:[];
+      if(days.length && days.length<7) x.days=days.slice().sort();
+      if(r.start) x.start=r.start; if(r.end) x.end=r.end; return x; });
+    if(rules.length) o.rules=rules; return o;
+  }) };
   for(const [id,p] of Object.entries(config.playlists)){
     const o={ name:p.name, fit:p.fit==="contain"?"contain":"cover", showClock:!!p.showClock };
     if((p.tickerText||"").trim()){ o.tickerLabel=p.tickerLabel||"INFO"; o.tickerText=p.tickerText; o.tickerSpeed=Number(p.tickerSpeed)||30; }
@@ -482,7 +529,7 @@ async function commitViaToken(files,deletions){
 }
 
 /* ---------- boot ---------- */
-console.log("Signage Dashboard — build 5 (playlists + screens)");
+console.log("Signage Dashboard — build 6 (scheduling)");
 loadPrefs();
 loadContent();
 if(el("adminPw").value) loadAssets(); else setConn("","Enter your admin password in Connection");
