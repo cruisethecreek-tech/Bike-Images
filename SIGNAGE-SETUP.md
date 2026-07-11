@@ -4,6 +4,16 @@ Your own AbleSign/Yodeck replacement. Zero subscription, no watermark, full cont
 It's just a webpage (`signage.html`) that loops through your photos/videos and shows a
 scrolling ticker. Point any TV's kiosk browser at it and you're done.
 
+## Your live URLs
+
+| Page | URL |
+|------|-----|
+| **Signage display** (point the TVs here) | `https://bike-images.vercel.app/signage.html` |
+| **Admin panel** (upload/manage content) | `https://bike-images.vercel.app/admin.html` |
+
+> On default Vercel, pages keep their **`.html`** extension — use `/signage.html` and
+> `/admin.html`, not `/signage` or `/admin`. The site root (`/`) serves `index.html`.
+
 ---
 
 ## How it works
@@ -90,7 +100,7 @@ the app itself. Do this once per Stick.
    After it installs, Downloader offers to **delete the APK file** — say yes to save space.
 
 6. **Point it at your page.** Open the browser app and set its **Start URL / home page** to
-   your deployed page, e.g. `https://YOUR-SITE.vercel.app/signage.html`
+   your deployed page, e.g. `https://bike-images.vercel.app/signage.html`
 
 7. **Make it run 24/7.** Enable the app's **Launch on Boot** (auto-start) and
    **keep-screen-awake / disable screensaver** options so the TV shows signage all day.
@@ -129,7 +139,7 @@ simplest, duplicate `signage.html` (e.g. `screen2.html`) and change the one line
 ## The admin panel (no GitHub, no JSON)
 
 `admin.html` is a web page for managing the signage without editing files by hand.
-Open `https://YOUR-SITE.vercel.app/admin` and you can:
+Open `https://bike-images.vercel.app/admin.html` and you can:
 
 - **Drag and drop** photos/videos to upload them,
 - **Reorder** slides (↑ / ↓), set **captions** and **seconds** per slide,
@@ -160,10 +170,10 @@ token as a Vercel secret, so it's never exposed in the browser.
    | `GITHUB_BRANCH` | `main` (or whichever branch Vercel deploys) |
    | `ADMIN_PASSWORD` | a password you choose for the panel |
 3. **Redeploy** (Vercel does this automatically when you save env vars, or trigger it).
-4. Open `/admin`, enter the **admin password**, and start uploading.
+4. Open `/admin.html`, enter the **admin password**, and start uploading.
 
-> Keep `/admin` to yourself — the password is what protects it. Anyone with the password
-> can publish to your screens.
+> Keep `/admin.html` to yourself — the password is what protects it. Anyone with the
+> password can publish to your screens.
 
 ### Token mode (Option 1) — quick / no server
 
