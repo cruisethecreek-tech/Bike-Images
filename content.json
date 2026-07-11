@@ -17,6 +17,9 @@
           "src": "images/gemini_generated_image_o8ptr1o8ptr1o8pt.jpg",
           "seconds": 10,
           "caption": "Check Out Our Adventure Map To Explore the Park!"
+        },
+        {
+          "src": "https://hqkdphrtxjhqestnvome.supabase.co/storage/v1/object/public/Store Media/imported/heybike-deck.mp4"
         }
       ]
     },
@@ -25,9 +28,6 @@
       "fit": "cover",
       "showClock": true,
       "slides": [
-        {
-          "src": "https://hqkdphrtxjhqestnvome.supabase.co/storage/v1/object/public/Store Media/videos/heybike.mp4"
-        },
         {
           "src": "https://hqkdphrtxjhqestnvome.supabase.co/storage/v1/object/public/Store Media/videos/velotric-bike-deck.mp4"
         }
