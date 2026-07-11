@@ -297,6 +297,15 @@ command to that TV (it applies within ~15 seconds):
 
 ---
 
+## Keeping screens in sync
+
+Turn this on in **Ticker & Display → 🔗 Keep screens in sync** (it's on by default). When two
+or more TVs show the **same playlist**, they play the **same slide at the same moment** —
+including seeking videos to the same spot. It works with **no server**: each TV figures out
+which slide should be on from the wall clock and the playlist's slide lengths, so identical
+playlists naturally line up. Fire TV clocks are internet-synced, so screens stay within about
+a second of each other. (Different playlists on different screens just run independently.)
+
 ## Large videos (Supabase Storage)
 
 Photos are auto-shrunk and stored in the repo, but **videos** can't be shrunk in the

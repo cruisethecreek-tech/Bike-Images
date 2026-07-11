@@ -66,5 +66,6 @@
     "lat": 41.02506,
     "lon": -80.76091,
     "unit": "fahrenheit"
-  }
+  },
+  "sync": true
 }
