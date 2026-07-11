@@ -120,6 +120,24 @@
   }
   #clock.on { display: block; }
 
+  /* ---------- Weather (optional corner) ---------- */
+  #weather {
+    position: absolute;
+    top: 2.2vh; left: 2.4vw;
+    color: #fff;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.85);
+    display: none;
+    align-items: center;
+    gap: 1.2vw;
+    z-index: 5;
+  }
+  #weather.on { display: flex; }
+  #weather .icon { font-size: 4.6vh; line-height: 1; }
+  #weather .temp { font-size: 4vh; font-weight: 800; letter-spacing: 0.5px; }
+  #weather .meta { display: flex; flex-direction: column; }
+  #weather .cond { font-size: 2vh; font-weight: 600; opacity: 0.95; }
+  #weather .place { font-size: 1.7vh; font-weight: 500; opacity: 0.8; }
+
   /* ---------- First-run / error message ---------- */
   #message {
     position: absolute;
@@ -148,6 +166,11 @@
 <body>
   <div id="stage"></div>
   <div id="clock"></div>
+  <div id="weather">
+    <span class="icon" id="wxIcon"></span>
+    <span class="temp" id="wxTemp"></span>
+    <span class="meta"><span class="cond" id="wxCond"></span><span class="place" id="wxPlace"></span></span>
+  </div>
 
   <div id="ticker">
     <div class="label" id="tickerLabel">NEWS</div>
@@ -176,7 +199,54 @@ const tickerEl   = document.getElementById("ticker");
 const tickerText = document.getElementById("tickerText");
 const tickerLabel= document.getElementById("tickerLabel");
 const clockEl    = document.getElementById("clock");
+const weatherEl  = document.getElementById("weather");
 const messageEl  = document.getElementById("message");
+
+/* ---------- Weather (Open-Meteo — free, no API key) ---------- */
+let wxCfg = null, wxTimer = null;
+function wmo(code){
+  const c = Number(code);
+  if (c === 0) return { icon:"☀️", label:"Clear" };
+  if (c === 1) return { icon:"🌤️", label:"Mostly clear" };
+  if (c === 2) return { icon:"⛅", label:"Partly cloudy" };
+  if (c === 3) return { icon:"☁️", label:"Overcast" };
+  if (c === 45 || c === 48) return { icon:"🌫️", label:"Fog" };
+  if (c >= 51 && c <= 57) return { icon:"🌦️", label:"Drizzle" };
+  if (c >= 61 && c <= 67) return { icon:"🌧️", label:"Rain" };
+  if (c >= 71 && c <= 77) return { icon:"🌨️", label:"Snow" };
+  if (c >= 80 && c <= 82) return { icon:"🌧️", label:"Showers" };
+  if (c === 85 || c === 86) return { icon:"🌨️", label:"Snow showers" };
+  if (c >= 95) return { icon:"⛈️", label:"Thunderstorm" };
+  return { icon:"🌡️", label:"" };
+}
+async function fetchWeather(){
+  if (!wxCfg) return;
+  try {
+    const unit = wxCfg.unit === "celsius" ? "celsius" : "fahrenheit";
+    const u = `https://api.open-meteo.com/v1/forecast?latitude=${wxCfg.lat}&longitude=${wxCfg.lon}`
+            + `&current=temperature_2m,weather_code&temperature_unit=${unit}&timezone=auto`;
+    const r = await fetch(u, { cache: "no-store" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const d = await r.json();
+    const cur = d.current || {};
+    const w = wmo(cur.weather_code);
+    document.getElementById("wxIcon").textContent = w.icon;
+    document.getElementById("wxTemp").textContent = Math.round(cur.temperature_2m) + "°" + (unit === "celsius" ? "C" : "F");
+    document.getElementById("wxCond").textContent = w.label;
+    document.getElementById("wxPlace").textContent = wxCfg.place || "";
+    weatherEl.classList.add("on");
+  } catch (err) {
+    console.warn("weather failed:", err.message);
+  }
+}
+function setupWeather(w){
+  const ok = w && w.enabled && w.lat != null && w.lon != null;
+  if (!ok) { wxCfg = null; weatherEl.classList.remove("on"); return; }
+  const changed = !wxCfg || wxCfg.lat !== w.lat || wxCfg.lon !== w.lon || wxCfg.unit !== w.unit || wxCfg.place !== w.place;
+  wxCfg = { lat: w.lat, lon: w.lon, unit: w.unit || "fahrenheit", place: w.place || "" };
+  if (changed) fetchWeather();
+  if (!wxTimer) wxTimer = setInterval(fetchWeather, 15 * 60 * 1000);   // refresh every 15 min
+}
 
 let slides = [];          // DOM nodes, one per playlist item
 let items  = [];          // normalized playlist data
@@ -195,6 +265,7 @@ async function loadConfig() {
     const cfg = await res.json();
     currentConfig = cfg;
     applyConfig(cfg);
+    setupWeather(cfg.weather);  // global weather widget
     heartbeat();               // check in with the up-to-date active playlist
   } catch (err) {
     // First run / missing file: show the helper message but keep trying.
