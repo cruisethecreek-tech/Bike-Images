@@ -16,7 +16,7 @@ export default async function handler(req, res) {
   if (req.method === "OPTIONS") { res.status(204).end(); return; }
   if (req.method !== "POST") { res.status(405).json({ error: "POST only" }); return; }
 
-  const url = process.env.SUPABASE_URL;
+  const url = (process.env.SUPABASE_URL || "").replace(/\/+$/, "");  // tolerate trailing slash
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const bucket = process.env.SUPABASE_BUCKET || "media";
   const adminPw = process.env.ADMIN_PASSWORD;
@@ -47,7 +47,13 @@ export default async function handler(req, res) {
       });
       const text = await r.text();
       let d; try { d = JSON.parse(text); } catch { d = {}; }
-      if (!r.ok) throw new Error("Supabase " + r.status + ": " + text.slice(0, 200));
+      if (!r.ok) {
+        // A PostgREST (PGRST…) error here means the request reached the database API
+        // instead of Storage — almost always a wrong SUPABASE_URL value.
+        if (/PGRST/.test(text)) throw new Error("Supabase couldn't route the upload. Check that SUPABASE_URL in Vercel is exactly https://<your-ref>.supabase.co (no extra path). Raw: " + text.slice(0, 120));
+        if (/bucket not found/i.test(text)) throw new Error(`Storage bucket "${bucket}" not found. Create a public bucket named "${bucket}" in Supabase → Storage.`);
+        throw new Error("Supabase " + r.status + ": " + text.slice(0, 200));
+      }
       const m = String(d.url || "").match(/token=([^&]+)/);
       const token = m ? m[1] : "";
       if (!token) throw new Error("No upload token returned by Supabase.");

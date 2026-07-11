@@ -53,7 +53,7 @@ export default async function handler(req, res) {
       .sort((a, b) => a.name.localeCompare(b.name));
 
     // Also list large videos kept in Supabase Storage (optional).
-    const sbUrl = process.env.SUPABASE_URL, sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const sbUrl = (process.env.SUPABASE_URL || "").replace(/\/+$/, ""), sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (sbUrl && sbKey) {
       const bucket = process.env.SUPABASE_BUCKET || "media";
       try {
