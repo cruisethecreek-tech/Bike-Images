@@ -63,8 +63,9 @@ export default async function handler(req, res) {
   }
 
   const files = Array.isArray(body.files) ? body.files : [];
+  const deletions = Array.isArray(body.deletions) ? body.deletions : [];
   const message = body.message || "Update signage content";
-  if (!files.length) { res.status(400).json({ error: "No files to commit." }); return; }
+  if (!files.length && !deletions.length) { res.status(400).json({ error: "Nothing to commit." }); return; }
 
   // Basic path safety: only allow writing content.json and files under images/.
   for (const f of files) {
@@ -73,6 +74,12 @@ export default async function handler(req, res) {
     }
     const ok = f.path === "content.json" || f.path.startsWith("images/");
     if (!ok) { res.status(400).json({ error: "Path not allowed: " + f.path }); return; }
+  }
+  // Deletions are limited to media under images/.
+  for (const p of deletions) {
+    if (typeof p !== "string" || p.includes("..") || p.startsWith("/") || !p.startsWith("images/")) {
+      res.status(400).json({ error: "Illegal delete path: " + p }); return;
+    }
   }
 
   try {
@@ -92,6 +99,10 @@ export default async function handler(req, res) {
         body: JSON.stringify({ content: f.contentBase64, encoding: "base64" }),
       });
       tree.push({ path: f.path, mode: "100644", type: "blob", sha: blob.sha });
+    }
+    // Deletions: a tree entry with sha:null removes the file.
+    for (const p of deletions) {
+      tree.push({ path: p, mode: "100644", type: "blob", sha: null });
     }
 
     // 4. New tree on top of the base
