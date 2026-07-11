@@ -297,6 +297,14 @@ appears in your library, and can be added to any playlist like a photo.
 > references their public CDN URL. Deleting a video in the dashboard removes it from
 > storage immediately.
 
+### Import from a link (Google Drive, etc.)
+In the **Media** tab, next to the uploader, there's an **import from a link** box. Paste a
+**Google Drive share link** (set the file to *Anyone with the link* first) or any public
+image/video URL, click **Import**, and the server fetches the file and stores it in
+Supabase (`media/imported/`) — no downloading to your device first. Works for Drive,
+Dropbox direct links, or a plain image URL. (Requires the same Supabase Storage setup as
+videos above.)
+
 ---
 
 ## Why this beats a paid tool for you
