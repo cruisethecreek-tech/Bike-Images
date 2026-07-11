@@ -7,7 +7,7 @@
 //
 // Env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ADMIN_PASSWORD, optional SUPABASE_BUCKET
 
-const MAX_BYTES = 60 * 1024 * 1024;   // 60 MB safety cap
+const MAX_BYTES = 100 * 1024 * 1024;  // function-memory safety cap; Supabase enforces the real file-size limit
 
 function sanitize(n){ return (n || "").toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "file"; }
 
@@ -48,7 +48,7 @@ async function fetchMedia(raw){
   const id = driveId(raw);
   if (id) {
     const r = await fetchDrive(id);
-    if (!r) throw new Error("Google Drive wouldn't release the file. Make sure it's shared “Anyone with the link”, and it's a photo/video under ~60 MB.");
+    if (!r) throw new Error("Google Drive wouldn't release the file. Make sure it's shared “Anyone with the link”, and it's a photo/video within your Storage size limit.");
     return r;
   }
   const r = await fetch(raw, { redirect: "follow", headers: UA });
@@ -91,7 +91,7 @@ export default async function handler(req, res) {
     if (!isImage && !isVideo) throw new Error("Link isn't an image or video (got " + (ctype || "unknown") + ").");
 
     const buf = Buffer.from(await r.arrayBuffer());
-    if (buf.length > MAX_BYTES) throw new Error("File is over 60 MB — too large to import.");
+    if (buf.length > MAX_BYTES) throw new Error("File is " + Math.round(buf.length / 1048576) + " MB — over your Supabase Storage file-size limit (free plan max is 50 MB). Compress it or raise the limit in Supabase → Storage settings.");
     if (!buf.length) throw new Error("The link returned no data.");
 
     // Work out a filename.
@@ -114,6 +114,7 @@ export default async function handler(req, res) {
     if (!up.ok) {
       const t = await up.text();
       if (/bucket not found/i.test(t)) throw new Error(`Storage bucket "${bucket}" not found — create a public bucket named "${bucket}".`);
+      if (up.status === 413 || /maximum allowed size|exceeded|too large|payload/i.test(t)) throw new Error("Supabase rejected the file for size — it's over your Storage file-size limit (free plan max is 50 MB). Raise it in Supabase → Storage settings, or use a smaller file.");
       throw new Error("Storage upload failed: " + up.status + " " + t.slice(0, 150));
     }
 

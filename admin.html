@@ -106,7 +106,7 @@
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand">Signage <span class="build">build 11 ✓</span></div>
+    <div class="brand">Signage <span class="build">build 12 ✓</span></div>
     <div class="status"><span class="dot" id="connDot"></span><span id="connLabel">Not connected</span></div>
     <span class="spacer"></span>
     <span id="dirty"></span>
@@ -235,7 +235,7 @@
 <div id="status"></div>
 
 <script>
-/* ===================== Signage Dashboard — build 11 (per-playlist chips) ===================== */
+/* ===================== Signage Dashboard — build 12 (clearer size errors) ===================== */
 const GH="https://api.github.com";
 const MAX_EDGE=1920, JPEG_QUALITY=0.82, MAX_BATCH_BYTES=3_500_000;
 const ONLINE_MS=3*60*1000;   // seen within 3 min = online
@@ -293,7 +293,13 @@ function putWithProgress(url,file,onProgress){
     const xhr=new XMLHttpRequest(); xhr.open("PUT",url);
     if(file.type) xhr.setRequestHeader("Content-Type",file.type);
     xhr.upload.onprogress=e=>{ if(e.lengthComputable&&onProgress) onProgress(Math.round(e.loaded/e.total*100)); };
-    xhr.onload=()=>{ (xhr.status>=200&&xhr.status<300)?res():rej(new Error("upload failed ("+xhr.status+")")); };
+    xhr.onload=()=>{
+      if(xhr.status>=200&&xhr.status<300) return res();
+      const t=(xhr.responseText||"");
+      if(xhr.status===413 || /maximum allowed size|exceeded|too large|payload/i.test(t))
+        rej(new Error("Supabase rejected this file for size. It's over your Storage file-size limit (free plan max is 50 MB). Raise it in Supabase → Storage settings, or use a smaller/shorter video."));
+      else rej(new Error("Upload failed ("+xhr.status+")"+(t?": "+t.slice(0,120):"")));
+    };
     xhr.onerror=()=>rej(new Error("network error during upload"));
     xhr.send(file);
   });
@@ -676,7 +682,7 @@ async function commitViaToken(files,deletions){
 }
 
 /* ---------- boot ---------- */
-console.log("Signage Dashboard — build 11 (per-playlist chips)");
+console.log("Signage Dashboard — build 12 (clearer size errors)");
 loadPrefs();
 loadContent();
 if(el("adminPw").value){ loadAssets(); loadScreenStatus(); } else setConn("","Enter your admin password in Connection");
