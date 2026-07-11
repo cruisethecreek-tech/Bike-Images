@@ -24,15 +24,27 @@ export default async function handler(req, res) {
   if (typeof body === "string") { try { body = JSON.parse(body); } catch { body = {}; } }
   const screen_id = String(body.screen || "default").slice(0, 64);
   const playlist  = body.playlist ? String(body.playlist).slice(0, 64) : null;
+  const ackCommand = body.ackCommand ? String(body.ackCommand).slice(0, 64) : null;
 
   try {
+    // The TV reports it just ran a command: clear it so it won't run again (even after a
+    // reload or a storage wipe). Filtered on command_id so we only clear that exact command.
+    if (ackCommand) {
+      await fetch(`${url}/rest/v1/screen_status?screen_id=eq.${encodeURIComponent(screen_id)}&command_id=eq.${encodeURIComponent(ackCommand)}`, {
+        method: "PATCH",
+        headers: { apikey: key, Authorization: "Bearer " + key, "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({ command: null, command_id: null }),
+      }).catch(() => {});
+    }
+
     const r = await fetch(`${url}/rest/v1/screen_status?on_conflict=screen_id`, {
       method: "POST",
       headers: {
         apikey: key,
         Authorization: "Bearer " + key,
         "Content-Type": "application/json",
-        Prefer: "resolution=merge-duplicates,return=minimal",
+        // return=representation so we can hand any pending command back to the TV.
+        Prefer: "resolution=merge-duplicates,return=representation",
       },
       body: JSON.stringify({
         screen_id,
@@ -42,7 +54,12 @@ export default async function handler(req, res) {
       }),
     });
     if (!r.ok) { const t = await r.text(); throw new Error("Supabase " + r.status + ": " + t.slice(0, 200)); }
-    res.status(200).json({ ok: true });
+    const rows = await r.json().catch(() => []);
+    const row = Array.isArray(rows) ? rows[0] : rows;
+    // Don't echo back a command we just acked in this same call.
+    const command = (row && row.command && row.command_id !== ackCommand) ? row.command : null;
+    const command_id = command ? row.command_id : null;
+    res.status(200).json({ ok: true, command, command_id });
   } catch (err) {
     res.status(200).json({ ok: false, error: err.message });   // never break the display
   }

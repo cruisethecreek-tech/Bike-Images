@@ -194,6 +194,21 @@
   }
   #picker .opt.sel { border-color: var(--ticker-accent); background: #2c2c2c; }
   #picker .hint { margin-top: 4.5vh; font-size: 2.1vh; color: #777; text-align: center; }
+
+  /* ---------- Remote-control overlays (pushed from the dashboard) ---------- */
+  /* Blank = soft "screen off": solid black over everything. */
+  #blank {
+    position: fixed; inset: 0; background: #000; z-index: 45; display: none;
+  }
+  #blank.on { display: block; }
+  /* Takeover = an instant fullscreen message pushed to this TV. */
+  #takeover {
+    position: fixed; inset: 0; z-index: 46; display: none;
+    align-items: center; justify-content: center; text-align: center;
+    background: #000; color: #fff; padding: 8vh 6vw;
+  }
+  #takeover.on { display: flex; }
+  #takeover .msg { font-size: 7vh; font-weight: 700; line-height: 1.25; max-width: 24ch; }
 </style>
 </head>
 <body>
@@ -223,6 +238,9 @@
     <div class="hint">Change this later: press the ☰ (menu) button on the remote.</div>
   </div>
 
+  <div id="blank"></div>
+  <div id="takeover"><div class="msg" id="takeoverMsg"></div></div>
+
 <script>
 /* =========================================================================
    DIY digital signage — reads content.json and runs a fullscreen playlist.
@@ -243,6 +261,9 @@ const weatherEl  = document.getElementById("weather");
 const messageEl  = document.getElementById("message");
 const pickerEl   = document.getElementById("picker");
 const pickerList = document.getElementById("pickerList");
+const blankEl    = document.getElementById("blank");
+const takeoverEl = document.getElementById("takeover");
+const takeoverMsg= document.getElementById("takeoverMsg");
 
 /* ---------- Weather (Open-Meteo — free, no API key) ---------- */
 let wxCfg = null, wxTimer = null;
@@ -444,14 +465,63 @@ function resolvePlaylist(cfg) {
   return cfg || {};   // old flat schema — the whole file is the playlist
 }
 
-// Check in so the dashboard can show this screen online. Silent if unconfigured.
-function heartbeat() {
-  fetch("/api/heartbeat", {
+// Check in so the dashboard can show this screen online, and pick up any remote-control
+// command the dashboard has queued for this screen. Silent if monitoring is unconfigured.
+function heartbeat(ackCommand) {
+  return fetch("/api/heartbeat", {
     method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ screen: SCREEN || "default", playlist: currentPlId }),
+    body: JSON.stringify({ screen: SCREEN || "default", playlist: currentPlId, ackCommand: ackCommand || undefined }),
     keepalive: true,
-  }).catch(() => {});
+  })
+    .then(r => r.json())
+    .then(d => { if (d && d.command && d.command_id) runCommand(d.command, d.command_id); })
+    .catch(() => {});
 }
+
+/* ---------- Remote-control commands (pushed from the dashboard) ----------
+   The TV runs each command once (tracked by command_id) and acks it so it won't repeat.
+   Blank/takeover states are remembered on the device so they survive a reload. */
+function lastCmd(){ try { return localStorage.getItem("signageLastCmd") || ""; } catch { return ""; } }
+function setLastCmd(id){ try { localStorage.setItem("signageLastCmd", id); } catch (_) {} }
+
+function setBlank(on){
+  blankEl.classList.toggle("on", !!on);
+  try { on ? localStorage.setItem("signageBlank","1") : localStorage.removeItem("signageBlank"); } catch (_) {}
+}
+function setTakeover(msg){
+  if (msg == null){ takeoverEl.classList.remove("on"); try { localStorage.removeItem("signageTakeover"); } catch(_){} return; }
+  takeoverMsg.textContent = msg;
+  takeoverEl.classList.add("on");
+  try { localStorage.setItem("signageTakeover", msg); } catch (_) {}
+}
+
+async function runCommand(command, id){
+  if (!id || id === lastCmd()) return;         // already handled this one
+  setLastCmd(id);
+  // Ack first so the command is cleared server-side before any reload/storage wipe.
+  await heartbeat(id);
+
+  if (command === "restart")      { location.reload(); return; }
+  if (command === "refresh")      { lastSignature = ""; setBlank(false); setTakeover(null); loadConfig(); return; }
+  if (command === "blank")        { setBlank(true); return; }
+  if (command === "wake")         { setBlank(false); return; }
+  if (command === "endtakeover")  { setTakeover(null); return; }
+  if (command.startsWith("takeover:")) { setTakeover(command.slice(9)); return; }
+  if (command === "clear") {
+    try { localStorage.clear(); } catch (_) {}
+    location.reload();
+    return;
+  }
+}
+
+// Re-apply any remembered "off"/takeover state immediately on load (before content shows).
+(function restoreOverlays(){
+  try {
+    if (localStorage.getItem("signageBlank")) blankEl.classList.add("on");
+    const t = localStorage.getItem("signageTakeover");
+    if (t != null) { takeoverMsg.textContent = t; takeoverEl.classList.add("on"); }
+  } catch (_) {}
+})();
 
 function applyConfig(fullCfg) {
   const cfg = resolvePlaylist(fullCfg);
@@ -590,7 +660,7 @@ setInterval(scheduleTick, 20 * 1000);   // catch schedule boundaries between fet
 setInterval(tickClock, 1000);
 tickClock();
 keepAwake();
-setInterval(heartbeat, 60 * 1000);      // periodic check-in (first one fires after config loads)
+setInterval(heartbeat, 15 * 1000);      // check-in + poll for remote commands (first fires after config loads)
 </script>
 </body>
 </html>
