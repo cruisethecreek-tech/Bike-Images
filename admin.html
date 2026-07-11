@@ -103,7 +103,7 @@
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand">Signage <span class="build">build 7 ✓</span></div>
+    <div class="brand">Signage <span class="build">build 8 ✓</span></div>
     <div class="status"><span class="dot" id="connDot"></span><span id="connLabel">Not connected</span></div>
     <span class="spacer"></span>
     <span id="dirty"></span>
@@ -210,7 +210,7 @@
 <div id="status"></div>
 
 <script>
-/* ===================== Signage Dashboard — build 7 (monitoring) ===================== */
+/* ===================== Signage Dashboard — build 8 (video storage) ===================== */
 const GH="https://api.github.com";
 const MAX_EDGE=1920, JPEG_QUALITY=0.82, MAX_BATCH_BYTES=3_500_000;
 const ONLINE_MS=3*60*1000;   // seen within 3 min = online
@@ -262,21 +262,52 @@ async function compressImage(f){
 }
 
 /* ---------- upload ---------- */
+// Large videos go straight to Supabase Storage (bypassing Vercel's ~4.5 MB cap).
+function putWithProgress(url,file,onProgress){
+  return new Promise((res,rej)=>{
+    const xhr=new XMLHttpRequest(); xhr.open("PUT",url);
+    if(file.type) xhr.setRequestHeader("Content-Type",file.type);
+    xhr.upload.onprogress=e=>{ if(e.lengthComputable&&onProgress) onProgress(Math.round(e.loaded/e.total*100)); };
+    xhr.onload=()=>{ (xhr.status>=200&&xhr.status<300)?res():rej(new Error("upload failed ("+xhr.status+")")); };
+    xhr.onerror=()=>rej(new Error("network error during upload"));
+    xhr.send(file);
+  });
+}
+async function uploadVideoToStorage(file,name,onProgress){
+  const r=await fetch("/api/storage",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({password:el("adminPw").value,action:"sign",path:"videos/"+name})});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok||d.configured===false||!d.uploadUrl) throw new Error(d.error||"Video storage isn't set up — add Supabase Storage (see SIGNAGE-SETUP.md).");
+  await putWithProgress(d.uploadUrl,file,onProgress);
+  return d.publicUrl;
+}
 async function addFiles(fileList){
   const names=new Set(assets.map(a=>a.name)); const list=Array.from(fileList);
-  for(let i=0;i<list.length;i++){ const file=list[i]; status(`Processing ${i+1}/${list.length}…`,"busy");
+  const uniqueName=base=>{ let u=base,n=1; while(names.has(u)){ const d=base.lastIndexOf("."); u=d>0?base.slice(0,d)+"-"+n+base.slice(d):base+"-"+n; n++; } names.add(u); return u; };
+  for(let i=0;i<list.length;i++){ const file=list[i];
     const isVideo=file.type.startsWith("video/")||isVideoName(file.name);
     const isGif=file.type==="image/gif"||/\.gif$/i.test(file.name);
+
+    if(isVideo){
+      const uniq=uniqueName(sanitize(file.name));
+      try{
+        const publicUrl=await uploadVideoToStorage(file,uniq,pct=>status(`Uploading “${uniq}” — ${pct}%`,"busy"));
+        const asset={ name:uniq, path:publicUrl, isVideo:true, previewUrl:publicUrl, pending:false, storage:true };
+        assets.push(asset); addToShow(asset); status(`“${uniq}” uploaded ✓`,"ok");
+      }catch(err){ names.delete(uniq); status("⚠ "+err.message,"err"); }
+      renderMedia(); renderSlides(); counts(); setDirty(true); continue;
+    }
+
+    status(`Processing ${i+1}/${list.length}…`,"busy");
     let base64,previewUrl,name=sanitize(file.name);
-    if(isVideo||isGif){ base64=await fileToBase64(file); previewUrl=URL.createObjectURL(file); }
+    if(isGif){ base64=await fileToBase64(file); previewUrl=URL.createObjectURL(file); }
     else{ const c=await compressImage(file); base64=c.base64; previewUrl=c.previewUrl;
       if(c.converted) name=name.replace(/\.(png|webp|jpe?g|bmp|heic|heif|tiff?)$/i,"")+".jpg"; }
-    let uniq=name,n=1; while(names.has(uniq)){ const d=name.lastIndexOf("."); uniq=d>0?name.slice(0,d)+"-"+n+name.slice(d):name+"-"+n; n++; }
-    names.add(uniq);
-    const asset={ name:uniq, path:"images/"+uniq, isVideo, previewUrl, pending:true, contentBase64:base64 };
+    const uniq=uniqueName(name);
+    const asset={ name:uniq, path:"images/"+uniq, isVideo:false, previewUrl, pending:true, contentBase64:base64 };
     assets.push(asset); addToShow(asset);
   }
-  hideStatus(); setDirty(true); renderMedia(); renderSlides(); counts();
+  setDirty(true); renderMedia(); renderSlides(); counts();
 }
 el("file").addEventListener("change",e=>{ addFiles(e.target.files); e.target.value=""; });
 el("drop").addEventListener("click",()=>el("file").click());
@@ -292,7 +323,10 @@ function deleteAsset(path){
   const a=assets.find(x=>x.path===path); if(!a)return;
   const usedIn=Object.values(config.playlists).filter(p=>p.slides.some(s=>s.path===path)).length;
   if(usedIn && !confirm(`This is used in ${usedIn} playlist(s). Delete it and remove it everywhere?`)) return;
-  if(!a.pending) pendingDeletes.add(path);
+  if(a.storage){   // video in Supabase Storage — remove it now
+    fetch("/api/storage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:el("adminPw").value,action:"delete",path})})
+      .then(r=>r.json()).then(d=>status(d&&d.ok?"Video deleted":"⚠ "+((d&&d.error)||"delete failed"),d&&d.ok?"ok":"err")).catch(()=>{});
+  } else if(!a.pending){ pendingDeletes.add(path); }
   assets=assets.filter(x=>x.path!==path);
   Object.values(config.playlists).forEach(p=>{ p.slides=p.slides.filter(s=>s.path!==path); });
   setDirty(true); renderMedia(); renderSlides(); counts();
@@ -486,7 +520,7 @@ async function loadAssets(){
     const res=await fetch("/api/list",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pw})});
     const data=await res.json().catch(()=>({})); if(!res.ok) throw new Error(data.error||("Server "+res.status));
     const pending=assets.filter(a=>a.pending);
-    const committed=(data.files||[]).filter(f=>!pendingDeletes.has(f.path)).map(f=>({name:f.name,path:f.path,isVideo:isVideoName(f.name),previewUrl:f.path,pending:false}));
+    const committed=(data.files||[]).filter(f=>!pendingDeletes.has(f.path)).map(f=>({name:f.name,path:f.path,isVideo:isVideoName(f.name),previewUrl:f.path,pending:false,storage:!!f.storage}));
     const pp=new Set(pending.map(a=>a.path));
     assets=[...committed.filter(c=>!pp.has(c.path)),...pending];
     setConn("ok","Connected"); hideStatus(); renderMedia(); counts();
@@ -516,7 +550,7 @@ function buildContent(){
 async function save(){
   savePrefs(); const usingToken=el("useToken").checked;
   const uploads=assets.filter(a=>a.pending).map(a=>({path:a.path,contentBase64:a.contentBase64}));
-  const deletions=[...pendingDeletes];
+  const deletions=[...pendingDeletes].filter(p=>p.startsWith("images/"));  // storage videos deleted live
   if(!usingToken){ const big=uploads.find(f=>f.contentBase64.length>MAX_BATCH_BYTES);
     if(big){ status(`⚠ "${big.path.split('/').pop()}" is too large (Vercel caps requests at ~4.5 MB). Use a smaller/shorter video.`,"err"); return; } }
   const contentFile={ path:"content.json", contentBase64:b64utf8(JSON.stringify(buildContent(),null,2)) };
@@ -557,7 +591,7 @@ async function commitViaToken(files,deletions){
 }
 
 /* ---------- boot ---------- */
-console.log("Signage Dashboard — build 7 (monitoring)");
+console.log("Signage Dashboard — build 8 (video storage)");
 loadPrefs();
 loadContent();
 if(el("adminPw").value){ loadAssets(); loadScreenStatus(); } else setConn("","Enter your admin password in Connection");
