@@ -1,27 +1,43 @@
 {
-  "fit": "cover",
-  "showClock": true,
-  "tickerLabel": "CRUISE THE CREEK",
-  "tickerText": "Welcome!  •  Kayak & bike rentals daily 9am–6pm  •  Ask us about weekend guided tours  •  Book online at cruisethecreek.com  •",
-  "tickerSpeed": 30,
-  "slides": [
+  "playlists": {
+    "main": {
+      "name": "Main",
+      "fit": "cover",
+      "showClock": true,
+      "tickerLabel": "CRUISE THE CREEK",
+      "tickerText": "Welcome!  •  Kayak & bike rentals daily 9am–6pm  •  Ask us about weekend guided tours  •  Book online at cruisethecreek.com  •",
+      "tickerSpeed": 30,
+      "slides": [
+        {
+          "src": "images/photo1.jpg",
+          "seconds": 8,
+          "caption": "Explore the creek"
+        },
+        {
+          "src": "images/photo2.jpg",
+          "seconds": 8,
+          "caption": "Rentals available now"
+        },
+        {
+          "src": "images/photo3.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/mascot.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/gemini_generated_image_o8ptr1o8ptr1o8pt.jpg",
+          "seconds": 8
+        }
+      ]
+    }
+  },
+  "screens": [
     {
-      "src": "images/photo1.jpg",
-      "seconds": 8,
-      "caption": "Explore the creek"
-    },
-    {
-      "src": "images/photo2.jpg",
-      "seconds": 8,
-      "caption": "Rentals available now"
-    },
-    {
-      "src": "images/photo3.jpg",
-      "seconds": 8
-    },
-    {
-      "src": "images/mascot.jpg",
-      "seconds": 8
+      "id": "1",
+      "name": "Screen 1",
+      "playlist": "main"
     }
   ]
 }
