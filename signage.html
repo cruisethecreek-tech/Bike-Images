@@ -161,6 +161,39 @@
     border-radius: 6px;
     font-size: 2.2vh;
   }
+
+  /* ---------- Screen picker (assign this TV to a screen, once, with the remote) ---------- */
+  #picker {
+    position: fixed;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.94);
+    color: #fff;
+    z-index: 50;
+    cursor: default;
+    padding: 6vh 4vw;
+  }
+  #picker.on { display: flex; }
+  #picker h2 { font-size: 4.4vh; margin-bottom: 1.2vh; }
+  #picker .sub { font-size: 2.4vh; color: #aaa; margin-bottom: 4vh; text-align: center; max-width: 44ch; }
+  #pickerList { width: min(70vw, 900px); }
+  #picker .opt {
+    display: block;
+    width: 100%;
+    padding: 2.4vh 3vw;
+    margin: 1.4vh 0;
+    font-size: 3.2vh;
+    text-align: center;
+    background: #1c1c1c;
+    border: 4px solid transparent;
+    border-radius: 16px;
+    color: #fff;
+  }
+  #picker .opt.sel { border-color: var(--ticker-accent); background: #2c2c2c; }
+  #picker .hint { margin-top: 4.5vh; font-size: 2.1vh; color: #777; text-align: center; }
 </style>
 </head>
 <body>
@@ -183,6 +216,13 @@
        then refresh. This screen updates itself automatically.</p>
   </div>
 
+  <div id="picker">
+    <h2>Which screen is this TV?</h2>
+    <p class="sub">Use the remote ▲ ▼ to highlight, then press OK / Select.</p>
+    <div id="pickerList"></div>
+    <div class="hint">Change this later: press the ☰ (menu) button on the remote.</div>
+  </div>
+
 <script>
 /* =========================================================================
    DIY digital signage — reads content.json and runs a fullscreen playlist.
@@ -201,6 +241,8 @@ const tickerLabel= document.getElementById("tickerLabel");
 const clockEl    = document.getElementById("clock");
 const weatherEl  = document.getElementById("weather");
 const messageEl  = document.getElementById("message");
+const pickerEl   = document.getElementById("picker");
+const pickerList = document.getElementById("pickerList");
 
 /* ---------- Weather (Open-Meteo — free, no API key) ---------- */
 let wxCfg = null, wxTimer = null;
@@ -267,6 +309,7 @@ async function loadConfig() {
     applyConfig(cfg);
     setupWeather(cfg.weather);  // global weather widget
     heartbeat();               // check in with the up-to-date active playlist
+    maybePromptScreen(cfg);    // first run on an unassigned TV: ask which screen this is
   } catch (err) {
     // First run / missing file: show the helper message but keep trying.
     if (!items.length) messageEl.classList.add("on");
@@ -278,9 +321,80 @@ async function loadConfig() {
 // scheduled time even if content.json hasn't changed.
 function scheduleTick() { if (currentConfig) applyConfig(currentConfig); }
 
-// Which screen is this? ?screen=front (matches a screen id in the config).
-// ?playlist=rentals forces a specific playlist (handy for previewing).
-const SCREEN   = new URLSearchParams(location.search).get("screen")   || "";
+/* ---------- Screen picker ----------
+   One white-label app opens one URL, so each TV needs to say which screen it is.
+   The picker lists the screens from content.json; the choice is saved on the TV
+   (localStorage) and reported in the heartbeat. Re-openable with the remote's ☰. */
+let pickerOpen = false, pickerOpts = [], pickerSel = 0, screenPrompted = false;
+
+function pickerOptions(cfg) {
+  const scr = (cfg && Array.isArray(cfg.screens)) ? cfg.screens : [];
+  return scr.map(s => ({ id: String(s.id), name: s.name || ("Screen " + s.id) }));
+}
+function renderPicker() {
+  pickerList.innerHTML = "";
+  pickerOpts.forEach((o, i) => {
+    const b = document.createElement("div");
+    b.className = "opt" + (i === pickerSel ? " sel" : "");
+    b.textContent = o.name;
+    b.addEventListener("click", () => choosePicker(i));
+    pickerList.appendChild(b);
+  });
+}
+function openPicker() {
+  pickerOpts = pickerOptions(currentConfig);
+  if (!pickerOpts.length) return;                 // no screens defined yet — nothing to pick
+  const cur = pickerOpts.findIndex(o => o.id === String(SCREEN));
+  pickerSel = cur >= 0 ? cur : 0;
+  pickerOpen = true;
+  renderPicker();
+  pickerEl.classList.add("on");
+}
+function closePicker() { pickerOpen = false; pickerEl.classList.remove("on"); }
+function choosePicker(i) {
+  const o = pickerOpts[i];
+  if (!o) return;
+  SCREEN = o.id;
+  try { localStorage.setItem("signageScreen", o.id); } catch (_) {}
+  closePicker();
+  lastSignature = "";                             // force a re-render for the newly chosen screen
+  if (currentConfig) applyConfig(currentConfig);
+  heartbeat();
+}
+// First run: if this TV wasn't told its screen by URL and hasn't picked one, and the
+// config defines more than one screen, prompt once. (A single-screen setup needs no pick.)
+function maybePromptScreen(cfg) {
+  if (screenPrompted || URL_SCREEN || savedScreen()) return;
+  if (cfg && Array.isArray(cfg.screens) && cfg.screens.length > 1) { screenPrompted = true; openPicker(); }
+}
+
+// Remote/keyboard control. The ☰ menu button (Fire TV) opens/closes the picker anytime;
+// inside it the D-pad moves the highlight and OK/Select confirms.
+document.addEventListener("keydown", (e) => {
+  if (e.key === "ContextMenu" || e.keyCode === 82) {        // ☰ menu / KEYCODE_MENU
+    e.preventDefault(); pickerOpen ? closePicker() : openPicker(); return;
+  }
+  if (!pickerOpen) return;
+  if (e.key === "ArrowDown" || e.keyCode === 40) {
+    e.preventDefault(); pickerSel = (pickerSel + 1) % pickerOpts.length; renderPicker();
+  } else if (e.key === "ArrowUp" || e.keyCode === 38) {
+    e.preventDefault(); pickerSel = (pickerSel - 1 + pickerOpts.length) % pickerOpts.length; renderPicker();
+  } else if (e.key === "Enter" || e.keyCode === 13 || e.keyCode === 23) {  // OK / DPAD_CENTER
+    e.preventDefault(); choosePicker(pickerSel);
+  } else if (e.key === "Escape" || e.keyCode === 27) {
+    e.preventDefault(); closePicker();
+  }
+});
+
+// Which screen is this?
+//   1. ?screen=front in the URL always wins (used by the dashboard's per-screen links).
+//   2. Otherwise the on-device pick, saved on this TV (see the screen picker below).
+//   3. Otherwise unassigned — the picker prompts once, and we fall back to the first screen.
+// This lets one white-label APK (a single baked URL) serve every TV: each TV picks its
+// screen once with the remote and remembers it.
+function savedScreen(){ try { return localStorage.getItem("signageScreen") || ""; } catch { return ""; } }
+const URL_SCREEN = new URLSearchParams(location.search).get("screen") || "";
+let SCREEN   = URL_SCREEN || savedScreen();
 const FORCE_PL = new URLSearchParams(location.search).get("playlist") || "";
 
 // "HH:MM" -> minutes since midnight (null if malformed).
