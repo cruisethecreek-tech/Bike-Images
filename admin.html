@@ -86,6 +86,9 @@
   .screen .top>div{flex:1 1 160px;}
   .urlrow{display:flex;gap:8px;margin-top:10px;align-items:center;}
   .urlrow input{background:#f7f4ee;font-size:.82rem;}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);}
+  .controls .ctitle{font-size:.8rem;color:var(--muted);margin-right:2px;width:100%;}
+  .controls.note{color:var(--muted);font-size:.82rem;}
   .sched{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px;}
   .sched .sctitle{font-size:.8rem;font-weight:700;color:#5a534a;margin-bottom:8px;}
   .rule{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#faf8f3;border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px;}
@@ -497,8 +500,27 @@ function renderScreens(){
         <div class="sctitle">Schedule (optional) — override the default playlist at set times</div>
         ${rulesHtml}
         <button class="small chip" data-addrule="${i}">＋ Add schedule rule</button>
-      </div>`;
+      </div>
+      ${monitoringConfigured===false
+        ? `<div class="controls note">💡 Remote control (Restart, Blank, Takeover…) turns on once Supabase monitoring is set up — see SIGNAGE-SETUP.md</div>`
+        : `<div class="controls">
+        <span class="ctitle">Remote control this TV — applies within ~15 seconds:</span>
+        <button class="small chip" data-cmd="restart" data-sid="${s.id}">↻ Restart app</button>
+        <button class="small chip" data-cmd="refresh" data-sid="${s.id}">⟳ Refresh now</button>
+        <button class="small chip" data-cmd="blank" data-sid="${s.id}">◐ Blank (off)</button>
+        <button class="small chip" data-cmd="wake" data-sid="${s.id}">☀ Wake (on)</button>
+        <button class="small chip" data-cmd="takeover" data-sid="${s.id}">📢 Takeover…</button>
+        <button class="small ghost" data-cmd="endtakeover" data-sid="${s.id}">End takeover</button>
+        <button class="small danger" data-cmd="clear" data-sid="${s.id}">Clear data &amp; re-pick</button>
+      </div>`}`;
     box.appendChild(div);
+  });
+  box.querySelectorAll("[data-cmd]").forEach(b=>b.onclick=e=>{
+    const sid=e.currentTarget.dataset.sid, cmd=e.currentTarget.dataset.cmd;
+    if(cmd==="takeover"){ const m=prompt("Message to show fullscreen on this TV right now:"); if(m==null||!m.trim())return; sendCommand(sid,"takeover:"+m.trim()); return; }
+    if(cmd==="restart" && !confirm("Restart the signage app on screen "+sid+"? The TV goes black for a moment, then reloads."))return;
+    if(cmd==="clear" && !confirm("Clear this TV's saved data (including which screen it is) and reload? It will ask which screen it is again."))return;
+    sendCommand(sid,cmd);
   });
   box.querySelectorAll("input[data-sk],select[data-sk]").forEach(inp=>inp.addEventListener("input",e=>{
     config.screens[+e.target.dataset.i][e.target.dataset.sk]=e.target.value; setDirty(true); }));
@@ -517,6 +539,19 @@ function renderScreens(){
   box.querySelectorAll("[data-rmr]").forEach(b=>b.onclick=e=>{ config.screens[+e.target.dataset.rmr].rules.splice(+e.target.dataset.j,1); setDirty(true); renderScreens(); });
 }
 el("addScreen").onclick=()=>{ const id=nextScreenId(); config.screens.push({id,name:"Screen "+id,playlist:curPl||Object.keys(config.playlists)[0],rules:[]}); setDirty(true); renderScreens(); counts(); };
+
+// Push a remote-control command to one screen. The TV picks it up on its next check-in.
+async function sendCommand(sid,command){
+  const pw=el("adminPw").value;
+  if(!pw){ status("Enter your admin password in the Connection tab first.","err"); return; }
+  status("Sending command…","busy");
+  try{
+    const r=await fetch("/api/command",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pw,screen:String(sid),command})});
+    const d=await r.json().catch(()=>({}));
+    if(r.ok && d.ok){ status("✅ Sent to Screen "+sid+" — applies within ~15 seconds","ok"); }
+    else{ status(d.error||("Command failed ("+r.status+")"),"err"); }
+  }catch(e){ status("Command failed: "+(e.message||e),"err"); }
+}
 
 /* ---------- ticker/display inputs -> current playlist ---------- */
 el("fit").addEventListener("change",()=>{ pl().fit=el("fit").value; setDirty(true); });

@@ -251,9 +251,18 @@ create table screen_status (
   screen_id  text primary key,
   last_seen  timestamptz not null default now(),
   playlist   text,
-  user_agent text
+  user_agent text,
+  command    text,
+  command_id text
 );
 ```
+
+> **Already made this table before remote control existed?** Run this once to add the two
+> new columns (safe to run even if they already exist):
+> ```sql
+> alter table screen_status add column if not exists command text;
+> alter table screen_status add column if not exists command_id text;
+> ```
 
 ### 3. Get your keys
 Supabase → **Project Settings → API**:
@@ -270,8 +279,21 @@ Your project → **Settings → Environment Variables** → add:
 Then **redeploy**. That's it — within a minute of your screens loading, the Screens tab
 lights up with live status.
 
-> The service_role key stays server-side (in `api/heartbeat.mjs` and `api/screens.mjs`);
-> it's never exposed in the browser. Screens check in through `/api/heartbeat`.
+> The service_role key stays server-side (in `api/heartbeat.mjs`, `api/screens.mjs`, and
+> `api/command.mjs`); it's never exposed in the browser. Screens check in through
+> `/api/heartbeat`, which also hands back any remote-control command queued for that screen.
+
+### Remote control (Restart, Blank, Takeover…)
+Once monitoring is on, each screen in the **Screens** tab gets a row of buttons that push a
+command to that TV (it applies within ~15 seconds):
+- **Restart app** — reloads the display (unsticks a frozen TV).
+- **Refresh now** — pull the newest content immediately instead of waiting for the next check.
+- **Blank (off) / Wake (on)** — black the screen out and back. (A soft "screen off" — a
+  sideloaded Fire TV app can't cut the TV's actual power, but the screen goes fully black.)
+- **Takeover…** — instantly show a fullscreen message on that TV (e.g. "Back in 10 minutes");
+  **End takeover** returns it to normal.
+- **Clear data & re-pick** — wipes the TV's saved data (including which screen it is) and
+  reloads, so it asks "Which screen is this TV?" again.
 
 ---
 
