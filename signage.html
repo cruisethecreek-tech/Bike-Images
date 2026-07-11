@@ -236,6 +236,7 @@
     <p class="sub">Use the remote ▲ ▼ to highlight, then press OK / Select.</p>
     <div id="pickerList"></div>
     <div class="hint">Change this later: press the ☰ (menu) button on the remote.</div>
+    <div class="hint" id="pickerDiag" style="margin-top:1.5vh;font-size:1.7vh;color:#555;"></div>
   </div>
 
   <div id="blank"></div>
@@ -255,7 +256,7 @@ const DEFAULT_SECS = 8;           // seconds per image if not specified
 // Bump this whenever signage.html changes, and set the same value in signage-version.json.
 // A running TV compares the two and reloads itself to pull the new code — so feature
 // updates reach every TV automatically instead of needing a manual relaunch.
-const APP_VERSION  = "2026-07-11-preload1";
+const APP_VERSION  = "2026-07-11-preload2";
 async function checkForUpdate() {
   try {
     const r = await fetch("signage-version.json?t=" + Date.now(), { cache: "no-store" });
@@ -380,6 +381,21 @@ function renderPicker() {
     pickerList.appendChild(b);
   });
 }
+// A one-line status the owner can read off the TV (press ☰): version + video cache/buffer.
+function diagText() {
+  const vids = items.filter(i => i.isVideo).length;
+  let cached = 0, buffering = 0;
+  slides.forEach((el, i) => {
+    const it = items[i]; if (!it || !it.isVideo) return;
+    const v = el.querySelector("video"); if (!v) return;
+    if (String(v.src).startsWith("blob:") || v._blobApplied) cached++;
+    if (v._buffering) buffering++;
+  });
+  let s = "v" + APP_VERSION + " · screen " + (SCREEN || "?") + " · sync " + (syncMode ? "on" : "off");
+  if (vids) s += " · videos in memory " + cached + "/" + vids + (buffering ? " · buffering " + buffering : "");
+  return s;
+}
+let diagTimer = null;
 function openPicker() {
   pickerOpts = pickerOptions(currentConfig);
   if (!pickerOpts.length) return;                 // no screens defined yet — nothing to pick
@@ -388,8 +404,10 @@ function openPicker() {
   pickerOpen = true;
   renderPicker();
   pickerEl.classList.add("on");
+  const diag = document.getElementById("pickerDiag");
+  if (diag) { diag.textContent = diagText(); clearInterval(diagTimer); diagTimer = setInterval(() => { diag.textContent = diagText(); }, 1500); }
 }
-function closePicker() { pickerOpen = false; pickerEl.classList.remove("on"); }
+function closePicker() { pickerOpen = false; pickerEl.classList.remove("on"); clearInterval(diagTimer); }
 function choosePicker(i) {
   const o = pickerOpts[i];
   if (!o) return;
@@ -611,11 +629,14 @@ function swapVideoSrc(v, url) {
 // Apply a ready blob, but don't yank the source from under the on-screen clip — defer that
 // swap until it's off-screen so there's no visible flicker.
 function applyBlob(v, url) {
-  if (!v) return;
+  if (!v || !v.isConnected) return;                       // element from an old playlist — skip
   const slide = v.closest(".slide");
   if (slide && slide.classList.contains("active")) { v._pendingBlob = url; return; }
   swapVideoSrc(v, url);
 }
+// Download clips one at a time so they don't split the TV's Wi-Fi and end up all buffering.
+let _preloadChain = Promise.resolve();
+function queuePreload(src, v) { _preloadChain = _preloadChain.then(() => preloadVideo(src, v)); }
 async function preloadVideo(src, v) {
   if (videoBlobs[src]) { applyBlob(v, videoBlobs[src]); return; }
   try {
@@ -661,7 +682,10 @@ function rebuildSlides() {
       v.src = it.src;
       v.muted = true;
       v.playsInline = true;
-      v.preload = "auto";
+      // "metadata" only: grab enough to know the length + first frame, but DON'T let the
+      // element stream the whole file — the in-memory preloader downloads it instead, so
+      // the two don't fight over Wi-Fi.
+      v.preload = "metadata";
       // Learn the clip's real length so the synced cycle is exact (same file → same
       // length on every TV). Re-align once we know it.
       v.addEventListener("loadedmetadata", () => {
@@ -670,8 +694,13 @@ function rebuildSlides() {
           if (syncMode) showSyncSlide(false);
         }
       });
+      // Track buffering so the on-TV status readout can show it.
+      v.addEventListener("waiting", () => { v._buffering = true; });
+      v.addEventListener("stalled", () => { v._buffering = true; });
+      v.addEventListener("playing", () => { v._buffering = false; });
+      v.addEventListener("canplaythrough", () => { v._buffering = false; });
       el.appendChild(v);
-      preloadVideo(it.src, v);   // download to memory in the background; swap in when ready
+      queuePreload(it.src, v);   // download to memory (one clip at a time); swap in when ready
 
     } else {
       const img = document.createElement("img");
