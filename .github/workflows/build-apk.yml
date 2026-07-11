@@ -11,6 +11,9 @@ on:
       - 'signage-app/**'
       - '.github/workflows/build-apk.yml'
 
+permissions:
+  contents: write   # needed to publish the APK as a GitHub Release
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -49,3 +52,26 @@ jobs:
           name: cruise-the-creek-signage-apk
           path: dist/cruise-the-creek-signage.apk
           if-no-files-found: error
+
+      # Publish the APK as a GitHub Release so it has a permanent, login-free,
+      # direct download URL the Fire Stick "Downloader" app can open by link:
+      #   https://github.com/<owner>/<repo>/releases/latest/download/cruise-the-creek-signage.apk
+      # Each build creates a new release tagged build-<run number>; GitHub serves the
+      # newest one as "latest", so the URL above always points at the freshest APK.
+      - name: Publish APK release
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Signage APK build ${{ github.run_number }}
+          body: |
+            Cruise the Creek signage app — automatic build.
+
+            Download **cruise-the-creek-signage.apk** below, or sideload directly via the
+            Fire Stick Downloader app using this permanent link (always the newest build):
+
+            https://github.com/${{ github.repository }}/releases/latest/download/cruise-the-creek-signage.apk
+
+            Opens `https://bike-images.vercel.app/signage.html` on launch.
+          files: dist/cruise-the-creek-signage.apk
+          make_latest: true
