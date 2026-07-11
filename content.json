@@ -29,6 +29,9 @@
         {
           "src": "images/gemini_generated_image_o8ptr1o8ptr1o8pt.jpg",
           "seconds": 8
+        },
+        {
+          "src": "https://hqkdphrtxjhqestnvome.supabase.co/storage/v1/object/public/Store Media/videos/velotric-bike-deck.mp4"
         }
       ]
     }
