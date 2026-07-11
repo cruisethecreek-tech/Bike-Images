@@ -11,13 +11,50 @@ const MAX_BYTES = 60 * 1024 * 1024;   // 60 MB safety cap
 
 function sanitize(n){ return (n || "").toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "file"; }
 
-// Turn a Google Drive share link into a direct-download URL; pass anything else through.
-function normalizeUrl(u){
-  if (/drive\.google\.com/.test(u)) {
-    const m = u.match(/\/d\/([a-zA-Z0-9_-]+)/) || u.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-    if (m) return "https://drive.google.com/uc?export=download&id=" + m[1];
+const UA = { "User-Agent": "Mozilla/5.0 (compatible; diy-signage-import/1.0)" };
+function isHtml(r){ return (r.headers.get("content-type") || "").toLowerCase().includes("text/html"); }
+
+// Extract a Google Drive file id from any of its share-link forms.
+function driveId(u){
+  if (!/drive\.google\.com|docs\.google\.com/.test(u)) return null;
+  const m = u.match(/\/d\/([a-zA-Z0-9_-]+)/) || u.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+  return m ? m[1] : null;
+}
+
+// Google Drive fights direct downloads: the plain uc link often returns an HTML
+// interstitial. Try the current download host with a confirm token, follow the
+// interstitial's token, then fall back to Drive's image renderer for photos.
+async function fetchDrive(id){
+  let r = await fetch(`https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=t`, { redirect: "follow", headers: UA });
+  if (r.ok && !isHtml(r)) return r;
+  if (r.ok && isHtml(r)) {
+    const html = await r.text();
+    const conf = html.match(/[?&;]confirm=([0-9A-Za-z_-]+)/) || html.match(/name="confirm"\s+value="([^"]+)"/);
+    const uuid = html.match(/name="uuid"\s+value="([^"]+)"/);
+    if (conf) {
+      let u = `https://drive.usercontent.google.com/download?id=${id}&export=download&confirm=${conf[1]}`;
+      if (uuid) u += `&uuid=${uuid[1]}`;
+      const r2 = await fetch(u, { redirect: "follow", headers: UA });
+      if (r2.ok && !isHtml(r2)) return r2;
+    }
   }
-  return u;
+  // Photo fallback: the thumbnail renderer returns real image bytes for public files.
+  const t = await fetch(`https://drive.google.com/thumbnail?id=${id}&sz=w1920`, { redirect: "follow", headers: UA });
+  if (t.ok && (t.headers.get("content-type") || "").toLowerCase().startsWith("image/")) return t;
+  return null;
+}
+
+async function fetchMedia(raw){
+  const id = driveId(raw);
+  if (id) {
+    const r = await fetchDrive(id);
+    if (!r) throw new Error("Google Drive wouldn't release the file. Make sure it's shared “Anyone with the link”, and it's a photo/video under ~60 MB.");
+    return r;
+  }
+  const r = await fetch(raw, { redirect: "follow", headers: UA });
+  if (!r.ok) throw new Error("Couldn't fetch the link (" + r.status + ").");
+  if (isHtml(r)) throw new Error("That link returned a web page, not a file. Use a direct link to the image/video itself.");
+  return r;
 }
 
 const EXT = {
@@ -45,17 +82,10 @@ export default async function handler(req, res) {
 
   const raw = String(body.url || "").trim();
   if (!/^https?:\/\//i.test(raw)) { res.status(400).json({ error: "Enter a valid http(s) link." }); return; }
-  const target = normalizeUrl(raw);
 
   try {
-    const r = await fetch(target, { redirect: "follow", headers: { "User-Agent": "Mozilla/5.0 diy-signage-import" } });
-    if (!r.ok) throw new Error("Couldn't fetch the link (" + r.status + ").");
+    const r = await fetchMedia(raw);
     let ctype = (r.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
-
-    // Google Drive returns an HTML page for big files / bad sharing instead of the file.
-    if (/text\/html/.test(ctype)) {
-      throw new Error("That link returned a web page, not a file. Make sure the Drive file is shared “Anyone with the link” (and under ~60 MB).");
-    }
     const isImage = ctype.startsWith("image/");
     const isVideo = ctype.startsWith("video/");
     if (!isImage && !isVideo) throw new Error("Link isn't an image or video (got " + (ctype || "unknown") + ").");
@@ -69,7 +99,7 @@ export default async function handler(req, res) {
     const cd = r.headers.get("content-disposition") || "";
     const mn = cd.match(/filename\*?=(?:UTF-8''|")?([^\";]+)/i);
     if (mn) name = decodeURIComponent(mn[1]);
-    if (!name) { try { name = decodeURIComponent(new URL(target).pathname.split("/").pop() || ""); } catch {} }
+    if (!name && !driveId(raw)) { try { name = decodeURIComponent(new URL(raw).pathname.split("/").pop() || ""); } catch {} }
     name = sanitize(name);
     const ext = EXT[ctype] || (name.match(/\.[a-z0-9]+$/i) ? "" : ".bin");
     if (ext && !name.toLowerCase().endsWith(ext)) name = name.replace(/\.[a-z0-9]+$/i, "") + ext;
