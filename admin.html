@@ -106,7 +106,7 @@
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand">Signage <span class="build">build 13 ✓</span></div>
+    <div class="brand">Signage <span class="build">build 14 ✓</span></div>
     <div class="status"><span class="dot" id="connDot"></span><span id="connLabel">Not connected</span></div>
     <span class="spacer"></span>
     <span id="dirty"></span>
@@ -235,7 +235,7 @@
 <div id="status"></div>
 
 <script>
-/* ===================== Signage Dashboard — build 13 (Cloudflare R2) ===================== */
+/* ===================== Signage Dashboard — build 14 (R2 self-test) ===================== */
 const GH="https://api.github.com";
 const MAX_EDGE=1920, JPEG_QUALITY=0.82, MAX_BATCH_BYTES=3_500_000;
 const ONLINE_MS=3*60*1000;   // seen within 3 min = online
@@ -558,7 +558,19 @@ function loadPrefs(){ el("adminPw").value=sessionStorage.getItem("sg_pw")||"";
 function savePrefs(){ sessionStorage.setItem("sg_pw",el("adminPw").value); sessionStorage.setItem("sg_tok",el("ghToken").value);
   localStorage.setItem("sg_repo",el("ghRepo").value.trim()); localStorage.setItem("sg_branch",el("ghBranch").value.trim()); localStorage.setItem("sg_useTok",el("useToken").checked?"1":"0"); }
 el("useToken").addEventListener("change",e=>{ el("tokenFields").style.display=e.target.checked?"block":"none"; hideStatus(); });
-el("checkBtn").addEventListener("click",()=>{ savePrefs(); loadAssets(); loadScreenStatus(); });
+el("checkBtn").addEventListener("click",()=>{ savePrefs(); loadAssets(); loadScreenStatus(); testR2(); });
+
+// Surface the exact R2 error (bad key / permission / bucket) instead of a browser CORS mask.
+async function testR2(){
+  const pw=el("adminPw").value; if(!pw||el("useToken").checked) return;
+  try{
+    const r=await fetch("/api/r2",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pw,action:"test"})});
+    const d=await r.json().catch(()=>({}));
+    if(d.configured===false) return;               // R2 not set up — fine
+    if(d.ok) status("✅ R2 storage connected ("+d.bucket+")","ok");
+    else status("⚠ R2 error — "+(d.error||("status "+d.status))+". Check R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY / token permissions.","err");
+  }catch(_){}
+}
 
 /* ---------- screen monitoring ---------- */
 async function loadScreenStatus(){
@@ -686,7 +698,7 @@ async function commitViaToken(files,deletions){
 }
 
 /* ---------- boot ---------- */
-console.log("Signage Dashboard — build 13 (Cloudflare R2)");
+console.log("Signage Dashboard — build 14 (R2 self-test)");
 loadPrefs();
 loadContent();
 if(el("adminPw").value){ loadAssets(); loadScreenStatus(); } else setConn("","Enter your admin password in Connection");
