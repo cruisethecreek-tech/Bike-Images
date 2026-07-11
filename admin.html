@@ -8,22 +8,17 @@
   :root{
     --bg:#f0ece3; --panel:#fff; --ink:#242424; --muted:#7a736a; --line:#e3ddd0;
     --accent:#1f6f8b; --accent-ink:#fff; --accent-soft:#e3eef2; --yellow:#ffcb05;
-    --ok:#2ecc71; --err:#c0392b; --sidebar:#20313a; --sidebar-ink:#cdd8dd;
-    --radius:14px;
+    --ok:#2ecc71; --err:#c0392b; --sidebar:#20313a; --sidebar-ink:#cdd8dd; --radius:14px;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   html,body{height:100%;}
-  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-       background:var(--bg);color:var(--ink);line-height:1.45;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.45;}
   button{font:inherit;cursor:pointer;border:0;border-radius:10px;font-weight:600;}
   input,select,textarea{font:inherit;}
   a{color:var(--accent);}
-
-  /* ---------- Shell ---------- */
   .app{display:flex;flex-direction:column;height:100vh;}
-  .topbar{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--panel);
-          border-bottom:1px solid var(--line);flex:0 0 auto;flex-wrap:wrap;}
-  .brand{font-size:1.15rem;font-weight:800;letter-spacing:.2px;}
+  .topbar{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line);flex:0 0 auto;flex-wrap:wrap;}
+  .brand{font-size:1.15rem;font-weight:800;}
   .brand .build{font-size:.62rem;color:var(--ok);font-weight:700;vertical-align:middle;margin-left:6px;}
   .status{display:flex;align-items:center;gap:7px;font-size:.85rem;color:var(--muted);}
   .dot{width:10px;height:10px;border-radius:50%;background:#c9c2b6;flex:0 0 auto;}
@@ -33,31 +28,21 @@
   button.primary{background:var(--accent);color:var(--accent-ink);padding:9px 16px;}
   button.ghost{background:#ece6da;color:#3a352d;padding:9px 14px;}
   button.primary:disabled{opacity:.5;cursor:not-allowed;}
-
   .body{flex:1 1 auto;display:flex;min-height:0;}
-  /* ---------- Sidebar ---------- */
-  .sidebar{flex:0 0 208px;background:var(--sidebar);color:var(--sidebar-ink);
-           padding:14px 10px;display:flex;flex-direction:column;gap:4px;overflow:auto;}
-  .sidebar .navbtn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;
-        background:transparent;color:var(--sidebar-ink);padding:11px 12px;border-radius:10px;font-weight:600;}
+  .sidebar{flex:0 0 208px;background:var(--sidebar);color:var(--sidebar-ink);padding:14px 10px;display:flex;flex-direction:column;gap:4px;overflow:auto;}
+  .sidebar .navbtn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;color:var(--sidebar-ink);padding:11px 12px;border-radius:10px;font-weight:600;}
   .sidebar .navbtn .ico{width:20px;text-align:center;}
   .sidebar .navbtn:hover{background:rgba(255,255,255,.07);}
   .sidebar .navbtn.active{background:var(--accent);color:#fff;}
-  .sidebar .navbtn .count{margin-left:auto;font-size:.72rem;background:rgba(255,255,255,.18);
-        padding:1px 8px;border-radius:20px;}
+  .sidebar .navbtn .count{margin-left:auto;font-size:.72rem;background:rgba(255,255,255,.18);padding:1px 8px;border-radius:20px;}
   .sidebar .hint{margin-top:auto;font-size:.72rem;color:#7f8f97;padding:10px 12px;}
-
-  /* ---------- Content ---------- */
   .content{flex:1 1 auto;overflow:auto;padding:22px;}
-  .tab{display:none;max-width:900px;margin:0 auto;}
-  .tab.active{display:block;}
-  .tab h2{font-size:1.25rem;margin-bottom:2px;}
-  .tab .lede{color:var(--muted);font-size:.9rem;margin-bottom:18px;}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-        padding:16px;margin-bottom:16px;box-shadow:0 2px 14px rgba(0,0,0,.04);}
+  .inner{max-width:900px;margin:0 auto;}
+  .tab{display:none;} .tab.active{display:block;}
+  .tab h2{font-size:1.25rem;margin-bottom:2px;} .tab .lede{color:var(--muted);font-size:.9rem;margin-bottom:16px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:16px;box-shadow:0 2px 14px rgba(0,0,0,.04);}
   label{display:block;font-size:.82rem;font-weight:600;color:#5a534a;margin:10px 0 4px;}
-  input[type=text],input[type=password],input[type=number],textarea,select{
-    width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);}
+  input[type=text],input[type=password],input[type=number],textarea,select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);}
   textarea{min-height:70px;resize:vertical;}
   .row{display:flex;gap:12px;flex-wrap:wrap;} .row>div{flex:1 1 150px;}
   .check{display:flex;align-items:center;gap:8px;margin-top:12px;} .check input{width:18px;height:18px;} .check label{margin:0;}
@@ -66,10 +51,13 @@
   button.chip{background:var(--accent-soft);color:var(--accent);}
   button.danger{background:#f6e4e2;color:var(--err);}
   button.solid{background:var(--accent);color:#fff;}
-
-  /* ---------- Media grid ---------- */
-  .drop{border:2px dashed var(--line);border-radius:12px;padding:22px;text-align:center;color:var(--muted);
-        background:#faf8f3;cursor:pointer;transition:.15s;margin-bottom:16px;}
+  /* playlist bar */
+  #plbar{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;margin-bottom:16px;flex-wrap:wrap;}
+  #plbar .lbl{font-weight:700;font-size:.85rem;color:#5a534a;}
+  #plbar select{width:auto;min-width:150px;}
+  #plbar .grow{flex:1;}
+  /* media grid */
+  .drop{border:2px dashed var(--line);border-radius:12px;padding:22px;text-align:center;color:var(--muted);background:#faf8f3;cursor:pointer;transition:.15s;margin-bottom:16px;}
   .drop.over{border-color:var(--accent);background:var(--accent);color:#fff;}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;}
   .asset{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;}
@@ -79,41 +67,32 @@
   .asset .nm{font-size:.75rem;color:var(--muted);word-break:break-all;line-height:1.25;}
   .asset .tags{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
   .badge{font-size:.66rem;font-weight:700;padding:2px 7px;border-radius:20px;}
-  .badge.inshow{background:#e5f4ea;color:#1e7d43;}
-  .badge.new{background:#fdf4d6;color:#8a6d00;}
-  .asset .acts{display:flex;gap:6px;margin-top:2px;}
-  .asset .acts button{flex:1;}
+  .badge.inshow{background:#e5f4ea;color:#1e7d43;} .badge.new{background:#fdf4d6;color:#8a6d00;}
+  .asset .acts{display:flex;gap:6px;} .asset .acts button{flex:1;}
   .empty{text-align:center;color:var(--muted);padding:30px 10px;}
-
-  /* ---------- Slides list ---------- */
   #slideList{display:flex;flex-direction:column;gap:10px;}
   .slide{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--panel);}
   .slide .thumb{width:104px;height:66px;border-radius:8px;object-fit:cover;background:#ddd;flex:0 0 auto;}
   .slide .thumb.vid{display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#888;background:#2a2a2a;}
-  .slide .body{flex:1 1 auto;min-width:0;}
-  .slide .nm{font-size:.76rem;color:var(--muted);word-break:break-all;margin-bottom:6px;}
+  .slide .body{flex:1 1 auto;min-width:0;} .slide .nm{font-size:.76rem;color:var(--muted);word-break:break-all;margin-bottom:6px;}
   .slide .fields{display:flex;gap:8px;flex-wrap:wrap;} .slide .fields>div{flex:1 1 120px;}
   .slide .ctrls{display:flex;flex-direction:column;gap:6px;flex:0 0 auto;}
-
-  /* ---------- Toast ---------- */
-  #status{position:fixed;left:50%;transform:translate(-50%,140%);bottom:18px;padding:12px 20px;border-radius:12px;
-          font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.18);transition:.25s;z-index:60;max-width:90vw;}
+  /* screens */
+  .screen{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--panel);margin-bottom:12px;}
+  .screen .top{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+  .screen .top>div{flex:1 1 160px;}
+  .urlrow{display:flex;gap:8px;margin-top:10px;align-items:center;}
+  .urlrow input{background:#f7f4ee;font-size:.82rem;}
+  #status{position:fixed;left:50%;transform:translate(-50%,140%);bottom:18px;padding:12px 20px;border-radius:12px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.18);transition:.25s;z-index:60;max-width:90vw;}
   #status.show{transform:translate(-50%,0);}
-  #status.ok{background:#e5f4ea;color:#1e7d43;} #status.err{background:#f9e4e2;color:var(--err);}
-  #status.busy{background:#eef3f6;color:var(--accent);}
-
-  @media(max-width:760px){
-    .body{flex-direction:column;}
-    .sidebar{flex:0 0 auto;flex-direction:row;overflow-x:auto;padding:8px;}
-    .sidebar .navbtn{width:auto;white-space:nowrap;} .sidebar .hint{display:none;}
-    .content{padding:16px;}
-  }
+  #status.ok{background:#e5f4ea;color:#1e7d43;} #status.err{background:#f9e4e2;color:var(--err);} #status.busy{background:#eef3f6;color:var(--accent);}
+  @media(max-width:760px){ .body{flex-direction:column;} .sidebar{flex:0 0 auto;flex-direction:row;overflow-x:auto;padding:8px;} .sidebar .navbtn{width:auto;white-space:nowrap;} .sidebar .hint{display:none;} .content{padding:16px;} }
 </style>
 </head>
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand">Signage <span class="build">build 4 ✓</span></div>
+    <div class="brand">Signage <span class="build">build 5 ✓</span></div>
     <div class="status"><span class="dot" id="connDot"></span><span id="connLabel">Not connected</span></div>
     <span class="spacer"></span>
     <span id="dirty"></span>
@@ -126,60 +105,71 @@
       <button class="navbtn active" data-tab="media"><span class="ico">🖼</span> Media<span class="count" id="cMedia">0</span></button>
       <button class="navbtn" data-tab="slides"><span class="ico">🎬</span> Slideshow<span class="count" id="cSlides">0</span></button>
       <button class="navbtn" data-tab="ticker"><span class="ico">📰</span> Ticker &amp; Display</button>
+      <button class="navbtn" data-tab="screens"><span class="ico">📺</span> Screens<span class="count" id="cScreens">0</span></button>
       <button class="navbtn" data-tab="conn"><span class="ico">🔑</span> Connection</button>
-      <div class="hint">Upload → add to slideshow → Save &amp; publish. Screens refresh within a minute.</div>
+      <div class="hint">Build a playlist → assign it to a screen → Save. Each TV shows its own playlist.</div>
     </nav>
 
-    <main class="content">
+    <main class="content"><div class="inner">
+      <!-- Playlist bar (media / slides / ticker) -->
+      <div id="plbar">
+        <span class="lbl">Editing playlist:</span>
+        <select id="plSelect"></select>
+        <button class="small chip" id="plNew">＋ New</button>
+        <button class="small ghost" id="plRename">Rename</button>
+        <button class="small danger" id="plDelete">Delete</button>
+        <span class="grow"></span>
+      </div>
+
       <!-- MEDIA -->
       <section id="tab-media" class="tab active">
         <h2>Media Library</h2>
-        <p class="lede">Every photo and video in your signage. Upload once, reuse anywhere.</p>
+        <p class="lede">Every photo and video, shared across all playlists. Upload once, reuse anywhere.</p>
         <div id="drop" class="drop">
           <strong>Drop photos or videos here</strong><br>
           <span class="muted">or click to choose files — big photos are auto-shrunk for you</span>
           <input type="file" id="file" accept="image/*,video/*" multiple hidden />
         </div>
         <div id="mediaGrid" class="grid"></div>
-        <div id="mediaEmpty" class="empty" style="display:none;">
-          No media yet. Drop some photos above, or enter your password in <strong>Connection</strong> to load your library.
-        </div>
+        <div id="mediaEmpty" class="empty" style="display:none;">No media yet. Drop some photos above, or enter your password in <strong>Connection</strong> to load your library.</div>
       </section>
 
       <!-- SLIDES -->
       <section id="tab-slides" class="tab">
         <h2>Slideshow</h2>
-        <p class="lede">The order your screens play. Drag timing, add captions, reorder with ↑ ↓.</p>
+        <p class="lede">The order this playlist plays. Add captions, timing, reorder with ↑ ↓.</p>
         <div id="slideList"></div>
-        <div id="slidesEmpty" class="empty">
-          No slides yet. Go to <strong>🖼 Media</strong> and click <em>Add to slideshow</em> on the photos you want.
-        </div>
+        <div id="slidesEmpty" class="empty">No slides in this playlist. Go to <strong>🖼 Media</strong> and click <em>Add to show</em> on the photos you want.</div>
       </section>
 
       <!-- TICKER & DISPLAY -->
       <section id="tab-ticker" class="tab">
         <h2>Ticker &amp; Display</h2>
-        <p class="lede">The scrolling message and how images fill the screen.</p>
+        <p class="lede">Scrolling message and image fit — set per playlist.</p>
         <div class="card">
-          <div class="row">
-            <div>
-              <label>Image fit</label>
-              <select id="fit">
-                <option value="cover">Cover — fill screen (may crop)</option>
-                <option value="contain">Contain — show whole image (letterbox)</option>
-              </select>
-            </div>
-          </div>
+          <div class="row"><div>
+            <label>Image fit</label>
+            <select id="fit"><option value="cover">Cover — fill screen (may crop)</option><option value="contain">Contain — show whole image (letterbox)</option></select>
+          </div></div>
           <div class="check"><input type="checkbox" id="showClock" /><label for="showClock">Show clock in the corner</label></div>
         </div>
         <div class="card">
           <label>Ticker label (the yellow badge)</label>
           <input type="text" id="tickerLabel" placeholder="CRUISE THE CREEK" />
           <label>Ticker text (leave blank to hide the ticker)</label>
-          <textarea id="tickerText" placeholder="Welcome!  •  Rentals daily 9am–6pm  •  Book at cruisethecreek.com  •"></textarea>
+          <textarea id="tickerText" placeholder="Welcome!  •  Rentals daily 9am–6pm  •"></textarea>
           <label>Ticker speed (seconds per pass — higher is slower)</label>
           <input type="number" id="tickerSpeed" min="8" max="120" placeholder="30" style="max-width:160px;" />
         </div>
+      </section>
+
+      <!-- SCREENS -->
+      <section id="tab-screens" class="tab">
+        <h2>Screens</h2>
+        <p class="lede">Assign a playlist to each TV. Point that TV's kiosk browser at its URL.</p>
+        <div id="screenList"></div>
+        <button class="chip" id="addScreen">＋ Add screen</button>
+        <p class="muted" style="margin-top:14px;">Tip: set each Fire Stick's start URL to its screen link below. The white-label app is baked to one URL, so for different content per TV use a kiosk browser (Fully Kiosk / TV Bro) with these links.</p>
       </section>
 
       <!-- CONNECTION -->
@@ -189,95 +179,86 @@
         <div class="card">
           <label>Admin password</label>
           <input type="password" id="adminPw" placeholder="the ADMIN_PASSWORD you set in Vercel" autocomplete="current-password" />
-          <p class="muted" style="margin:8px 0 0;">Secure mode: saves through this site's <code>/api/commit</code> function. Your GitHub token stays on the server.</p>
+          <p class="muted" style="margin:8px 0 0;">Secure mode: saves through this site's <code>/api/commit</code>. Your GitHub token stays on the server.</p>
           <button id="checkBtn" class="chip small" type="button" style="margin-top:12px;">Check connection &amp; load media</button>
           <details style="margin-top:14px;">
             <summary style="cursor:pointer;font-weight:600;color:var(--accent);">Advanced: use a GitHub token directly</summary>
-            <p class="muted" style="margin-top:8px;">Only for local use with no server function. Leave this off when using the deployed dashboard.</p>
+            <p class="muted" style="margin-top:8px;">Only for local use. Leave off when using the deployed dashboard.</p>
             <div class="check"><input type="checkbox" id="useToken" /><label for="useToken">Use a GitHub token instead of the admin password</label></div>
             <div id="tokenFields" style="display:none;">
-              <label>GitHub token</label>
-              <input type="password" id="ghToken" placeholder="github_pat_..." autocomplete="off" />
-              <div class="row">
-                <div><label>Repository (owner/name)</label><input type="text" id="ghRepo" placeholder="cruisethecreek-tech/Bike-Images" /></div>
-                <div><label>Branch</label><input type="text" id="ghBranch" placeholder="main" /></div>
-              </div>
+              <label>GitHub token</label><input type="password" id="ghToken" placeholder="github_pat_..." autocomplete="off" />
+              <div class="row"><div><label>Repository (owner/name)</label><input type="text" id="ghRepo" placeholder="cruisethecreek-tech/Bike-Images" /></div>
+              <div><label>Branch</label><input type="text" id="ghBranch" placeholder="main" /></div></div>
             </div>
           </details>
         </div>
       </section>
-    </main>
+    </div></main>
   </div>
 </div>
 <div id="status"></div>
 
 <script>
-/* ===================== Signage Dashboard — build 4 ===================== */
-const GH = "https://api.github.com";
-const MAX_EDGE = 1920, JPEG_QUALITY = 0.82, MAX_BATCH_BYTES = 3_500_000;
+/* ===================== Signage Dashboard — build 5 (playlists) ===================== */
+const GH="https://api.github.com";
+const MAX_EDGE=1920, JPEG_QUALITY=0.82, MAX_BATCH_BYTES=3_500_000;
+const SIGNAGE_BASE = location.origin + location.pathname.replace(/admin(\.html)?$/,"signage.html");
 
-const el = id => document.getElementById(id);
-let assets = [];            // { name, path, isVideo, previewUrl, pending?, contentBase64? }
-let slides = [];            // { path, name, isVideo, seconds, caption, fit, previewUrl }
-let pendingDeletes = new Set();
-let dirty = false;
+const el=id=>document.getElementById(id);
+let config={ playlists:{}, screens:[] };
+let curPl=null;
+let assets=[];
+let pendingDeletes=new Set();
+let dirty=false;
 
-/* ---------- utilities ---------- */
-function setDirty(v){ dirty=v; el("dirty").textContent = v ? "● Unsaved changes" : ""; }
-function status(msg,kind){ const s=el("status"); s.textContent=msg; s.className="show "+(kind||"busy"); if(kind==="ok") setTimeout(()=>s.className="",3500); }
+const pl=()=>config.playlists[curPl];
+function setDirty(v){ dirty=v; el("dirty").textContent=v?"● Unsaved changes":""; }
+function status(m,k){ const s=el("status"); s.textContent=m; s.className="show "+(k||"busy"); if(k==="ok") setTimeout(()=>s.className="",3500); }
 function hideStatus(){ el("status").className=""; }
-function setConn(state,label){ el("connDot").className="dot "+(state||""); el("connLabel").textContent=label; }
+function setConn(st,l){ el("connDot").className="dot "+(st||""); el("connLabel").textContent=l; }
 function sanitize(n){ return (n||"").toLowerCase().replace(/[^a-z0-9._-]+/g,"-").replace(/^-+|-+$/g,"")||"file"; }
+function slug(s){ return (s||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")||"playlist"; }
 function isVideoName(n){ return /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(n); }
-function fileToBase64(file){ return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(",")[1]);r.onerror=rej;r.readAsDataURL(file);}); }
-function b64utf8(str){ return btoa(unescape(encodeURIComponent(str))); }
-function counts(){ el("cMedia").textContent=assets.length; el("cSlides").textContent=slides.length; }
+function fileToBase64(f){ return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(",")[1]);r.onerror=rej;r.readAsDataURL(f);}); }
+function b64utf8(s){ return btoa(unescape(encodeURIComponent(s))); }
+function counts(){ el("cMedia").textContent=assets.length; el("cSlides").textContent=pl()?pl().slides.length:0; el("cScreens").textContent=config.screens.length; }
+function screenUrl(id){ return SIGNAGE_BASE+"?screen="+encodeURIComponent(id); }
 
 /* ---------- tabs ---------- */
 document.querySelectorAll(".navbtn").forEach(b=>b.addEventListener("click",()=>{
   document.querySelectorAll(".navbtn").forEach(x=>x.classList.remove("active"));
   document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
-  b.classList.add("active");
-  el("tab-"+b.dataset.tab).classList.add("active");
+  b.classList.add("active"); el("tab-"+b.dataset.tab).classList.add("active");
+  el("plbar").style.display=["media","slides","ticker"].includes(b.dataset.tab)?"flex":"none";
   if(b.dataset.tab==="media" && !assets.length && el("adminPw").value) loadAssets();
+  if(b.dataset.tab==="screens") renderScreens();
 }));
 
-/* ---------- image compression ---------- */
-function loadImage(file){ return new Promise((res,rej)=>{const url=URL.createObjectURL(file);const img=new Image();
-  img.onload=()=>res({img,url});img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error("Could not read image"));};img.src=url;}); }
-async function compressImage(file){
-  try{
-    const {img,url}=await loadImage(file);
-    let w=img.naturalWidth,h=img.naturalHeight;
-    const scale=Math.min(1,MAX_EDGE/Math.max(w,h));
-    w=Math.max(1,Math.round(w*scale)); h=Math.max(1,Math.round(h*scale));
-    const c=document.createElement("canvas");c.width=w;c.height=h;
-    const x=c.getContext("2d");x.fillStyle="#000";x.fillRect(0,0,w,h);x.drawImage(img,0,0,w,h);
-    URL.revokeObjectURL(url);
-    const dataUrl=c.toDataURL("image/jpeg",JPEG_QUALITY);
-    return {base64:dataUrl.split(",")[1],previewUrl:dataUrl,converted:true};
-  }catch(_){ return {base64:await fileToBase64(file),previewUrl:URL.createObjectURL(file),converted:false}; }
+/* ---------- compression ---------- */
+function loadImage(f){ return new Promise((res,rej)=>{const u=URL.createObjectURL(f);const i=new Image();i.onload=()=>res({img:i,url:u});i.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("Could not read image"));};i.src=u;}); }
+async function compressImage(f){
+  try{ const {img,url}=await loadImage(f); let w=img.naturalWidth,h=img.naturalHeight;
+    const sc=Math.min(1,MAX_EDGE/Math.max(w,h)); w=Math.max(1,Math.round(w*sc)); h=Math.max(1,Math.round(h*sc));
+    const c=document.createElement("canvas"); c.width=w; c.height=h; const x=c.getContext("2d");
+    x.fillStyle="#000"; x.fillRect(0,0,w,h); x.drawImage(img,0,0,w,h); URL.revokeObjectURL(url);
+    const d=c.toDataURL("image/jpeg",JPEG_QUALITY); return {base64:d.split(",")[1],previewUrl:d,converted:true};
+  }catch(_){ return {base64:await fileToBase64(f),previewUrl:URL.createObjectURL(f),converted:false}; }
 }
 
-/* ---------- add files (upload) ---------- */
+/* ---------- upload ---------- */
 async function addFiles(fileList){
-  const names=new Set(assets.map(a=>a.name));
-  const list=Array.from(fileList);
-  for(let i=0;i<list.length;i++){
-    const file=list[i];
-    status(`Processing ${i+1}/${list.length}…`,"busy");
+  const names=new Set(assets.map(a=>a.name)); const list=Array.from(fileList);
+  for(let i=0;i<list.length;i++){ const file=list[i]; status(`Processing ${i+1}/${list.length}…`,"busy");
     const isVideo=file.type.startsWith("video/")||isVideoName(file.name);
     const isGif=file.type==="image/gif"||/\.gif$/i.test(file.name);
     let base64,previewUrl,name=sanitize(file.name);
     if(isVideo||isGif){ base64=await fileToBase64(file); previewUrl=URL.createObjectURL(file); }
     else{ const c=await compressImage(file); base64=c.base64; previewUrl=c.previewUrl;
-          if(c.converted) name=name.replace(/\.(png|webp|jpe?g|bmp|heic|heif|tiff?)$/i,"")+".jpg"; }
-    let unique=name,n=1;
-    while(names.has(unique)){ const d=name.lastIndexOf("."); unique=d>0?name.slice(0,d)+"-"+n+name.slice(d):name+"-"+n; n++; }
-    names.add(unique);
-    const asset={ name:unique, path:"images/"+unique, isVideo, previewUrl, pending:true, contentBase64:base64 };
-    assets.push(asset);
-    addToShow(asset);            // uploading usually means "put it on screen"
+      if(c.converted) name=name.replace(/\.(png|webp|jpe?g|bmp|heic|heif|tiff?)$/i,"")+".jpg"; }
+    let uniq=name,n=1; while(names.has(uniq)){ const d=name.lastIndexOf("."); uniq=d>0?name.slice(0,d)+"-"+n+name.slice(d):name+"-"+n; n++; }
+    names.add(uniq);
+    const asset={ name:uniq, path:"images/"+uniq, isVideo, previewUrl, pending:true, contentBase64:base64 };
+    assets.push(asset); addToShow(asset);
   }
   hideStatus(); setDirty(true); renderMedia(); renderSlides(); counts();
 }
@@ -287,48 +268,31 @@ el("drop").addEventListener("click",()=>el("file").click());
 ["dragleave","drop"].forEach(ev=>el("drop").addEventListener(ev,e=>{e.preventDefault();el("drop").classList.remove("over");}));
 el("drop").addEventListener("drop",e=>{ if(e.dataTransfer.files.length) addFiles(e.dataTransfer.files); });
 
-/* ---------- media <-> slideshow ---------- */
-function inShow(path){ return slides.some(s=>s.path===path); }
-function addToShow(asset){
-  if(inShow(asset.path)) return;
-  slides.push({ path:asset.path, name:asset.name, isVideo:asset.isVideo,
-                seconds:8, caption:"", fit:"", previewUrl:asset.previewUrl });
-  setDirty(true);
-}
-function removeFromShow(path){ slides=slides.filter(s=>s.path!==path); setDirty(true); }
+/* ---------- media <-> current playlist ---------- */
+function inShow(path){ return pl().slides.some(s=>s.path===path); }
+function addToShow(a){ if(inShow(a.path))return; pl().slides.push({path:a.path,name:a.name,isVideo:a.isVideo,seconds:8,caption:"",fit:"",previewUrl:a.previewUrl}); setDirty(true); }
+function removeFromShow(path){ pl().slides=pl().slides.filter(s=>s.path!==path); setDirty(true); }
 function deleteAsset(path){
-  const a=assets.find(x=>x.path===path); if(!a) return;
-  if(inShow(path) && !confirm("This photo is in the slideshow. Delete it and remove it from the show?")) return;
-  if(!a.pending) pendingDeletes.add(path);   // committed file → schedule deletion
+  const a=assets.find(x=>x.path===path); if(!a)return;
+  const usedIn=Object.values(config.playlists).filter(p=>p.slides.some(s=>s.path===path)).length;
+  if(usedIn && !confirm(`This is used in ${usedIn} playlist(s). Delete it and remove it everywhere?`)) return;
+  if(!a.pending) pendingDeletes.add(path);
   assets=assets.filter(x=>x.path!==path);
-  removeFromShow(path);
+  Object.values(config.playlists).forEach(p=>{ p.slides=p.slides.filter(s=>s.path!==path); });
   setDirty(true); renderMedia(); renderSlides(); counts();
 }
 
-/* ---------- render media grid ---------- */
+/* ---------- render media ---------- */
 function renderMedia(){
-  const g=el("mediaGrid"); g.innerHTML="";
-  el("mediaEmpty").style.display=assets.length?"none":"block";
+  const g=el("mediaGrid"); g.innerHTML=""; el("mediaEmpty").style.display=assets.length?"none":"block";
   assets.forEach(a=>{
     const card=document.createElement("div"); card.className="asset";
-    const thumb=a.isVideo ? `<div class="thumb vid">🎬</div>`
-      : `<img class="thumb" src="${a.previewUrl||a.path}" alt="" loading="lazy" onerror="this.style.opacity=.25"/>`;
+    const thumb=a.isVideo?`<div class="thumb vid">🎬</div>`:`<img class="thumb" src="${a.previewUrl||a.path}" loading="lazy" onerror="this.style.opacity=.25"/>`;
     const shown=inShow(a.path);
-    card.innerHTML=`
-      ${thumb}
-      <div class="meta">
-        <div class="nm">${a.name}</div>
-        <div class="tags">
-          ${shown?'<span class="badge inshow">In show</span>':''}
-          ${a.pending?'<span class="badge new">new</span>':''}
-        </div>
-        <div class="acts">
-          ${shown
-            ? `<button class="small ghost" data-remove="${a.path}">Remove</button>`
-            : `<button class="small solid" data-add="${a.path}">＋ Add to show</button>`}
-          <button class="small danger" data-del="${a.path}">🗑</button>
-        </div>
-      </div>`;
+    card.innerHTML=`${thumb}<div class="meta"><div class="nm">${a.name}</div>
+      <div class="tags">${shown?'<span class="badge inshow">In show</span>':''}${a.pending?'<span class="badge new">new</span>':''}</div>
+      <div class="acts">${shown?`<button class="small ghost" data-remove="${a.path}">Remove</button>`:`<button class="small solid" data-add="${a.path}">＋ Add to show</button>`}
+      <button class="small danger" data-del="${a.path}">🗑</button></div></div>`;
     g.appendChild(card);
   });
   g.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{ addToShow(assets.find(a=>a.path===b.dataset.add)); renderMedia(); renderSlides(); counts(); });
@@ -336,175 +300,181 @@ function renderMedia(){
   g.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>deleteAsset(b.dataset.del));
 }
 
-/* ---------- render slideshow list ---------- */
+/* ---------- render slideshow ---------- */
 function renderSlides(){
-  const box=el("slideList"); box.innerHTML="";
-  el("slidesEmpty").style.display=slides.length?"none":"block";
-  slides.forEach((s,i)=>{
+  const box=el("slideList"); box.innerHTML=""; const S=pl().slides;
+  el("slidesEmpty").style.display=S.length?"none":"block";
+  S.forEach((s,i)=>{
     const row=document.createElement("div"); row.className="slide";
-    const thumb=s.isVideo?`<div class="thumb vid">🎬</div>`
-      :`<img class="thumb" src="${s.previewUrl||s.path}" alt="" onerror="this.style.opacity=.25"/>`;
-    row.innerHTML=`
-      ${thumb}
-      <div class="body">
-        <div class="nm">${s.name}</div>
-        <div class="fields">
-          <div><label>Caption</label><input type="text" data-k="caption" data-i="${i}" value="${(s.caption||'').replace(/"/g,'&quot;')}" placeholder="(optional)"/></div>
-          <div><label>Seconds${s.isVideo?' (video plays full)':''}</label><input type="number" min="1" data-k="seconds" data-i="${i}" value="${s.seconds}" ${s.isVideo?'disabled':''}/></div>
-          <div><label>Fit</label><select data-k="fit" data-i="${i}">
-            <option value=""${s.fit===''?' selected':''}>Default</option>
-            <option value="cover"${s.fit==='cover'?' selected':''}>Cover</option>
-            <option value="contain"${s.fit==='contain'?' selected':''}>Contain</option>
-          </select></div>
-        </div>
-      </div>
-      <div class="ctrls">
-        <button class="small ghost" data-move="up" data-i="${i}" ${i===0?'disabled':''}>↑</button>
-        <button class="small ghost" data-move="down" data-i="${i}" ${i===slides.length-1?'disabled':''}>↓</button>
-        <button class="small danger" data-rm="${i}">✕</button>
-      </div>`;
+    const thumb=s.isVideo?`<div class="thumb vid">🎬</div>`:`<img class="thumb" src="${s.previewUrl||s.path}" onerror="this.style.opacity=.25"/>`;
+    row.innerHTML=`${thumb}<div class="body"><div class="nm">${s.name}</div><div class="fields">
+      <div><label>Caption</label><input type="text" data-k="caption" data-i="${i}" value="${(s.caption||'').replace(/"/g,'&quot;')}" placeholder="(optional)"/></div>
+      <div><label>Seconds${s.isVideo?' (video plays full)':''}</label><input type="number" min="1" data-k="seconds" data-i="${i}" value="${s.seconds}" ${s.isVideo?'disabled':''}/></div>
+      <div><label>Fit</label><select data-k="fit" data-i="${i}"><option value=""${s.fit===''?' selected':''}>Default</option><option value="cover"${s.fit==='cover'?' selected':''}>Cover</option><option value="contain"${s.fit==='contain'?' selected':''}>Contain</option></select></div>
+      </div></div><div class="ctrls">
+      <button class="small ghost" data-move="up" data-i="${i}" ${i===0?'disabled':''}>↑</button>
+      <button class="small ghost" data-move="down" data-i="${i}" ${i===S.length-1?'disabled':''}>↓</button>
+      <button class="small danger" data-rm="${i}">✕</button></div>`;
     box.appendChild(row);
   });
   box.querySelectorAll("input[data-k],select[data-k]").forEach(inp=>inp.addEventListener("input",e=>{
-    const i=+e.target.dataset.i,k=e.target.dataset.k;
-    slides[i][k]= k==="seconds"?(Number(e.target.value)||8):e.target.value; setDirty(true);
-  }));
-  box.querySelectorAll("[data-move]").forEach(b=>b.onclick=e=>{
-    const i=+e.target.dataset.i,j=i+(e.target.dataset.move==="up"?-1:1);
-    if(j<0||j>=slides.length)return; [slides[i],slides[j]]=[slides[j],slides[i]]; setDirty(true); renderSlides();
+    const i=+e.target.dataset.i,k=e.target.dataset.k; S[i][k]=k==="seconds"?(Number(e.target.value)||8):e.target.value; setDirty(true); }));
+  box.querySelectorAll("[data-move]").forEach(b=>b.onclick=e=>{ const i=+e.target.dataset.i,j=i+(e.target.dataset.move==="up"?-1:1);
+    if(j<0||j>=S.length)return; [S[i],S[j]]=[S[j],S[i]]; setDirty(true); renderSlides(); });
+  box.querySelectorAll("[data-rm]").forEach(b=>b.onclick=e=>{ S.splice(+e.target.dataset.rm,1); setDirty(true); renderSlides(); renderMedia(); counts(); });
+}
+
+/* ---------- playlists ---------- */
+function renderPlSelect(){
+  const sel=el("plSelect"); sel.innerHTML="";
+  Object.entries(config.playlists).forEach(([id,p])=>{ const o=document.createElement("option"); o.value=id; o.textContent=p.name||id; if(id===curPl)o.selected=true; sel.appendChild(o); });
+}
+function syncFromPlaylist(){ const p=pl(); el("fit").value=p.fit==="contain"?"contain":"cover"; el("showClock").checked=!!p.showClock;
+  el("tickerLabel").value=p.tickerLabel||""; el("tickerText").value=p.tickerText||""; el("tickerSpeed").value=p.tickerSpeed||30; }
+function refreshPl(){ renderPlSelect(); syncFromPlaylist(); renderMedia(); renderSlides(); renderScreens(); counts(); }
+el("plSelect").addEventListener("change",e=>{ curPl=e.target.value; syncFromPlaylist(); renderMedia(); renderSlides(); counts(); });
+el("plNew").onclick=()=>{ const name=prompt("New playlist name:","Playlist "+(Object.keys(config.playlists).length+1)); if(!name)return;
+  let id=slug(name),n=2; while(config.playlists[id]){ id=slug(name)+"-"+n; n++; }
+  config.playlists[id]={name,fit:"cover",showClock:true,tickerLabel:"",tickerText:"",tickerSpeed:30,slides:[]}; curPl=id; setDirty(true); refreshPl(); };
+el("plRename").onclick=()=>{ const name=prompt("Rename playlist:",pl().name); if(!name)return; pl().name=name; setDirty(true); refreshPl(); };
+el("plDelete").onclick=()=>{ if(Object.keys(config.playlists).length<=1){ alert("You need at least one playlist."); return; }
+  if(!confirm(`Delete playlist "${pl().name}"? Screens using it will move to another playlist.`))return;
+  const del=curPl; delete config.playlists[del]; const first=Object.keys(config.playlists)[0];
+  config.screens.forEach(s=>{ if(s.playlist===del)s.playlist=first; }); curPl=first; setDirty(true); refreshPl(); };
+
+/* ---------- screens ---------- */
+function nextScreenId(){ let n=1; const ids=new Set(config.screens.map(s=>String(s.id))); while(ids.has(String(n)))n++; return String(n); }
+function renderScreens(){
+  const box=el("screenList"); box.innerHTML="";
+  config.screens.forEach((s,i)=>{
+    const opts=Object.entries(config.playlists).map(([id,p])=>`<option value="${id}"${id===s.playlist?' selected':''}>${p.name||id}</option>`).join("");
+    const div=document.createElement("div"); div.className="screen";
+    div.innerHTML=`<div class="top">
+      <div><label>Screen name</label><input type="text" data-sk="name" data-i="${i}" value="${(s.name||'').replace(/"/g,'&quot;')}"/></div>
+      <div><label>Plays playlist</label><select data-sk="playlist" data-i="${i}">${opts}</select></div>
+      <div style="flex:0 0 auto;"><label>&nbsp;</label>${config.screens.length>1?`<button class="small danger" data-rms="${i}">Remove</button>`:''}</div>
+      </div>
+      <div class="urlrow"><input type="text" readonly value="${screenUrl(s.id)}" data-url="${s.id}"/>
+        <button class="small chip" data-copy="${s.id}">Copy</button>
+        <a href="${screenUrl(s.id)}" target="_blank"><button class="small ghost" type="button">Open</button></a></div>`;
+    box.appendChild(div);
   });
-  box.querySelectorAll("[data-rm]").forEach(b=>b.onclick=e=>{ slides.splice(+e.target.dataset.rm,1); setDirty(true); renderSlides(); renderMedia(); counts(); });
+  box.querySelectorAll("input[data-sk],select[data-sk]").forEach(inp=>inp.addEventListener("input",e=>{
+    const i=+e.target.dataset.i,k=e.target.dataset.sk; config.screens[i][k]=e.target.value; setDirty(true); if(k==="name"){} }));
+  box.querySelectorAll("[data-copy]").forEach(b=>b.onclick=()=>{ navigator.clipboard.writeText(screenUrl(b.dataset.copy)).then(()=>status("Link copied","ok")); });
+  box.querySelectorAll("[data-rms]").forEach(b=>b.onclick=e=>{ config.screens.splice(+e.target.dataset.rms,1); setDirty(true); renderScreens(); counts(); });
 }
+el("addScreen").onclick=()=>{ const id=nextScreenId(); config.screens.push({id,name:"Screen "+id,playlist:curPl||Object.keys(config.playlists)[0]}); setDirty(true); renderScreens(); counts(); };
 
-/* mark display settings dirty */
-["fit","showClock","tickerLabel","tickerText","tickerSpeed"].forEach(id=>el(id).addEventListener("input",()=>setDirty(true)));
+/* ---------- ticker/display inputs -> current playlist ---------- */
+el("fit").addEventListener("change",()=>{ pl().fit=el("fit").value; setDirty(true); });
+el("showClock").addEventListener("change",()=>{ pl().showClock=el("showClock").checked; setDirty(true); });
+el("tickerLabel").addEventListener("input",()=>{ pl().tickerLabel=el("tickerLabel").value; setDirty(true); });
+el("tickerText").addEventListener("input",()=>{ pl().tickerText=el("tickerText").value; setDirty(true); });
+el("tickerSpeed").addEventListener("input",()=>{ pl().tickerSpeed=Number(el("tickerSpeed").value)||30; setDirty(true); });
 
-/* ---------- connection prefs ---------- */
-function loadPrefs(){
-  el("adminPw").value=sessionStorage.getItem("sg_pw")||"";
-  const t=sessionStorage.getItem("sg_tok")||"";
-  el("ghToken").value=/^(gh[pousr]_|github_pat_)/.test(t)?t:"";
-  el("ghRepo").value=localStorage.getItem("sg_repo")||"";
-  el("ghBranch").value=localStorage.getItem("sg_branch")||"main";
-  if(localStorage.getItem("sg_useTok")==="1"&&el("ghToken").value){ el("useToken").checked=true; el("tokenFields").style.display="block"; }
-}
-function savePrefs(){
-  sessionStorage.setItem("sg_pw",el("adminPw").value);
-  sessionStorage.setItem("sg_tok",el("ghToken").value);
-  localStorage.setItem("sg_repo",el("ghRepo").value.trim());
-  localStorage.setItem("sg_branch",el("ghBranch").value.trim());
-  localStorage.setItem("sg_useTok",el("useToken").checked?"1":"0");
-}
+/* ---------- prefs ---------- */
+function loadPrefs(){ el("adminPw").value=sessionStorage.getItem("sg_pw")||"";
+  const t=sessionStorage.getItem("sg_tok")||""; el("ghToken").value=/^(gh[pousr]_|github_pat_)/.test(t)?t:"";
+  el("ghRepo").value=localStorage.getItem("sg_repo")||""; el("ghBranch").value=localStorage.getItem("sg_branch")||"main";
+  if(localStorage.getItem("sg_useTok")==="1"&&el("ghToken").value){ el("useToken").checked=true; el("tokenFields").style.display="block"; } }
+function savePrefs(){ sessionStorage.setItem("sg_pw",el("adminPw").value); sessionStorage.setItem("sg_tok",el("ghToken").value);
+  localStorage.setItem("sg_repo",el("ghRepo").value.trim()); localStorage.setItem("sg_branch",el("ghBranch").value.trim()); localStorage.setItem("sg_useTok",el("useToken").checked?"1":"0"); }
 el("useToken").addEventListener("change",e=>{ el("tokenFields").style.display=e.target.checked?"block":"none"; hideStatus(); });
 el("checkBtn").addEventListener("click",()=>{ savePrefs(); loadAssets(); });
 
-/* ---------- load content.json ---------- */
+/* ---------- migrate + load content.json ---------- */
+function normSlides(list){ return (list||[]).map(raw=>{ const it=typeof raw==="string"?{src:raw}:(raw||{}); const src=it.src||it.url||it.image||it.video||"";
+  return { path:src, name:src.split("/").pop(), isVideo:isVideoName(src)||it.type==="video", seconds:Number(it.seconds||it.duration)||8, caption:it.caption||"", fit:it.fit||"", previewUrl:src }; }).filter(s=>s.path); }
+function migrate(cfg){
+  if(cfg && cfg.playlists && typeof cfg.playlists==="object"){
+    const out={ playlists:{}, screens:Array.isArray(cfg.screens)?cfg.screens.map(s=>({id:String(s.id),name:s.name||("Screen "+s.id),playlist:s.playlist})):[] };
+    for(const [id,p] of Object.entries(cfg.playlists)){
+      out.playlists[id]={ name:p.name||id, fit:p.fit==="contain"?"contain":"cover", showClock:!!p.showClock,
+        tickerLabel:p.tickerLabel||"", tickerText:p.tickerText||"", tickerSpeed:Number(p.tickerSpeed)||30, slides:normSlides(p.slides||p.items||[]) }; }
+    if(!out.screens.length){ const first=Object.keys(out.playlists)[0]||"main"; out.screens=[{id:"1",name:"Screen 1",playlist:first}]; }
+    if(!Object.keys(out.playlists).length) out.playlists.main={name:"Main",fit:"cover",showClock:true,tickerLabel:"",tickerText:"",tickerSpeed:30,slides:[]};
+    return out;
+  }
+  const flat=cfg||{};
+  const p={ name:"Main", fit:flat.fit==="contain"?"contain":"cover", showClock:!!flat.showClock,
+    tickerLabel:flat.tickerLabel||"", tickerText:flat.tickerText||"", tickerSpeed:Number(flat.tickerSpeed)||30,
+    slides:normSlides(Array.isArray(flat)?flat:(flat.slides||flat.items||[])) };
+  return { playlists:{ main:p }, screens:[{id:"1",name:"Screen 1",playlist:"main"}] };
+}
 async function loadContent(){
-  try{
-    const res=await fetch("content.json?t="+Date.now(),{cache:"no-store"}); if(!res.ok) throw 0;
-    const cfg=await res.json();
-    el("fit").value=cfg.fit==="contain"?"contain":"cover";
-    el("showClock").checked=!!cfg.showClock;
-    el("tickerLabel").value=cfg.tickerLabel||"";
-    el("tickerText").value=cfg.tickerText||"";
-    el("tickerSpeed").value=cfg.tickerSpeed||30;
-    const list=Array.isArray(cfg)?cfg:(cfg.slides||cfg.items||[]);
-    slides=list.map(raw=>{ const it=typeof raw==="string"?{src:raw}:(raw||{}); const src=it.src||it.url||it.image||it.video||"";
-      return { path:src, name:src.split("/").pop(), isVideo:isVideoName(src)||it.type==="video",
-               seconds:Number(it.seconds||it.duration)||8, caption:it.caption||"", fit:it.fit||"", previewUrl:src }; })
-      .filter(s=>s.path);
-  }catch(_){ slides=[]; }
-  renderSlides(); counts();
+  let cfg={};
+  try{ const res=await fetch("content.json?t="+Date.now(),{cache:"no-store"}); if(res.ok) cfg=await res.json(); }catch(_){}
+  config=migrate(cfg); curPl=Object.keys(config.playlists)[0]; refreshPl();
 }
 
-/* ---------- load media library ---------- */
+/* ---------- media library ---------- */
 async function loadAssets(){
   const pw=el("adminPw").value;
-  if(el("useToken").checked){ setConn("","Token mode — library listing uses secure mode only"); return; }
+  if(el("useToken").checked){ setConn("","Token mode — library uses secure mode only"); return; }
   if(!pw){ setConn("","Enter your admin password"); return; }
   setConn("busy","Connecting…"); status("Loading media…","busy");
   try{
     const res=await fetch("/api/list",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pw})});
-    const data=await res.json().catch(()=>({}));
-    if(!res.ok) throw new Error(data.error||("Server "+res.status));
-    const pending=assets.filter(a=>a.pending);           // keep not-yet-saved uploads
-    const committed=(data.files||[]).filter(f=>!pendingDeletes.has(f.path)).map(f=>({
-      name:f.name, path:f.path, isVideo:isVideoName(f.name), previewUrl:f.path, pending:false }));
-    const pendPaths=new Set(pending.map(a=>a.path));
-    assets=[...committed.filter(c=>!pendPaths.has(c.path)),...pending];
+    const data=await res.json().catch(()=>({})); if(!res.ok) throw new Error(data.error||("Server "+res.status));
+    const pending=assets.filter(a=>a.pending);
+    const committed=(data.files||[]).filter(f=>!pendingDeletes.has(f.path)).map(f=>({name:f.name,path:f.path,isVideo:isVideoName(f.name),previewUrl:f.path,pending:false}));
+    const pp=new Set(pending.map(a=>a.path));
+    assets=[...committed.filter(c=>!pp.has(c.path)),...pending];
     setConn("ok","Connected"); hideStatus(); renderMedia(); counts();
-  }catch(err){
-    setConn("err", /password/i.test(err.message)?"Wrong password":"Connection failed");
-    status("⚠ "+err.message,"err");
-  }
+  }catch(err){ setConn("err",/password/i.test(err.message)?"Wrong password":"Connection failed"); status("⚠ "+err.message,"err"); }
 }
 
 /* ---------- build content.json ---------- */
 function buildContent(){
-  const out={ fit:el("fit").value, showClock:el("showClock").checked };
-  const label=el("tickerLabel").value.trim(), text=el("tickerText").value.trim();
-  if(text){ out.tickerLabel=label||"INFO"; out.tickerText=text; out.tickerSpeed=Number(el("tickerSpeed").value)||30; }
-  out.slides=slides.map(s=>{ const o={src:s.path}; if(!s.isVideo)o.seconds=Number(s.seconds)||8; if(s.caption)o.caption=s.caption; if(s.fit)o.fit=s.fit; return o; });
+  const out={ playlists:{}, screens:config.screens.map(s=>({id:s.id,name:s.name,playlist:s.playlist})) };
+  for(const [id,p] of Object.entries(config.playlists)){
+    const o={ name:p.name, fit:p.fit==="contain"?"contain":"cover", showClock:!!p.showClock };
+    if((p.tickerText||"").trim()){ o.tickerLabel=p.tickerLabel||"INFO"; o.tickerText=p.tickerText; o.tickerSpeed=Number(p.tickerSpeed)||30; }
+    o.slides=p.slides.map(s=>{ const x={src:s.path}; if(!s.isVideo)x.seconds=Number(s.seconds)||8; if(s.caption)x.caption=s.caption; if(s.fit)x.fit=s.fit; return x; });
+    out.playlists[id]=o;
+  }
   return out;
 }
 
 /* ---------- save ---------- */
 async function save(){
-  savePrefs();
-  const usingToken=el("useToken").checked;
+  savePrefs(); const usingToken=el("useToken").checked;
   const uploads=assets.filter(a=>a.pending).map(a=>({path:a.path,contentBase64:a.contentBase64}));
   const deletions=[...pendingDeletes];
-
-  if(!usingToken){
-    const tooBig=uploads.find(f=>f.contentBase64.length>MAX_BATCH_BYTES);
-    if(tooBig){ status(`⚠ "${tooBig.path.split('/').pop()}" is too large (Vercel caps requests at ~4.5 MB). Use a smaller/shorter video.`,"err"); return; }
-  }
+  if(!usingToken){ const big=uploads.find(f=>f.contentBase64.length>MAX_BATCH_BYTES);
+    if(big){ status(`⚠ "${big.path.split('/').pop()}" is too large (Vercel caps requests at ~4.5 MB). Use a smaller/shorter video.`,"err"); return; } }
   const contentFile={ path:"content.json", contentBase64:b64utf8(JSON.stringify(buildContent(),null,2)) };
-
-  // batch uploads by size; content.json + deletions ride in the last batch
   const batches=[]; let cur=[],sz=0;
-  for(const f of uploads){ if(cur.length&&sz+f.contentBase64.length>MAX_BATCH_BYTES){batches.push({files:cur,del:[]});cur=[];sz=0;}
-    cur.push(f); sz+=f.contentBase64.length; }
+  for(const f of uploads){ if(cur.length&&sz+f.contentBase64.length>MAX_BATCH_BYTES){batches.push({files:cur,del:[]});cur=[];sz=0;} cur.push(f); sz+=f.contentBase64.length; }
   cur.push(contentFile); batches.push({files:cur,del:deletions});
-
   const commit=usingToken?commitViaToken:commitViaServer;
   el("saveBtn").disabled=true; setConn("busy","Publishing…");
   try{
-    for(let i=0;i<batches.length;i++){ status(batches.length>1?`Publishing… (${i+1}/${batches.length})`:"Publishing…","busy");
-      await commit(batches[i].files,batches[i].del); }
-    pendingDeletes.clear();
-    assets.forEach(a=>{ if(a.pending){ a.pending=false; delete a.contentBase64; } });
+    for(let i=0;i<batches.length;i++){ status(batches.length>1?`Publishing… (${i+1}/${batches.length})`:"Publishing…","busy"); await commit(batches[i].files,batches[i].del); }
+    pendingDeletes.clear(); assets.forEach(a=>{ if(a.pending){a.pending=false; delete a.contentBase64;} });
     setDirty(false); setConn("ok","Connected"); renderMedia(); renderSlides(); counts();
-    status("✅ Published! Screens update within a minute.","ok");
-    if(!usingToken) loadAssets();   // refresh from server
+    status("✅ Published! Screens update within a minute.","ok"); if(!usingToken) loadAssets();
   }catch(err){ setConn("err","Save failed"); status("⚠ "+(err.message||err),"err"); }
   finally{ el("saveBtn").disabled=false; }
 }
 el("saveBtn").addEventListener("click",save);
 window.addEventListener("beforeunload",e=>{ if(dirty){ e.preventDefault(); e.returnValue=""; } });
 
-/* ---------- secure mode ---------- */
 async function commitViaServer(files,deletions){
   const res=await fetch("/api/commit",{method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({password:el("adminPw").value,message:"Update signage content",files,deletions:deletions||[]})});
-  const data=await res.json().catch(()=>({}));
-  if(!res.ok) throw new Error(data.error||("Server error "+res.status));
-  return data;
+  const data=await res.json().catch(()=>({})); if(!res.ok) throw new Error(data.error||("Server error "+res.status)); return data;
 }
-
-/* ---------- token mode ---------- */
 async function commitViaToken(files,deletions){
   const token=el("ghToken").value.trim(),repo=el("ghRepo").value.trim(),branch=el("ghBranch").value.trim()||"main";
   if(!token||!repo) throw new Error("Enter a GitHub token and repository (owner/name).");
-  if(/\s/.test(token)||!/^(gh[pousr]_|github_pat_)/.test(token))
-    throw new Error("That doesn't look like a GitHub token. If you set an admin password in Vercel, untick “Use a GitHub token” and use the Admin password field instead.");
+  if(/\s/.test(token)||!/^(gh[pousr]_|github_pat_)/.test(token)) throw new Error("That doesn't look like a GitHub token. If you set an admin password in Vercel, untick “Use a GitHub token” and use the Admin password field.");
   const api=(p,o={})=>fetch(GH+p,{...o,headers:{Authorization:"Bearer "+token,Accept:"application/vnd.github+json","Content-Type":"application/json",...(o.headers||{})}})
     .then(async r=>{const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.message||("GitHub "+r.status));return d;});
   const ref=await api(`/repos/${repo}/git/ref/heads/${branch}`); const latest=ref.object.sha;
-  const commitObj=await api(`/repos/${repo}/git/commits/${latest}`);
-  const tree=[];
-  for(const f of files){ const blob=await api(`/repos/${repo}/git/blobs`,{method:"POST",body:JSON.stringify({content:f.contentBase64,encoding:"base64"})});
-    tree.push({path:f.path,mode:"100644",type:"blob",sha:blob.sha}); }
+  const commitObj=await api(`/repos/${repo}/git/commits/${latest}`); const tree=[];
+  for(const f of files){ const blob=await api(`/repos/${repo}/git/blobs`,{method:"POST",body:JSON.stringify({content:f.contentBase64,encoding:"base64"})}); tree.push({path:f.path,mode:"100644",type:"blob",sha:blob.sha}); }
   for(const p of (deletions||[])) tree.push({path:p,mode:"100644",type:"blob",sha:null});
   const newTree=await api(`/repos/${repo}/git/trees`,{method:"POST",body:JSON.stringify({base_tree:commitObj.tree.sha,tree})});
   const newCommit=await api(`/repos/${repo}/git/commits`,{method:"POST",body:JSON.stringify({message:"Update signage content",tree:newTree.sha,parents:[latest]})});
@@ -512,7 +482,7 @@ async function commitViaToken(files,deletions){
 }
 
 /* ---------- boot ---------- */
-console.log("Signage Dashboard — build 4 (sidebar + media library)");
+console.log("Signage Dashboard — build 5 (playlists + screens)");
 loadPrefs();
 loadContent();
 if(el("adminPw").value) loadAssets(); else setConn("","Enter your admin password in Connection");
