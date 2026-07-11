@@ -43,6 +43,21 @@
       "id": "1",
       "name": "Screen 1",
       "playlist": "sales"
+    },
+    {
+      "id": "2",
+      "name": "Screen 2",
+      "playlist": "main"
+    },
+    {
+      "id": "3",
+      "name": "Screen 3",
+      "playlist": "main"
+    },
+    {
+      "id": "4",
+      "name": "Screen 4",
+      "playlist": "main"
     }
   ],
   "weather": {
