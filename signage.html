@@ -195,6 +195,7 @@ async function loadConfig() {
     const cfg = await res.json();
     currentConfig = cfg;
     applyConfig(cfg);
+    heartbeat();               // check in with the up-to-date active playlist
   } catch (err) {
     // First run / missing file: show the helper message but keep trying.
     if (!items.length) messageEl.classList.add("on");
@@ -242,6 +243,7 @@ function activePlaylistId(cfg, screen) {
 // Pick the playlist this screen should show. Supports the multi-playlist schema
 // { playlists:{...}, screens:[...] } (with optional schedule rules) and falls back
 // to the old flat schema.
+let currentPlId = "";   // active playlist id, reported in the heartbeat
 function resolvePlaylist(cfg) {
   if (cfg && cfg.playlists && typeof cfg.playlists === "object") {
     let plId = FORCE_PL;
@@ -250,9 +252,20 @@ function resolvePlaylist(cfg) {
       if (scr) plId = activePlaylistId(cfg, scr);
     }
     if (!plId || !cfg.playlists[plId]) plId = Object.keys(cfg.playlists)[0];
+    currentPlId = plId;
     return cfg.playlists[plId] || {};
   }
+  currentPlId = "";
   return cfg || {};   // old flat schema — the whole file is the playlist
+}
+
+// Check in so the dashboard can show this screen online. Silent if unconfigured.
+function heartbeat() {
+  fetch("/api/heartbeat", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ screen: SCREEN || "default", playlist: currentPlId }),
+    keepalive: true,
+  }).catch(() => {});
 }
 
 function applyConfig(fullCfg) {
@@ -392,6 +405,7 @@ setInterval(scheduleTick, 20 * 1000);   // catch schedule boundaries between fet
 setInterval(tickClock, 1000);
 tickClock();
 keepAwake();
+setInterval(heartbeat, 60 * 1000);      // periodic check-in (first one fires after config loads)
 </script>
 </body>
 </html>

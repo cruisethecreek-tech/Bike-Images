@@ -92,6 +92,8 @@
   .days button{width:26px;height:26px;padding:0;border-radius:6px;background:#e7e0d3;color:#6b6357;font-size:.72rem;font-weight:700;}
   .days button.on{background:var(--accent);color:#fff;}
   .rule .sep{color:var(--muted);}
+  .scstatus{display:flex;align-items:center;gap:8px;font-size:.85rem;color:#3a352d;margin-top:10px;}
+  .scstatus.muted{color:var(--muted);}
   #status{position:fixed;left:50%;transform:translate(-50%,140%);bottom:18px;padding:12px 20px;border-radius:12px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.18);transition:.25s;z-index:60;max-width:90vw;}
   #status.show{transform:translate(-50%,0);}
   #status.ok{background:#e5f4ea;color:#1e7d43;} #status.err{background:#f9e4e2;color:var(--err);} #status.busy{background:#eef3f6;color:var(--accent);}
@@ -101,7 +103,7 @@
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand">Signage <span class="build">build 6 ✓</span></div>
+    <div class="brand">Signage <span class="build">build 7 ✓</span></div>
     <div class="status"><span class="dot" id="connDot"></span><span id="connLabel">Not connected</span></div>
     <span class="spacer"></span>
     <span id="dirty"></span>
@@ -208,9 +210,10 @@
 <div id="status"></div>
 
 <script>
-/* ===================== Signage Dashboard — build 6 (scheduling) ===================== */
+/* ===================== Signage Dashboard — build 7 (monitoring) ===================== */
 const GH="https://api.github.com";
 const MAX_EDGE=1920, JPEG_QUALITY=0.82, MAX_BATCH_BYTES=3_500_000;
+const ONLINE_MS=3*60*1000;   // seen within 3 min = online
 const SIGNAGE_BASE = location.origin + location.pathname.replace(/admin(\.html)?$/,"signage.html");
 
 const el=id=>document.getElementById(id);
@@ -218,6 +221,8 @@ let config={ playlists:{}, screens:[] };
 let curPl=null;
 let assets=[];
 let pendingDeletes=new Set();
+let screenStatus={};          // screen_id -> { last_seen, playlist }
+let monitoringConfigured=null; // null unknown, false not set up, true active
 let dirty=false;
 
 const pl=()=>config.playlists[curPl];
@@ -232,6 +237,8 @@ function fileToBase64(f){ return new Promise((res,rej)=>{const r=new FileReader(
 function b64utf8(s){ return btoa(unescape(encodeURIComponent(s))); }
 function counts(){ el("cMedia").textContent=assets.length; el("cSlides").textContent=pl()?pl().slides.length:0; el("cScreens").textContent=config.screens.length; }
 function screenUrl(id){ return SIGNAGE_BASE+"?screen="+encodeURIComponent(id); }
+function ago(ts){ if(!ts) return ""; const s=Math.max(0,Math.round((Date.now()-new Date(ts).getTime())/1000));
+  if(s<60) return s+"s ago"; if(s<3600) return Math.round(s/60)+"m ago"; if(s<86400) return Math.round(s/3600)+"h ago"; return Math.round(s/86400)+"d ago"; }
 
 /* ---------- tabs ---------- */
 document.querySelectorAll(".navbtn").forEach(b=>b.addEventListener("click",()=>{
@@ -240,7 +247,7 @@ document.querySelectorAll(".navbtn").forEach(b=>b.addEventListener("click",()=>{
   b.classList.add("active"); el("tab-"+b.dataset.tab).classList.add("active");
   el("plbar").style.display=["media","slides","ticker"].includes(b.dataset.tab)?"flex":"none";
   if(b.dataset.tab==="media" && !assets.length && el("adminPw").value) loadAssets();
-  if(b.dataset.tab==="screens") renderScreens();
+  if(b.dataset.tab==="screens"){ renderScreens(); loadScreenStatus(); }
 }));
 
 /* ---------- compression ---------- */
@@ -371,12 +378,20 @@ function renderScreens(){
         <button class="small danger" data-rmr="${i}" data-j="${j}">✕</button>
       </div>`;
     }).join("");
+    const st=screenStatus[String(s.id)];
+    let statusHtml="";
+    if(st){ const online=(Date.now()-new Date(st.last_seen).getTime())<ONLINE_MS;
+      const plName=st.playlist&&config.playlists[st.playlist]?config.playlists[st.playlist].name:st.playlist;
+      statusHtml=`<div class="scstatus"><span class="dot ${online?'ok':'err'}"></span><strong>${online?'Online':'Offline'}</strong> · last seen ${ago(st.last_seen)}${plName?` · showing “${plName}”`:''}</div>`;
+    } else if(monitoringConfigured===true){ statusHtml=`<div class="scstatus muted"><span class="dot"></span>No check-in yet — this screen hasn't loaded since monitoring was enabled</div>`;
+    } else if(monitoringConfigured===false){ statusHtml=`<div class="scstatus muted">💡 Turn on live online/offline status by adding Supabase — see SIGNAGE-SETUP.md</div>`; }
     const div=document.createElement("div"); div.className="screen";
     div.innerHTML=`<div class="top">
       <div><label>Screen name</label><input type="text" data-sk="name" data-i="${i}" value="${(s.name||'').replace(/"/g,'&quot;')}"/></div>
       <div><label>Default playlist (when no schedule matches)</label><select data-sk="playlist" data-i="${i}">${plOptions(s.playlist)}</select></div>
       <div style="flex:0 0 auto;"><label>&nbsp;</label>${config.screens.length>1?`<button class="small danger" data-rms="${i}">Remove</button>`:''}</div>
       </div>
+      ${statusHtml}
       <div class="urlrow"><input type="text" readonly value="${screenUrl(s.id)}"/>
         <button class="small chip" data-copy="${s.id}">Copy</button>
         <a href="${screenUrl(s.id)}" target="_blank"><button class="small ghost" type="button">Open</button></a></div>
@@ -420,7 +435,20 @@ function loadPrefs(){ el("adminPw").value=sessionStorage.getItem("sg_pw")||"";
 function savePrefs(){ sessionStorage.setItem("sg_pw",el("adminPw").value); sessionStorage.setItem("sg_tok",el("ghToken").value);
   localStorage.setItem("sg_repo",el("ghRepo").value.trim()); localStorage.setItem("sg_branch",el("ghBranch").value.trim()); localStorage.setItem("sg_useTok",el("useToken").checked?"1":"0"); }
 el("useToken").addEventListener("change",e=>{ el("tokenFields").style.display=e.target.checked?"block":"none"; hideStatus(); });
-el("checkBtn").addEventListener("click",()=>{ savePrefs(); loadAssets(); });
+el("checkBtn").addEventListener("click",()=>{ savePrefs(); loadAssets(); loadScreenStatus(); });
+
+/* ---------- screen monitoring ---------- */
+async function loadScreenStatus(){
+  const pw=el("adminPw").value; if(!pw || el("useToken").checked) return;
+  try{
+    const res=await fetch("/api/screens",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pw})});
+    const data=await res.json().catch(()=>({})); if(!res.ok) return;
+    monitoringConfigured=!!data.configured; screenStatus={};
+    (data.screens||[]).forEach(s=>{ screenStatus[String(s.screen_id)]={last_seen:s.last_seen,playlist:s.playlist}; });
+    if(document.querySelector('.navbtn[data-tab=screens]').classList.contains("active")) renderScreens();
+  }catch(_){}
+}
+setInterval(()=>{ if(document.querySelector('.navbtn[data-tab=screens]').classList.contains("active")) loadScreenStatus(); }, 30000);
 
 /* ---------- migrate + load content.json ---------- */
 function normSlides(list){ return (list||[]).map(raw=>{ const it=typeof raw==="string"?{src:raw}:(raw||{}); const src=it.src||it.url||it.image||it.video||"";
@@ -529,10 +557,10 @@ async function commitViaToken(files,deletions){
 }
 
 /* ---------- boot ---------- */
-console.log("Signage Dashboard — build 6 (scheduling)");
+console.log("Signage Dashboard — build 7 (monitoring)");
 loadPrefs();
 loadContent();
-if(el("adminPw").value) loadAssets(); else setConn("","Enter your admin password in Connection");
+if(el("adminPw").value){ loadAssets(); loadScreenStatus(); } else setConn("","Enter your admin password in Connection");
 </script>
 </body>
 </html>

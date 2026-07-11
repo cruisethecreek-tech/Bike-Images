@@ -231,6 +231,50 @@ can be wired up.
 
 ---
 
+## Screen monitoring (optional — Supabase)
+
+Turn on the online/offline health dot in the dashboard's **Screens** tab. Each TV checks
+in every minute; the dashboard shows 🟢 online / 🔴 offline and when it was last seen.
+This is the one feature that needs a tiny database. It's free and about a 5-minute setup.
+
+**Until you set this up, everything else works as normal** — the Screens tab just shows a
+hint instead of the status dot.
+
+### 1. Create a Supabase project
+1. Go to **supabase.com**, sign up (free), and **New project**. Pick any name/region and a
+   database password (you won't need it again for this).
+
+### 2. Create the table
+In the Supabase dashboard → **SQL Editor** → **New query** → paste and **Run**:
+```sql
+create table screen_status (
+  screen_id  text primary key,
+  last_seen  timestamptz not null default now(),
+  playlist   text,
+  user_agent text
+);
+```
+
+### 3. Get your keys
+Supabase → **Project Settings → API**:
+- **Project URL** (e.g. `https://abcd.supabase.co`)
+- **service_role** key (under *Project API keys* — the secret one, **not** anon)
+
+### 4. Add them to Vercel
+Your project → **Settings → Environment Variables** → add:
+| Name | Value |
+|------|-------|
+| `SUPABASE_URL` | your Project URL |
+| `SUPABASE_SERVICE_ROLE_KEY` | the service_role key |
+
+Then **redeploy**. That's it — within a minute of your screens loading, the Screens tab
+lights up with live status.
+
+> The service_role key stays server-side (in `api/heartbeat.mjs` and `api/screens.mjs`);
+> it's never exposed in the browser. Screens check in through `/api/heartbeat`.
+
+---
+
 ## Why this beats a paid tool for you
 
 - **$0 forever** — no per-screen fees, no watermark, no account.
