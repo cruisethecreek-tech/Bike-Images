@@ -103,7 +103,7 @@
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand">Signage <span class="build">build 8 ✓</span></div>
+    <div class="brand">Signage <span class="build">build 9 ✓</span></div>
     <div class="status"><span class="dot" id="connDot"></span><span id="connLabel">Not connected</span></div>
     <span class="spacer"></span>
     <span id="dirty"></span>
@@ -172,6 +172,23 @@
           <label>Ticker speed (seconds per pass — higher is slower)</label>
           <input type="number" id="tickerSpeed" min="8" max="120" placeholder="30" style="max-width:160px;" />
         </div>
+
+        <div class="card">
+          <div style="font-weight:800;font-size:1rem;margin-bottom:2px;">🌤 Live weather</div>
+          <p class="muted" style="margin:0 0 6px;">Shows current temperature in a corner of <strong>every screen</strong>. Free, no API key.</p>
+          <div class="check"><input type="checkbox" id="wxEnabled" /><label for="wxEnabled">Show live weather</label></div>
+          <label>Location</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <input type="text" id="wxPlace" placeholder="e.g. Cocoa Beach, FL" style="flex:1 1 200px;" />
+            <button class="chip" id="wxFind" type="button" style="flex:0 0 auto;">Find location</button>
+          </div>
+          <div id="wxResolved" class="muted" style="margin-top:8px;"></div>
+          <label>Units</label>
+          <select id="wxUnit" style="max-width:200px;">
+            <option value="fahrenheit">°F (Fahrenheit)</option>
+            <option value="celsius">°C (Celsius)</option>
+          </select>
+        </div>
       </section>
 
       <!-- SCREENS -->
@@ -210,7 +227,7 @@
 <div id="status"></div>
 
 <script>
-/* ===================== Signage Dashboard — build 8 (video storage) ===================== */
+/* ===================== Signage Dashboard — build 9 (weather) ===================== */
 const GH="https://api.github.com";
 const MAX_EDGE=1920, JPEG_QUALITY=0.82, MAX_BATCH_BYTES=3_500_000;
 const ONLINE_MS=3*60*1000;   // seen within 3 min = online
@@ -461,6 +478,31 @@ el("tickerLabel").addEventListener("input",()=>{ pl().tickerLabel=el("tickerLabe
 el("tickerText").addEventListener("input",()=>{ pl().tickerText=el("tickerText").value; setDirty(true); });
 el("tickerSpeed").addEventListener("input",()=>{ pl().tickerSpeed=Number(el("tickerSpeed").value)||30; setDirty(true); });
 
+/* ---------- weather (global) ---------- */
+function renderWeather(){
+  const w=config.weather||(config.weather={enabled:false,place:"",lat:null,lon:null,unit:"fahrenheit"});
+  el("wxEnabled").checked=!!w.enabled;
+  el("wxPlace").value=w.place||"";
+  el("wxUnit").value=w.unit==="celsius"?"celsius":"fahrenheit";
+  el("wxResolved").textContent=(w.lat!=null&&w.lon!=null)?`📍 ${w.place||"set"} (${(+w.lat).toFixed(2)}, ${(+w.lon).toFixed(2)})`:"No location set yet — type a town and click Find.";
+}
+el("wxEnabled").addEventListener("change",()=>{ config.weather.enabled=el("wxEnabled").checked; setDirty(true); });
+el("wxUnit").addEventListener("change",()=>{ config.weather.unit=el("wxUnit").value; setDirty(true); });
+el("wxPlace").addEventListener("input",()=>{ config.weather.place=el("wxPlace").value; setDirty(true); });
+el("wxFind").addEventListener("click",async ()=>{
+  const q=el("wxPlace").value.trim(); if(!q){ status("Type a town/city first","err"); return; }
+  status("Finding location…","busy");
+  try{
+    const r=await fetch("https://geocoding-api.open-meteo.com/v1/search?count=1&language=en&name="+encodeURIComponent(q));
+    const d=await r.json(); const g=d.results&&d.results[0];
+    if(!g) throw new Error("Not found — try “City, State” or a bigger nearby town");
+    config.weather.lat=g.latitude; config.weather.lon=g.longitude;
+    config.weather.place=[g.name,g.admin1,g.country_code].filter(Boolean).join(", ");
+    if(!config.weather.enabled){ config.weather.enabled=true; }
+    setDirty(true); renderWeather(); status("Location set: "+config.weather.place,"ok");
+  }catch(e){ status("⚠ "+e.message,"err"); }
+});
+
 /* ---------- prefs ---------- */
 function loadPrefs(){ el("adminPw").value=sessionStorage.getItem("sg_pw")||"";
   const t=sessionStorage.getItem("sg_tok")||""; el("ghToken").value=/^(gh[pousr]_|github_pat_)/.test(t)?t:"";
@@ -496,18 +538,20 @@ function migrate(cfg){
         tickerLabel:p.tickerLabel||"", tickerText:p.tickerText||"", tickerSpeed:Number(p.tickerSpeed)||30, slides:normSlides(p.slides||p.items||[]) }; }
     if(!out.screens.length){ const first=Object.keys(out.playlists)[0]||"main"; out.screens=[{id:"1",name:"Screen 1",playlist:first}]; }
     if(!Object.keys(out.playlists).length) out.playlists.main={name:"Main",fit:"cover",showClock:true,tickerLabel:"",tickerText:"",tickerSpeed:30,slides:[]};
+    out.weather=normWeather(cfg.weather);
     return out;
   }
   const flat=cfg||{};
   const p={ name:"Main", fit:flat.fit==="contain"?"contain":"cover", showClock:!!flat.showClock,
     tickerLabel:flat.tickerLabel||"", tickerText:flat.tickerText||"", tickerSpeed:Number(flat.tickerSpeed)||30,
     slides:normSlides(Array.isArray(flat)?flat:(flat.slides||flat.items||[])) };
-  return { playlists:{ main:p }, screens:[{id:"1",name:"Screen 1",playlist:"main",rules:[]}] };
+  return { playlists:{ main:p }, screens:[{id:"1",name:"Screen 1",playlist:"main",rules:[]}], weather:normWeather(flat.weather) };
 }
+function normWeather(w){ w=w||{}; return { enabled:!!w.enabled, place:w.place||"", lat:(w.lat!=null&&w.lat!==""?Number(w.lat):null), lon:(w.lon!=null&&w.lon!==""?Number(w.lon):null), unit:w.unit==="celsius"?"celsius":"fahrenheit" }; }
 async function loadContent(){
   let cfg={};
   try{ const res=await fetch("content.json?t="+Date.now(),{cache:"no-store"}); if(res.ok) cfg=await res.json(); }catch(_){}
-  config=migrate(cfg); curPl=Object.keys(config.playlists)[0]; refreshPl();
+  config=migrate(cfg); curPl=Object.keys(config.playlists)[0]; refreshPl(); renderWeather();
 }
 
 /* ---------- media library ---------- */
@@ -542,6 +586,10 @@ function buildContent(){
     if((p.tickerText||"").trim()){ o.tickerLabel=p.tickerLabel||"INFO"; o.tickerText=p.tickerText; o.tickerSpeed=Number(p.tickerSpeed)||30; }
     o.slides=p.slides.map(s=>{ const x={src:s.path}; if(!s.isVideo)x.seconds=Number(s.seconds)||8; if(s.caption)x.caption=s.caption; if(s.fit)x.fit=s.fit; return x; });
     out.playlists[id]=o;
+  }
+  const w=config.weather;
+  if(w && w.enabled && w.lat!=null && w.lon!=null){
+    out.weather={ enabled:true, place:w.place||"", lat:w.lat, lon:w.lon, unit:w.unit==="celsius"?"celsius":"fahrenheit" };
   }
   return out;
 }
@@ -591,7 +639,7 @@ async function commitViaToken(files,deletions){
 }
 
 /* ---------- boot ---------- */
-console.log("Signage Dashboard — build 8 (video storage)");
+console.log("Signage Dashboard — build 9 (weather)");
 loadPrefs();
 loadContent();
 if(el("adminPw").value){ loadAssets(); loadScreenStatus(); } else setConn("","Enter your admin password in Connection");
