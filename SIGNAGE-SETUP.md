@@ -175,6 +175,52 @@ browser — fine for just you, not for a shared/kiosk machine.
 
 ---
 
+## Phase 3: the white-label app (`signage-app/`)
+
+For a fully-branded, standalone experience — your own app name and icon on the Fire TV
+home screen, no third-party kiosk browser — there's a native Android app in
+`signage-app/`. It's a fullscreen WebView kiosk that:
+
+- Opens straight to your signage page (no browser bars, no address bar),
+- **Auto-launches when the TV powers on**, keeps the screen awake, and ignores the Back
+  button so it can't be exited by accident,
+- Auto-reloads if the network hiccups,
+- Wears **your branding** (app name, icon, Fire TV banner).
+
+It shows the same `signage.html`, so everything you set up above still applies — the app
+is just a branded wrapper instead of Fully Kiosk / TV Bro.
+
+### Building the APK (no Android tools needed)
+
+A GitHub Actions workflow (`.github/workflows/build-apk.yml`) compiles and signs the APK
+in the cloud:
+
+1. Go to the repo's **Actions** tab → **Build Signage APK** → **Run workflow**.
+   (It also runs automatically whenever anything in `signage-app/` changes.)
+2. When it finishes (~3–5 min), open the run and download the
+   **`cruise-the-creek-signage-apk`** artifact — inside is `cruise-the-creek-signage.apk`.
+3. **Sideload it** onto each Fire Stick with the **Downloader** app (same steps as the
+   Option B sideload above) — but now you're installing *your own app*.
+
+### Customizing it
+
+- **Which page it shows:** edit `signage_url` in
+  `signage-app/app/src/main/res/values/strings.xml` (set it to your deployed
+  `…/signage.html`), then rebuild.
+- **App name:** edit `app_name` in the same file.
+- **Icon / banner:** replace `ic_foreground.xml` / `banner.xml` under
+  `signage-app/app/src/main/res/` (or `colors.xml` to recolor).
+
+### Signing note
+
+To get a working APK with zero setup, the release build is signed with the auto-generated
+debug key — perfectly fine for sideloaded kiosk devices. If you later want a proper
+release keystore (e.g. for consistent app updates), generate one, add it as GitHub
+secrets, and point a `signingConfig` at it in `signage-app/app/build.gradle`. Ask and it
+can be wired up.
+
+---
+
 ## Why this beats a paid tool for you
 
 - **$0 forever** — no per-screen fees, no watermark, no account.
@@ -183,3 +229,5 @@ browser — fine for just you, not for a shared/kiosk machine.
 - **Self-updating screens** — push once, all TVs follow.
 - **Your own upload panel** — `admin.html` gives you drag-and-drop management with none
   of the subscription.
+- **Your own branded app** — `signage-app/` builds a white-label APK, no third-party
+  kiosk software.

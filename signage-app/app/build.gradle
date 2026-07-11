@@ -1,0 +1,36 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.cruisethecreek.signage'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.cruisethecreek.signage"
+        minSdk 21          // Fire OS 5 (Fire TV Stick) and up
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            // Sign the release with the auto-generated debug key so a working,
+            // installable APK is produced with ZERO keystore setup. This is fine for
+            // sideloaded kiosk devices. To ship a properly-signed build later, replace
+            // this with your own signingConfig (see SIGNAGE-SETUP.md, Phase 3).
+            signingConfig signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+}

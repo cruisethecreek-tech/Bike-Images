@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fullscreen, no action bar. Teal window background doubles as the splash. -->
+    <style name="Theme.Signage" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/brand_teal</item>
+        <item name="android:statusBarColor">@color/brand_teal</item>
+        <item name="android:navigationBarColor">@color/brand_teal</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+</resources>
