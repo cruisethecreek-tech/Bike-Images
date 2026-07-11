@@ -52,28 +52,32 @@ export default async function handler(req, res) {
       .map(f => ({ name: f.name, path: f.path, size: f.size }))
       .sort((a, b) => a.name.localeCompare(b.name));
 
-    // Also list large videos kept in Supabase Storage (optional).
+    // Also list media kept in Supabase Storage: uploaded videos (videos/) and
+    // link-imported photos/videos (imported/). Optional — only if configured.
     const sbUrl = (process.env.SUPABASE_URL || "").replace(/\/+$/, ""), sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (sbUrl && sbKey) {
       const bucket = process.env.SUPABASE_BUCKET || "media";
-      try {
-        const r = await fetch(`${sbUrl}/storage/v1/object/list/${bucket}`, {
-          method: "POST",
-          headers: { apikey: sbKey, Authorization: "Bearer " + sbKey, "Content-Type": "application/json" },
-          body: JSON.stringify({ prefix: "videos/", limit: 200, sortBy: { column: "name", order: "asc" } }),
-        });
-        if (r.ok) {
-          const objs = await r.json();
-          (Array.isArray(objs) ? objs : [])
-            .filter(o => o.name && o.metadata && /\.(mp4|webm|ogg|mov|m4v)$/i.test(o.name))
-            .forEach(o => files.push({
-              name: o.name,
-              path: `${sbUrl}/storage/v1/object/public/${bucket}/videos/${o.name}`,
-              size: (o.metadata && o.metadata.size) || 0,
-              storage: true,
-            }));
-        }
-      } catch (_) { /* storage optional — ignore listing errors */ }
+      const mediaRe = /\.(jpe?g|png|webp|gif|mp4|webm|ogg|mov|m4v)$/i;
+      for (const prefix of ["videos/", "imported/"]) {
+        try {
+          const r = await fetch(`${sbUrl}/storage/v1/object/list/${bucket}`, {
+            method: "POST",
+            headers: { apikey: sbKey, Authorization: "Bearer " + sbKey, "Content-Type": "application/json" },
+            body: JSON.stringify({ prefix, limit: 200, sortBy: { column: "name", order: "asc" } }),
+          });
+          if (r.ok) {
+            const objs = await r.json();
+            (Array.isArray(objs) ? objs : [])
+              .filter(o => o.name && o.metadata && mediaRe.test(o.name))
+              .forEach(o => files.push({
+                name: o.name,
+                path: `${sbUrl}/storage/v1/object/public/${bucket}/${prefix}${o.name}`,
+                size: (o.metadata && o.metadata.size) || 0,
+                storage: true,
+              }));
+          }
+        } catch (_) { /* storage optional — ignore listing errors */ }
+      }
     }
     res.status(200).json({ files });
   } catch (err) {

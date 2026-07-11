@@ -103,7 +103,7 @@
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand">Signage <span class="build">build 9 ✓</span></div>
+    <div class="brand">Signage <span class="build">build 10 ✓</span></div>
     <div class="status"><span class="dot" id="connDot"></span><span id="connLabel">Not connected</span></div>
     <span class="spacer"></span>
     <span id="dirty"></span>
@@ -140,6 +140,11 @@
           <strong>Drop photos or videos here</strong><br>
           <span class="muted">or click to choose files — big photos are auto-shrunk for you</span>
           <input type="file" id="file" accept="image/*,video/*" multiple hidden />
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;">
+          <span class="muted" style="flex:0 0 auto;">Or import from a link:</span>
+          <input type="text" id="importUrl" placeholder="Paste a Google Drive share link or image/video URL" style="flex:1 1 240px;" />
+          <button class="chip" id="importBtn" type="button" style="flex:0 0 auto;">Import</button>
         </div>
         <div id="mediaGrid" class="grid"></div>
         <div id="mediaEmpty" class="empty" style="display:none;">No media yet. Drop some photos above, or enter your password in <strong>Connection</strong> to load your library.</div>
@@ -227,7 +232,7 @@
 <div id="status"></div>
 
 <script>
-/* ===================== Signage Dashboard — build 9 (weather) ===================== */
+/* ===================== Signage Dashboard — build 10 (import from link) ===================== */
 const GH="https://api.github.com";
 const MAX_EDGE=1920, JPEG_QUALITY=0.82, MAX_BATCH_BYTES=3_500_000;
 const ONLINE_MS=3*60*1000;   // seen within 3 min = online
@@ -331,6 +336,26 @@ el("drop").addEventListener("click",()=>el("file").click());
 ["dragover","dragenter"].forEach(ev=>el("drop").addEventListener(ev,e=>{e.preventDefault();el("drop").classList.add("over");}));
 ["dragleave","drop"].forEach(ev=>el("drop").addEventListener(ev,e=>{e.preventDefault();el("drop").classList.remove("over");}));
 el("drop").addEventListener("drop",e=>{ if(e.dataTransfer.files.length) addFiles(e.dataTransfer.files); });
+
+/* ---------- import from a link (Google Drive / URL) ---------- */
+async function importFromUrl(){
+  const u=el("importUrl").value.trim(); if(!u){ status("Paste a link first","err"); return; }
+  status("Importing from link…","busy"); el("importBtn").disabled=true;
+  try{
+    const r=await fetch("/api/import-url",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({password:el("adminPw").value,url:u})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok||!d.publicUrl) throw new Error(d.error||"Import failed");
+    let name=d.name,n=1; const have=new Set(assets.map(a=>a.name));
+    while(have.has(name)){ const dot=d.name.lastIndexOf("."); name=dot>0?d.name.slice(0,dot)+"-"+n+d.name.slice(dot):d.name+"-"+n; n++; }
+    const asset={ name, path:d.publicUrl, isVideo:!!d.isVideo, previewUrl:d.publicUrl, pending:false, storage:true };
+    assets.push(asset); addToShow(asset); el("importUrl").value="";
+    setDirty(true); renderMedia(); renderSlides(); counts(); status(`Imported “${name}” ✓`,"ok");
+  }catch(e){ status("⚠ "+e.message,"err"); }
+  finally{ el("importBtn").disabled=false; }
+}
+el("importBtn").addEventListener("click",importFromUrl);
+el("importUrl").addEventListener("keydown",e=>{ if(e.key==="Enter") importFromUrl(); });
 
 /* ---------- media <-> current playlist ---------- */
 function inShow(path){ return pl().slides.some(s=>s.path===path); }
@@ -639,7 +664,7 @@ async function commitViaToken(files,deletions){
 }
 
 /* ---------- boot ---------- */
-console.log("Signage Dashboard — build 9 (weather)");
+console.log("Signage Dashboard — build 10 (import from link)");
 loadPrefs();
 loadContent();
 if(el("adminPw").value){ loadAssets(); loadScreenStatus(); } else setConn("","Enter your admin password in Connection");
