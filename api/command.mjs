@@ -59,7 +59,15 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({ screen_id, command: command || null, command_id }),
     });
-    if (!r.ok) { const t = await r.text(); throw new Error("Supabase " + r.status + ": " + t.slice(0, 200)); }
+    if (!r.ok) {
+      const t = await r.text();
+      // The command/command_id columns haven't been added to the table yet.
+      if (/command.* column|PGRST204|schema cache/i.test(t)) {
+        res.status(200).json({ ok: false, needsSetup: true, error: "One-time setup needed: add the remote-control columns. In Supabase → SQL Editor, run:  alter table screen_status add column if not exists command text;  alter table screen_status add column if not exists command_id text;" });
+        return;
+      }
+      throw new Error("Supabase " + r.status + ": " + t.slice(0, 200));
+    }
     res.status(200).json({ ok: true, command_id });
   } catch (err) {
     res.status(200).json({ ok: false, error: err.message });
