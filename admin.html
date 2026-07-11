@@ -247,19 +247,80 @@ function render(){
   }));
 }
 
+/* ---------- Image compression ----------
+   TVs are 1080p, so there's no reason to store multi-MB phone photos. Downscaling
+   to 1920px and re-encoding as JPEG shrinks a typical photo to a few hundred KB —
+   which also keeps uploads under Vercel's ~4.5 MB request limit (the cause of 413s). */
+const MAX_EDGE = 1920;
+const JPEG_QUALITY = 0.82;
+
+function loadImage(file){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => res({ img, url });
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("Could not read image")); };
+    img.src = url;
+  });
+}
+
+// Downscale + JPEG-encode an image file. Falls back to the raw bytes on any failure.
+async function compressImage(file){
+  try{
+    const { img, url } = await loadImage(file);
+    let w = img.naturalWidth, h = img.naturalHeight;
+    const scale = Math.min(1, MAX_EDGE / Math.max(w, h));
+    w = Math.max(1, Math.round(w * scale));
+    h = Math.max(1, Math.round(h * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, w, h);   // matte for transparent PNGs
+    ctx.drawImage(img, 0, 0, w, h);
+    URL.revokeObjectURL(url);
+    const dataUrl = canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+    return { base64: dataUrl.split(",")[1], previewUrl: dataUrl, converted: true };
+  }catch(_){
+    return { base64: await fileToBase64(file), previewUrl: URL.createObjectURL(file), converted: false };
+  }
+}
+
 /* ---------- Add files ---------- */
 async function addFiles(fileList){
-  const existingNames = new Set(slides.map(s=>s.name));
-  for(const file of fileList){
-    let base=sanitize(file.name), name=base, n=1;
-    while(existingNames.has(name)){ const dot=base.lastIndexOf(".");
-      name = dot>0 ? base.slice(0,dot)+"-"+n+base.slice(dot) : base+"-"+n; n++; }
-    existingNames.add(name);
-    const b64 = await fileToBase64(file);
-    slides.push({ path:"images/"+name, name, isVideo:file.type.startsWith("video/")||isVideoName(name),
-                  seconds:8, caption:"", fit:"", contentBase64:b64,
-                  previewUrl:URL.createObjectURL(file), existing:false });
+  const existingNames = new Set(slides.map(s => s.name));
+  const list = Array.from(fileList);
+  for(let i = 0; i < list.length; i++){
+    const file = list[i];
+    status(`Processing ${i + 1}/${list.length}…`, "busy");
+
+    const isVideo = file.type.startsWith("video/") || isVideoName(file.name);
+    const isGif   = file.type === "image/gif" || /\.gif$/i.test(file.name);
+
+    let base64, previewUrl, name = sanitize(file.name);
+    if(isVideo || isGif){
+      // leave videos and animated GIFs untouched
+      base64 = await fileToBase64(file);
+      previewUrl = URL.createObjectURL(file);
+    }else{
+      const c = await compressImage(file);
+      base64 = c.base64; previewUrl = c.previewUrl;
+      if(c.converted) name = name.replace(/\.(png|webp|jpe?g|bmp|heic|heif|tiff?)$/i, "") + ".jpg";
+    }
+
+    // ensure a unique filename
+    let unique = name, n = 1;
+    while(existingNames.has(unique)){
+      const dot = name.lastIndexOf(".");
+      unique = dot > 0 ? name.slice(0, dot) + "-" + n + name.slice(dot) : name + "-" + n;
+      n++;
+    }
+    existingNames.add(unique);
+
+    slides.push({ path:"images/"+unique, name:unique, isVideo,
+                  seconds:8, caption:"", fit:"", contentBase64:base64,
+                  previewUrl, existing:false });
   }
+  hideStatus();
   setDirty(true); render();
 }
 el("file").addEventListener("change",e=>{ addFiles(e.target.files); e.target.value=""; });
@@ -288,28 +349,58 @@ function buildContent(){
 }
 
 /* ---------- Save (commit) ---------- */
+// Keep each request under Vercel's ~4.5 MB body limit (base64 length ≈ bytes sent).
+const MAX_BATCH_BYTES = 3_500_000;
+
 async function save(){
   savePrefs();
   if(!slides.length && !confirm("No slides — save an empty display?")) return;
 
-  // Gather files: new media + content.json
-  const files = [];
-  for(const s of slides){ if(s.contentBase64) files.push({ path:s.path, contentBase64:s.contentBase64 }); }
-  const content = JSON.stringify(buildContent(), null, 2);
-  files.push({ path:"content.json", contentBase64: b64utf8(content) });
+  const usingToken = el("useToken").checked;
 
-  el("saveBtn").disabled=true;
-  status("Publishing "+files.length+" file(s)…","busy");
+  // New media that still needs uploading
+  const media = [];
+  for(const s of slides){
+    if(s.contentBase64) media.push({ path:s.path, contentBase64:s.contentBase64, isVideo:s.isVideo, name:s.name });
+  }
+
+  // Secure mode can't push a single file bigger than the request limit (usually a video).
+  if(!usingToken){
+    const tooBig = media.find(f => f.contentBase64.length > MAX_BATCH_BYTES);
+    if(tooBig){
+      status(`⚠ "${tooBig.name}" is too large to upload through the panel (Vercel caps requests at ~4.5 MB). Use a smaller/shorter video, or the Advanced GitHub-token mode which has no such limit.`, "err");
+      return;
+    }
+  }
+
+  const contentFile = { path:"content.json", contentBase64: b64utf8(JSON.stringify(buildContent(), null, 2)) };
+
+  // Pack media into size-bounded batches; content.json rides along in the last batch.
+  const batches = [];
+  let cur = [], curSize = 0;
+  for(const f of media){
+    if(cur.length && curSize + f.contentBase64.length > MAX_BATCH_BYTES){ batches.push(cur); cur = []; curSize = 0; }
+    cur.push({ path:f.path, contentBase64:f.contentBase64 });
+    curSize += f.contentBase64.length;
+  }
+  cur.push(contentFile);
+  batches.push(cur);
+
+  const commit = usingToken ? commitViaToken : commitViaServer;
+
+  el("saveBtn").disabled = true;
   try{
-    if(el("useToken").checked){ await commitViaToken(files); }
-    else{ await commitViaServer(files); }
+    for(let i = 0; i < batches.length; i++){
+      status(batches.length > 1 ? `Publishing… (${i + 1}/${batches.length})` : "Publishing…", "busy");
+      await commit(batches[i]);   // sequential: each commit builds on the previous
+    }
     // mark uploaded slides as existing so a re-save won't re-upload them
-    slides.forEach(s=>{ if(s.contentBase64){ delete s.contentBase64; s.existing=true; } });
+    slides.forEach(s => { if(s.contentBase64){ delete s.contentBase64; s.existing = true; } });
     setDirty(false); render();
     status("✅ Published! Screens will update within a minute.","ok");
   }catch(err){
     status("⚠ "+(err.message||err),"err");
-  }finally{ el("saveBtn").disabled=false; }
+  }finally{ el("saveBtn").disabled = false; }
 }
 
 function b64utf8(str){ return btoa(unescape(encodeURIComponent(str))); }
