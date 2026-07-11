@@ -185,6 +185,12 @@
         </div>
 
         <div class="card">
+          <div style="font-weight:800;font-size:1rem;margin-bottom:2px;">🔗 Keep screens in sync</div>
+          <p class="muted" style="margin:0 0 6px;">When two or more TVs show the <strong>same playlist</strong>, they play the same slide at the same moment. Applies to <strong>all screens</strong>.</p>
+          <div class="check"><input type="checkbox" id="syncPlay" /><label for="syncPlay">Sync screens that are playing the same playlist</label></div>
+        </div>
+
+        <div class="card">
           <div style="font-weight:800;font-size:1rem;margin-bottom:2px;">🌤 Live weather</div>
           <p class="muted" style="margin:0 0 6px;">Shows current temperature in a corner of <strong>every screen</strong>. Free, no API key.</p>
           <div class="check"><input type="checkbox" id="wxEnabled" /><label for="wxEnabled">Show live weather</label></div>
@@ -633,20 +639,23 @@ function migrate(cfg){
     if(!out.screens.length){ const first=Object.keys(out.playlists)[0]||"main"; out.screens=[{id:"1",name:"Screen 1",playlist:first}]; }
     if(!Object.keys(out.playlists).length) out.playlists.main={name:"Main",fit:"cover",showClock:true,tickerLabel:"",tickerText:"",tickerSpeed:30,slides:[]};
     out.weather=normWeather(cfg.weather);
+    out.sync=cfg.sync!==false;   // default on
     return out;
   }
   const flat=cfg||{};
   const p={ name:"Main", fit:flat.fit==="contain"?"contain":"cover", showClock:!!flat.showClock,
     tickerLabel:flat.tickerLabel||"", tickerText:flat.tickerText||"", tickerSpeed:Number(flat.tickerSpeed)||30,
     slides:normSlides(Array.isArray(flat)?flat:(flat.slides||flat.items||[])) };
-  return { playlists:{ main:p }, screens:[{id:"1",name:"Screen 1",playlist:"main",rules:[]}], weather:normWeather(flat.weather) };
+  return { playlists:{ main:p }, screens:[{id:"1",name:"Screen 1",playlist:"main",rules:[]}], weather:normWeather(flat.weather), sync:flat.sync!==false };
 }
 function normWeather(w){ w=w||{}; return { enabled:!!w.enabled, place:w.place||"", lat:(w.lat!=null&&w.lat!==""?Number(w.lat):null), lon:(w.lon!=null&&w.lon!==""?Number(w.lon):null), unit:w.unit==="celsius"?"celsius":"fahrenheit" }; }
 async function loadContent(){
   let cfg={};
   try{ const res=await fetch("content.json?t="+Date.now(),{cache:"no-store"}); if(res.ok) cfg=await res.json(); }catch(_){}
   config=migrate(cfg); curPl=Object.keys(config.playlists)[0]; refreshPl(); renderWeather();
+  el("syncPlay").checked = config.sync!==false;
 }
+el("syncPlay").onchange=e=>{ config.sync=e.target.checked; setDirty(true); };
 
 /* ---------- media library ---------- */
 async function loadAssets(){
@@ -685,6 +694,7 @@ function buildContent(){
   if(w && w.enabled && w.lat!=null && w.lon!=null){
     out.weather={ enabled:true, place:w.place||"", lat:w.lat, lon:w.lon, unit:w.unit==="celsius"?"celsius":"fahrenheit" };
   }
+  out.sync = config.sync!==false;   // clock-synced playback across screens (default on)
   return out;
 }
 

@@ -316,6 +316,7 @@ let items  = [];          // normalized playlist data
 let idx    = -1;
 let timer  = null;
 let lastSignature = "";   // detect content.json changes without flicker
+let syncMode = true;      // clock-driven playback so identical playlists stay in step
 
 /* ---------- Load + normalize config ---------- */
 let currentConfig = null;   // last good config, re-evaluated on a timer for schedules
@@ -526,9 +527,13 @@ async function runCommand(command, id){
 function applyConfig(fullCfg) {
   const cfg = resolvePlaylist(fullCfg);
   const list = Array.isArray(cfg) ? cfg : (cfg.slides || cfg.items || []);
-  const signature = JSON.stringify({ screen: SCREEN, list, t: cfg.tickerText, l: cfg.tickerLabel, f: cfg.fit });
+  // Sync playback across TVs unless explicitly disabled. When on, every TV shows the
+  // slide the wall clock says should be on now, so identical playlists stay in step.
+  const wantSync = !(fullCfg && fullCfg.sync === false);
+  const signature = JSON.stringify({ screen: SCREEN, list, t: cfg.tickerText, l: cfg.tickerLabel, f: cfg.fit, y: wantSync });
   if (signature === lastSignature) return;   // nothing changed; leave playback alone
   lastSignature = signature;
+  syncMode = wantSync;
 
   const globalFit = cfg.fit === "cover" ? "cover" : "contain";
 
@@ -586,6 +591,14 @@ function rebuildSlides() {
       v.muted = true;
       v.playsInline = true;
       v.preload = "auto";
+      // Learn the clip's real length so the synced cycle is exact (same file → same
+      // length on every TV). Re-align once we know it.
+      v.addEventListener("loadedmetadata", () => {
+        if (v.duration && isFinite(v.duration) && v.duration > 0 && it.vdur !== v.duration) {
+          it.vdur = v.duration;
+          if (syncMode) showSyncSlide(false);
+        }
+      });
       el.appendChild(v);
     } else {
       const img = document.createElement("img");
@@ -603,10 +616,10 @@ function rebuildSlides() {
   });
 
   idx = -1;
-  next();
+  if (syncMode) showSyncSlide(true); else next();
 }
 
-/* ---------- Playback loop ---------- */
+/* ---------- Playback: independent loop (sync off) ---------- */
 function next() {
   clearTimeout(timer);
   if (!slides.length) return;
@@ -629,6 +642,61 @@ function next() {
   } else {
     timer = setTimeout(next, it.seconds * 1000);
   }
+}
+
+/* ---------- Playback: clock-synced (sync on) ----------
+   Which slide is on, and how far into it, is a pure function of the wall clock and the
+   playlist's slide lengths — so any two TVs on the same playlist show the same thing at
+   the same time (Fire TV clocks are NTP-synced). Videos are seeked to the right offset. */
+function effDur(it) {
+  if (it.isVideo) return (it.vdur && isFinite(it.vdur)) ? it.vdur : (it.seconds || DEFAULT_SECS);
+  return it.seconds || DEFAULT_SECS;
+}
+function syncState() {
+  const durs = items.map(effDur);
+  const cycle = durs.reduce((a, b) => a + b, 0);
+  if (!(cycle > 0)) return { index: 0, into: 0, dur: durs[0] || DEFAULT_SECS };
+  let t = (Date.now() / 1000) % cycle;              // seconds into the shared cycle
+  for (let i = 0; i < durs.length; i++) {
+    if (t < durs[i]) return { index: i, into: t, dur: durs[i] };
+    t -= durs[i];
+  }
+  const last = durs.length - 1;
+  return { index: last, into: 0, dur: durs[last] };
+}
+function showSyncSlide(force) {
+  if (!slides.length) return;
+  const s = syncState();
+  if (s.index !== idx || force) {
+    if (idx >= 0 && slides[idx]) {
+      slides[idx].classList.remove("active");
+      const pv = slides[idx].querySelector("video");
+      if (pv) { try { pv.pause(); } catch (_) {} }
+    }
+    idx = s.index;
+    const el = slides[idx], it = items[idx];
+    el.classList.add("active");
+    if (it.isVideo) {
+      const v = el.querySelector("video");
+      // advancing early (clip shorter than we thought) just re-checks the clock
+      v.onended = () => { if (syncMode) showSyncSlide(true); };
+      try { v.currentTime = s.into || 0; } catch (_) {}
+      const p = v.play(); if (p && p.catch) p.catch(() => {});
+    }
+  } else {
+    // Same slide as the clock wants — nudge a drifting video back into alignment.
+    const it = items[idx], el = slides[idx];
+    if (it && it.isVideo && el) {
+      const v = el.querySelector("video");
+      if (v && isFinite(s.into) && Math.abs((v.currentTime || 0) - s.into) > 1.2) {
+        try { v.currentTime = s.into; } catch (_) {}
+      }
+    }
+  }
+  // Re-evaluate at this slide's boundary (recomputed from the clock, so late timers self-heal).
+  clearTimeout(timer);
+  const remaining = Math.max(0.25, (s.dur || effDur(items[idx])) - (s.into || 0));
+  timer = setTimeout(() => { if (syncMode) showSyncSlide(true); }, remaining * 1000 + 50);
 }
 
 /* ---------- Clock ---------- */
@@ -657,6 +725,7 @@ document.addEventListener("visibilitychange", () => {
 loadConfig();
 setInterval(loadConfig, RELOAD_MS);
 setInterval(scheduleTick, 20 * 1000);   // catch schedule boundaries between fetches
+setInterval(() => { if (syncMode && slides.length) showSyncSlide(false); }, 5 * 1000); // keep TVs aligned
 setInterval(tickClock, 1000);
 tickClock();
 keepAwake();
