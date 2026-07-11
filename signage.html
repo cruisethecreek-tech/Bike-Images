@@ -199,9 +199,30 @@ async function loadConfig() {
   }
 }
 
-function applyConfig(cfg) {
+// Which screen is this? ?screen=front (matches a screen id in the config).
+// ?playlist=rentals forces a specific playlist (handy for previewing).
+const SCREEN   = new URLSearchParams(location.search).get("screen")   || "";
+const FORCE_PL = new URLSearchParams(location.search).get("playlist") || "";
+
+// Pick the playlist this screen should show. Supports the multi-playlist schema
+// { playlists:{...}, screens:[...] } and falls back to the old flat schema.
+function resolvePlaylist(cfg) {
+  if (cfg && cfg.playlists && typeof cfg.playlists === "object") {
+    let plId = FORCE_PL;
+    if (!plId && Array.isArray(cfg.screens)) {
+      const scr = cfg.screens.find(s => String(s.id) === String(SCREEN)) || cfg.screens[0];
+      if (scr) plId = scr.playlist;
+    }
+    if (!plId || !cfg.playlists[plId]) plId = Object.keys(cfg.playlists)[0];
+    return cfg.playlists[plId] || {};
+  }
+  return cfg || {};   // old flat schema — the whole file is the playlist
+}
+
+function applyConfig(fullCfg) {
+  const cfg = resolvePlaylist(fullCfg);
   const list = Array.isArray(cfg) ? cfg : (cfg.slides || cfg.items || []);
-  const signature = JSON.stringify({ list, t: cfg.tickerText, l: cfg.tickerLabel, f: cfg.fit });
+  const signature = JSON.stringify({ screen: SCREEN, list, t: cfg.tickerText, l: cfg.tickerLabel, f: cfg.fit });
   if (signature === lastSignature) return;   // nothing changed; leave playback alone
   lastSignature = signature;
 
