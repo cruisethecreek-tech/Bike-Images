@@ -3,330 +3,283 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Signage Admin</title>
+<title>Signage Dashboard</title>
 <style>
   :root{
-    --bg:#f4f1ea; --card:#fff; --ink:#242424; --muted:#777; --line:#e3ddd0;
-    --accent:#1f6f8b; --accent-ink:#fff; --yellow:#ffcb05; --danger:#c0392b;
+    --bg:#f0ece3; --panel:#fff; --ink:#242424; --muted:#7a736a; --line:#e3ddd0;
+    --accent:#1f6f8b; --accent-ink:#fff; --accent-soft:#e3eef2; --yellow:#ffcb05;
+    --ok:#2ecc71; --err:#c0392b; --sidebar:#20313a; --sidebar-ink:#cdd8dd;
     --radius:14px;
   }
-  *{box-sizing:border-box;}
-  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{height:100%;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
        background:var(--bg);color:var(--ink);line-height:1.45;}
-  .wrap{max-width:840px;margin:0 auto;padding:20px 16px 120px;}
-  h1{font-size:1.5rem;margin:8px 0 2px;}
-  .sub{color:var(--muted);margin:0 0 18px;font-size:.95rem;}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-        padding:16px;margin-bottom:16px;box-shadow:0 2px 14px rgba(0,0,0,.04);}
-  .card h2{font-size:1.05rem;margin:0 0 12px;}
-  label{display:block;font-size:.85rem;font-weight:600;color:#555;margin:10px 0 4px;}
-  input[type=text],input[type=password],input[type=number],textarea,select{
-    width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;
-    font:inherit;background:#fff;color:var(--ink);}
-  textarea{min-height:70px;resize:vertical;}
-  .row{display:flex;gap:12px;flex-wrap:wrap;}
-  .row > div{flex:1 1 140px;}
-  .check{display:flex;align-items:center;gap:8px;margin-top:12px;}
-  .check input{width:18px;height:18px;}
-  .check label{margin:0;}
-  button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;
-         cursor:pointer;background:var(--accent);color:var(--accent-ink);}
-  button.ghost{background:#eee;color:#333;}
-  button.small{padding:5px 10px;font-size:.8rem;border-radius:8px;}
-  button.danger{background:#f6e4e2;color:var(--danger);}
-  button:disabled{opacity:.5;cursor:not-allowed;}
-  .muted{color:var(--muted);font-size:.85rem;}
-  /* Slides */
-  #slides{display:flex;flex-direction:column;gap:10px;}
-  .slide{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);
-         border-radius:12px;padding:10px;background:#fbfaf6;}
-  .slide .thumb{width:96px;height:64px;border-radius:8px;object-fit:cover;background:#ddd;flex:0 0 auto;}
-  .slide .thumb.vid{display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:#666;}
-  .slide .body{flex:1 1 auto;min-width:0;}
-  .slide .name{font-size:.8rem;color:var(--muted);word-break:break-all;margin-bottom:6px;}
-  .slide .fields{display:flex;gap:8px;flex-wrap:wrap;}
-  .slide .fields > div{flex:1 1 120px;}
-  .slide .ctrls{display:flex;flex-direction:column;gap:6px;flex:0 0 auto;}
-  .drop{border:2px dashed var(--line);border-radius:12px;padding:26px;text-align:center;
-        color:var(--muted);background:#fbfaf6;cursor:pointer;transition:.15s;}
-  .drop.over{border-color:var(--accent);background:var(--accent);color:#fff;}
-  #status{position:fixed;left:0;right:0;bottom:0;padding:14px 16px;text-align:center;
-          font-weight:600;transform:translateY(120%);transition:.25s;z-index:50;}
-  #status.show{transform:translateY(0);}
-  #status.ok{background:#e5f4ea;color:#1e7d43;border-top:2px solid #2ecc71;}
-  #status.err{background:#f9e4e2;color:var(--danger);border-top:2px solid var(--danger);}
-  #status.busy{background:#eef3f6;color:var(--accent);border-top:2px solid var(--accent);}
-  .bar{position:sticky;top:0;background:var(--bg);padding:10px 0;z-index:10;
-       display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--line);}
-  .bar .spacer{flex:1;}
-  details summary{cursor:pointer;font-weight:600;color:var(--accent);}
+  button{font:inherit;cursor:pointer;border:0;border-radius:10px;font-weight:600;}
+  input,select,textarea{font:inherit;}
   a{color:var(--accent);}
-  code{background:#efe9dc;padding:.1em .4em;border-radius:5px;font-size:.85em;}
+
+  /* ---------- Shell ---------- */
+  .app{display:flex;flex-direction:column;height:100vh;}
+  .topbar{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--panel);
+          border-bottom:1px solid var(--line);flex:0 0 auto;flex-wrap:wrap;}
+  .brand{font-size:1.15rem;font-weight:800;letter-spacing:.2px;}
+  .brand .build{font-size:.62rem;color:var(--ok);font-weight:700;vertical-align:middle;margin-left:6px;}
+  .status{display:flex;align-items:center;gap:7px;font-size:.85rem;color:var(--muted);}
+  .dot{width:10px;height:10px;border-radius:50%;background:#c9c2b6;flex:0 0 auto;}
+  .dot.ok{background:var(--ok);} .dot.err{background:var(--err);} .dot.busy{background:var(--accent);}
+  .topbar .spacer{flex:1;}
+  #dirty{font-size:.82rem;color:var(--muted);}
+  button.primary{background:var(--accent);color:var(--accent-ink);padding:9px 16px;}
+  button.ghost{background:#ece6da;color:#3a352d;padding:9px 14px;}
+  button.primary:disabled{opacity:.5;cursor:not-allowed;}
+
+  .body{flex:1 1 auto;display:flex;min-height:0;}
+  /* ---------- Sidebar ---------- */
+  .sidebar{flex:0 0 208px;background:var(--sidebar);color:var(--sidebar-ink);
+           padding:14px 10px;display:flex;flex-direction:column;gap:4px;overflow:auto;}
+  .sidebar .navbtn{display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+        background:transparent;color:var(--sidebar-ink);padding:11px 12px;border-radius:10px;font-weight:600;}
+  .sidebar .navbtn .ico{width:20px;text-align:center;}
+  .sidebar .navbtn:hover{background:rgba(255,255,255,.07);}
+  .sidebar .navbtn.active{background:var(--accent);color:#fff;}
+  .sidebar .navbtn .count{margin-left:auto;font-size:.72rem;background:rgba(255,255,255,.18);
+        padding:1px 8px;border-radius:20px;}
+  .sidebar .hint{margin-top:auto;font-size:.72rem;color:#7f8f97;padding:10px 12px;}
+
+  /* ---------- Content ---------- */
+  .content{flex:1 1 auto;overflow:auto;padding:22px;}
+  .tab{display:none;max-width:900px;margin:0 auto;}
+  .tab.active{display:block;}
+  .tab h2{font-size:1.25rem;margin-bottom:2px;}
+  .tab .lede{color:var(--muted);font-size:.9rem;margin-bottom:18px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+        padding:16px;margin-bottom:16px;box-shadow:0 2px 14px rgba(0,0,0,.04);}
+  label{display:block;font-size:.82rem;font-weight:600;color:#5a534a;margin:10px 0 4px;}
+  input[type=text],input[type=password],input[type=number],textarea,select{
+    width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);}
+  textarea{min-height:70px;resize:vertical;}
+  .row{display:flex;gap:12px;flex-wrap:wrap;} .row>div{flex:1 1 150px;}
+  .check{display:flex;align-items:center;gap:8px;margin-top:12px;} .check input{width:18px;height:18px;} .check label{margin:0;}
+  .muted{color:var(--muted);font-size:.85rem;}
+  button.small{padding:5px 10px;font-size:.8rem;border-radius:8px;}
+  button.chip{background:var(--accent-soft);color:var(--accent);}
+  button.danger{background:#f6e4e2;color:var(--err);}
+  button.solid{background:var(--accent);color:#fff;}
+
+  /* ---------- Media grid ---------- */
+  .drop{border:2px dashed var(--line);border-radius:12px;padding:22px;text-align:center;color:var(--muted);
+        background:#faf8f3;cursor:pointer;transition:.15s;margin-bottom:16px;}
+  .drop.over{border-color:var(--accent);background:var(--accent);color:#fff;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;}
+  .asset{background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;}
+  .asset .thumb{aspect-ratio:16/10;background:#ddd;object-fit:cover;width:100%;display:block;}
+  .asset .thumb.vid{display:flex;align-items:center;justify-content:center;font-size:2rem;color:#888;background:#2a2a2a;}
+  .asset .meta{padding:8px 10px;display:flex;flex-direction:column;gap:6px;}
+  .asset .nm{font-size:.75rem;color:var(--muted);word-break:break-all;line-height:1.25;}
+  .asset .tags{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+  .badge{font-size:.66rem;font-weight:700;padding:2px 7px;border-radius:20px;}
+  .badge.inshow{background:#e5f4ea;color:#1e7d43;}
+  .badge.new{background:#fdf4d6;color:#8a6d00;}
+  .asset .acts{display:flex;gap:6px;margin-top:2px;}
+  .asset .acts button{flex:1;}
+  .empty{text-align:center;color:var(--muted);padding:30px 10px;}
+
+  /* ---------- Slides list ---------- */
+  #slideList{display:flex;flex-direction:column;gap:10px;}
+  .slide{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--panel);}
+  .slide .thumb{width:104px;height:66px;border-radius:8px;object-fit:cover;background:#ddd;flex:0 0 auto;}
+  .slide .thumb.vid{display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:#888;background:#2a2a2a;}
+  .slide .body{flex:1 1 auto;min-width:0;}
+  .slide .nm{font-size:.76rem;color:var(--muted);word-break:break-all;margin-bottom:6px;}
+  .slide .fields{display:flex;gap:8px;flex-wrap:wrap;} .slide .fields>div{flex:1 1 120px;}
+  .slide .ctrls{display:flex;flex-direction:column;gap:6px;flex:0 0 auto;}
+
+  /* ---------- Toast ---------- */
+  #status{position:fixed;left:50%;transform:translate(-50%,140%);bottom:18px;padding:12px 20px;border-radius:12px;
+          font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,.18);transition:.25s;z-index:60;max-width:90vw;}
+  #status.show{transform:translate(-50%,0);}
+  #status.ok{background:#e5f4ea;color:#1e7d43;} #status.err{background:#f9e4e2;color:var(--err);}
+  #status.busy{background:#eef3f6;color:var(--accent);}
+
+  @media(max-width:760px){
+    .body{flex-direction:column;}
+    .sidebar{flex:0 0 auto;flex-direction:row;overflow-x:auto;padding:8px;}
+    .sidebar .navbtn{width:auto;white-space:nowrap;} .sidebar .hint{display:none;}
+    .content{padding:16px;}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Signage Admin <span id="build" style="font-size:.5em;color:#2ecc71;font-weight:600;vertical-align:middle;">build&nbsp;3&nbsp;✓</span></h1>
-  <p class="sub">Upload photos/videos, arrange them, edit the ticker — then Save. Your TVs update within a minute.</p>
-
-  <div class="bar">
-    <button id="saveBtn">💾 Save &amp; publish</button>
-    <a href="signage.html" target="_blank"><button class="ghost" type="button">▶ Preview display</button></a>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">Signage <span class="build">build 4 ✓</span></div>
+    <div class="status"><span class="dot" id="connDot"></span><span id="connLabel">Not connected</span></div>
     <span class="spacer"></span>
-    <span id="dirty" class="muted"></span>
-  </div>
+    <span id="dirty"></span>
+    <a href="signage.html" target="_blank"><button class="ghost" type="button">▶ Preview</button></a>
+    <button id="saveBtn" class="primary">💾 Save &amp; publish</button>
+  </header>
 
-  <!-- Connection -->
-  <div class="card">
-    <h2>Connection</h2>
-    <div id="connSecure">
-      <label>Admin password</label>
-      <input type="password" id="adminPw" placeholder="the ADMIN_PASSWORD you set in Vercel" autocomplete="current-password" />
-      <p class="muted" style="margin:8px 0 0;">Secure mode: saves through this site's <code>/api/commit</code> function. Your GitHub token stays on the server.</p>
-    </div>
-    <details style="margin-top:12px;">
-      <summary>Advanced: use a GitHub token directly (Option 1)</summary>
-      <p class="muted" style="margin-top:8px;">For quick or local use with no server function. The token is kept only in this browser tab. Prefer the password method above when deployed.</p>
-      <div class="check"><input type="checkbox" id="useToken" /><label for="useToken">Use a GitHub token instead of the admin password</label></div>
-      <div id="tokenFields" style="display:none;">
-        <label>GitHub token (Contents: read/write)</label>
-        <input type="password" id="ghToken" placeholder="github_pat_..." autocomplete="off" />
-        <div class="row">
-          <div><label>Repository (owner/name)</label><input type="text" id="ghRepo" placeholder="cruisethecreek-tech/Bike-Images" /></div>
-          <div><label>Branch</label><input type="text" id="ghBranch" placeholder="main" /></div>
+  <div class="body">
+    <nav class="sidebar">
+      <button class="navbtn active" data-tab="media"><span class="ico">🖼</span> Media<span class="count" id="cMedia">0</span></button>
+      <button class="navbtn" data-tab="slides"><span class="ico">🎬</span> Slideshow<span class="count" id="cSlides">0</span></button>
+      <button class="navbtn" data-tab="ticker"><span class="ico">📰</span> Ticker &amp; Display</button>
+      <button class="navbtn" data-tab="conn"><span class="ico">🔑</span> Connection</button>
+      <div class="hint">Upload → add to slideshow → Save &amp; publish. Screens refresh within a minute.</div>
+    </nav>
+
+    <main class="content">
+      <!-- MEDIA -->
+      <section id="tab-media" class="tab active">
+        <h2>Media Library</h2>
+        <p class="lede">Every photo and video in your signage. Upload once, reuse anywhere.</p>
+        <div id="drop" class="drop">
+          <strong>Drop photos or videos here</strong><br>
+          <span class="muted">or click to choose files — big photos are auto-shrunk for you</span>
+          <input type="file" id="file" accept="image/*,video/*" multiple hidden />
         </div>
-      </div>
-    </details>
+        <div id="mediaGrid" class="grid"></div>
+        <div id="mediaEmpty" class="empty" style="display:none;">
+          No media yet. Drop some photos above, or enter your password in <strong>Connection</strong> to load your library.
+        </div>
+      </section>
+
+      <!-- SLIDES -->
+      <section id="tab-slides" class="tab">
+        <h2>Slideshow</h2>
+        <p class="lede">The order your screens play. Drag timing, add captions, reorder with ↑ ↓.</p>
+        <div id="slideList"></div>
+        <div id="slidesEmpty" class="empty">
+          No slides yet. Go to <strong>🖼 Media</strong> and click <em>Add to slideshow</em> on the photos you want.
+        </div>
+      </section>
+
+      <!-- TICKER & DISPLAY -->
+      <section id="tab-ticker" class="tab">
+        <h2>Ticker &amp; Display</h2>
+        <p class="lede">The scrolling message and how images fill the screen.</p>
+        <div class="card">
+          <div class="row">
+            <div>
+              <label>Image fit</label>
+              <select id="fit">
+                <option value="cover">Cover — fill screen (may crop)</option>
+                <option value="contain">Contain — show whole image (letterbox)</option>
+              </select>
+            </div>
+          </div>
+          <div class="check"><input type="checkbox" id="showClock" /><label for="showClock">Show clock in the corner</label></div>
+        </div>
+        <div class="card">
+          <label>Ticker label (the yellow badge)</label>
+          <input type="text" id="tickerLabel" placeholder="CRUISE THE CREEK" />
+          <label>Ticker text (leave blank to hide the ticker)</label>
+          <textarea id="tickerText" placeholder="Welcome!  •  Rentals daily 9am–6pm  •  Book at cruisethecreek.com  •"></textarea>
+          <label>Ticker speed (seconds per pass — higher is slower)</label>
+          <input type="number" id="tickerSpeed" min="8" max="120" placeholder="30" style="max-width:160px;" />
+        </div>
+      </section>
+
+      <!-- CONNECTION -->
+      <section id="tab-conn" class="tab">
+        <h2>Connection</h2>
+        <p class="lede">How the dashboard saves to your screens.</p>
+        <div class="card">
+          <label>Admin password</label>
+          <input type="password" id="adminPw" placeholder="the ADMIN_PASSWORD you set in Vercel" autocomplete="current-password" />
+          <p class="muted" style="margin:8px 0 0;">Secure mode: saves through this site's <code>/api/commit</code> function. Your GitHub token stays on the server.</p>
+          <button id="checkBtn" class="chip small" type="button" style="margin-top:12px;">Check connection &amp; load media</button>
+          <details style="margin-top:14px;">
+            <summary style="cursor:pointer;font-weight:600;color:var(--accent);">Advanced: use a GitHub token directly</summary>
+            <p class="muted" style="margin-top:8px;">Only for local use with no server function. Leave this off when using the deployed dashboard.</p>
+            <div class="check"><input type="checkbox" id="useToken" /><label for="useToken">Use a GitHub token instead of the admin password</label></div>
+            <div id="tokenFields" style="display:none;">
+              <label>GitHub token</label>
+              <input type="password" id="ghToken" placeholder="github_pat_..." autocomplete="off" />
+              <div class="row">
+                <div><label>Repository (owner/name)</label><input type="text" id="ghRepo" placeholder="cruisethecreek-tech/Bike-Images" /></div>
+                <div><label>Branch</label><input type="text" id="ghBranch" placeholder="main" /></div>
+              </div>
+            </div>
+          </details>
+        </div>
+      </section>
+    </main>
   </div>
-
-  <!-- Display settings -->
-  <div class="card">
-    <h2>Display settings</h2>
-    <div class="row">
-      <div>
-        <label>Image fit</label>
-        <select id="fit">
-          <option value="cover">Cover — fill screen (may crop)</option>
-          <option value="contain">Contain — show whole image (letterbox)</option>
-        </select>
-      </div>
-    </div>
-    <div class="check"><input type="checkbox" id="showClock" /><label for="showClock">Show clock in the corner</label></div>
-
-    <label>Ticker label (the yellow badge)</label>
-    <input type="text" id="tickerLabel" placeholder="CRUISE THE CREEK" />
-    <label>Ticker text (leave blank to hide the ticker)</label>
-    <textarea id="tickerText" placeholder="Welcome!  •  Rentals daily 9am–6pm  •  Book at cruisethecreek.com  •"></textarea>
-    <label>Ticker speed (seconds per pass — higher is slower)</label>
-    <input type="number" id="tickerSpeed" min="8" max="120" placeholder="30" style="max-width:160px;" />
-  </div>
-
-  <!-- Slides -->
-  <div class="card">
-    <h2>Slides</h2>
-    <div id="drop" class="drop">
-      <strong>Drop photos or videos here</strong><br>
-      <span class="muted">or click to choose files (.jpg .png .webp .gif .mp4 .webm)</span>
-      <input type="file" id="file" accept="image/*,video/*" multiple hidden />
-    </div>
-    <div id="slides" style="margin-top:14px;"></div>
-    <p id="empty" class="muted" style="text-align:center;margin-top:14px;">No slides yet — add some above.</p>
-  </div>
-
 </div>
-
 <div id="status"></div>
 
 <script>
-/* ============================ Signage Admin ============================ */
-const CONTENT_URL = "content.json";
+/* ===================== Signage Dashboard — build 4 ===================== */
 const GH = "https://api.github.com";
+const MAX_EDGE = 1920, JPEG_QUALITY = 0.82, MAX_BATCH_BYTES = 3_500_000;
 
 const el = id => document.getElementById(id);
-let slides = [];        // { path, name, isVideo, seconds, caption, fit, contentBase64? , previewUrl }
+let assets = [];            // { name, path, isVideo, previewUrl, pending?, contentBase64? }
+let slides = [];            // { path, name, isVideo, seconds, caption, fit, previewUrl }
+let pendingDeletes = new Set();
 let dirty = false;
 
-/* ---------- Small helpers ---------- */
-function setDirty(v){ dirty = v; el("dirty").textContent = v ? "Unsaved changes" : ""; }
-function status(msg, kind){ const s=el("status"); s.textContent=msg; s.className="show "+(kind||"busy"); if(kind==="ok"){setTimeout(()=>s.className="",3500);} }
+/* ---------- utilities ---------- */
+function setDirty(v){ dirty=v; el("dirty").textContent = v ? "● Unsaved changes" : ""; }
+function status(msg,kind){ const s=el("status"); s.textContent=msg; s.className="show "+(kind||"busy"); if(kind==="ok") setTimeout(()=>s.className="",3500); }
 function hideStatus(){ el("status").className=""; }
-function sanitize(name){ return name.toLowerCase().replace(/[^a-z0-9._-]+/g,"-").replace(/^-+|-+$/g,"") || "file"; }
+function setConn(state,label){ el("connDot").className="dot "+(state||""); el("connLabel").textContent=label; }
+function sanitize(n){ return (n||"").toLowerCase().replace(/[^a-z0-9._-]+/g,"-").replace(/^-+|-+$/g,"")||"file"; }
 function isVideoName(n){ return /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(n); }
-function fileToBase64(file){
-  return new Promise((res,rej)=>{ const r=new FileReader();
-    r.onload=()=>res(String(r.result).split(",")[1]); r.onerror=rej; r.readAsDataURL(file); });
-}
+function fileToBase64(file){ return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(",")[1]);r.onerror=rej;r.readAsDataURL(file);}); }
+function b64utf8(str){ return btoa(unescape(encodeURIComponent(str))); }
+function counts(){ el("cMedia").textContent=assets.length; el("cSlides").textContent=slides.length; }
 
-/* ---------- Persisted connection prefs ---------- */
-function loadPrefs(){
-  el("adminPw").value  = sessionStorage.getItem("sg_pw")   || "";
-  // Only restore a token that actually looks like one — never resurrect stray text
-  // that would break saving with an "invalid header value".
-  const savedTok = sessionStorage.getItem("sg_tok") || "";
-  el("ghToken").value  = /^(gh[pousr]_|github_pat_)/.test(savedTok) ? savedTok : "";
-  el("ghRepo").value   = localStorage.getItem("sg_repo")   || "";
-  el("ghBranch").value = localStorage.getItem("sg_branch") || "main";
-  if(localStorage.getItem("sg_useTok")==="1" && el("ghToken").value){
-    el("useToken").checked=true; el("tokenFields").style.display="block";
-  }
-}
-function savePrefs(){
-  sessionStorage.setItem("sg_pw",  el("adminPw").value);
-  sessionStorage.setItem("sg_tok", el("ghToken").value);
-  localStorage.setItem("sg_repo",  el("ghRepo").value.trim());
-  localStorage.setItem("sg_branch",el("ghBranch").value.trim());
-  localStorage.setItem("sg_useTok",el("useToken").checked?"1":"0");
-}
-el("useToken").addEventListener("change",e=>{ el("tokenFields").style.display=e.target.checked?"block":"none"; hideStatus(); });
+/* ---------- tabs ---------- */
+document.querySelectorAll(".navbtn").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll(".navbtn").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");
+  el("tab-"+b.dataset.tab).classList.add("active");
+  if(b.dataset.tab==="media" && !assets.length && el("adminPw").value) loadAssets();
+}));
 
-/* ---------- Load current content.json ---------- */
-async function loadContent(){
-  try{
-    const res = await fetch(CONTENT_URL+"?t="+Date.now(),{cache:"no-store"});
-    if(!res.ok) throw 0;
-    const cfg = await res.json();
-    el("fit").value        = cfg.fit==="contain" ? "contain" : "cover";
-    el("showClock").checked= !!cfg.showClock;
-    el("tickerLabel").value= cfg.tickerLabel || "";
-    el("tickerText").value = cfg.tickerText || "";
-    el("tickerSpeed").value= cfg.tickerSpeed || 30;
-    const list = Array.isArray(cfg) ? cfg : (cfg.slides||cfg.items||[]);
-    slides = list.map(raw=>{
-      const it = typeof raw==="string" ? {src:raw} : (raw||{});
-      const src = it.src||it.url||it.image||it.video||"";
-      return { path:src, name:src.split("/").pop(), isVideo:isVideoName(src)||it.type==="video",
-               seconds:Number(it.seconds||it.duration)||8, caption:it.caption||"",
-               fit:it.fit||"", previewUrl:src, existing:true };
-    }).filter(s=>s.path);
-  }catch(_){ slides=[]; }
-  render();
-}
-
-/* ---------- Render slide list ---------- */
-function render(){
-  const box = el("slides"); box.innerHTML="";
-  el("empty").style.display = slides.length ? "none":"block";
-  slides.forEach((s,i)=>{
-    const row=document.createElement("div"); row.className="slide";
-    const thumb = s.isVideo
-      ? `<div class="thumb vid">🎬</div>`
-      : `<img class="thumb" src="${s.previewUrl}" alt="" onerror="this.style.opacity=.3"/>`;
-    row.innerHTML = `
-      ${thumb}
-      <div class="body">
-        <div class="name">${s.name}${s.existing?"":" &middot; <em>new</em>"}</div>
-        <div class="fields">
-          <div><label>Caption</label><input type="text" data-k="caption" data-i="${i}" value="${(s.caption||"").replace(/"/g,'&quot;')}" placeholder="(optional)"/></div>
-          <div><label>Seconds${s.isVideo?" (video plays full length)":""}</label><input type="number" data-k="seconds" data-i="${i}" value="${s.seconds}" min="1" ${s.isVideo?"disabled":""}/></div>
-          <div><label>Fit</label>
-            <select data-k="fit" data-i="${i}">
-              <option value=""${s.fit===""?" selected":""}>Use default</option>
-              <option value="cover"${s.fit==="cover"?" selected":""}>Cover</option>
-              <option value="contain"${s.fit==="contain"?" selected":""}>Contain</option>
-            </select>
-          </div>
-        </div>
-      </div>
-      <div class="ctrls">
-        <button class="small ghost" data-move="up" data-i="${i}" ${i===0?"disabled":""}>↑</button>
-        <button class="small ghost" data-move="down" data-i="${i}" ${i===slides.length-1?"disabled":""}>↓</button>
-        <button class="small danger" data-del="${i}">✕</button>
-      </div>`;
-    box.appendChild(row);
-  });
-  // wire field edits
-  box.querySelectorAll("input[data-k],select[data-k]").forEach(inp=>{
-    inp.addEventListener("input",e=>{
-      const i=+e.target.dataset.i, k=e.target.dataset.k;
-      slides[i][k] = k==="seconds" ? Number(e.target.value)||8 : e.target.value;
-      setDirty(true);
-    });
-  });
-  box.querySelectorAll("[data-move]").forEach(b=>b.addEventListener("click",e=>{
-    const i=+e.target.dataset.i, dir=e.target.dataset.move==="up"?-1:1, j=i+dir;
-    if(j<0||j>=slides.length) return;
-    [slides[i],slides[j]]=[slides[j],slides[i]]; setDirty(true); render();
-  }));
-  box.querySelectorAll("[data-del]").forEach(b=>b.addEventListener("click",e=>{
-    slides.splice(+e.target.dataset.del,1); setDirty(true); render();
-  }));
-}
-
-/* ---------- Image compression ----------
-   TVs are 1080p, so there's no reason to store multi-MB phone photos. Downscaling
-   to 1920px and re-encoding as JPEG shrinks a typical photo to a few hundred KB —
-   which also keeps uploads under Vercel's ~4.5 MB request limit (the cause of 413s). */
-const MAX_EDGE = 1920;
-const JPEG_QUALITY = 0.82;
-
-function loadImage(file){
-  return new Promise((res, rej) => {
-    const url = URL.createObjectURL(file);
-    const img = new Image();
-    img.onload = () => res({ img, url });
-    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("Could not read image")); };
-    img.src = url;
-  });
-}
-
-// Downscale + JPEG-encode an image file. Falls back to the raw bytes on any failure.
+/* ---------- image compression ---------- */
+function loadImage(file){ return new Promise((res,rej)=>{const url=URL.createObjectURL(file);const img=new Image();
+  img.onload=()=>res({img,url});img.onerror=()=>{URL.revokeObjectURL(url);rej(new Error("Could not read image"));};img.src=url;}); }
 async function compressImage(file){
   try{
-    const { img, url } = await loadImage(file);
-    let w = img.naturalWidth, h = img.naturalHeight;
-    const scale = Math.min(1, MAX_EDGE / Math.max(w, h));
-    w = Math.max(1, Math.round(w * scale));
-    h = Math.max(1, Math.round(h * scale));
-    const canvas = document.createElement("canvas");
-    canvas.width = w; canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, w, h);   // matte for transparent PNGs
-    ctx.drawImage(img, 0, 0, w, h);
+    const {img,url}=await loadImage(file);
+    let w=img.naturalWidth,h=img.naturalHeight;
+    const scale=Math.min(1,MAX_EDGE/Math.max(w,h));
+    w=Math.max(1,Math.round(w*scale)); h=Math.max(1,Math.round(h*scale));
+    const c=document.createElement("canvas");c.width=w;c.height=h;
+    const x=c.getContext("2d");x.fillStyle="#000";x.fillRect(0,0,w,h);x.drawImage(img,0,0,w,h);
     URL.revokeObjectURL(url);
-    const dataUrl = canvas.toDataURL("image/jpeg", JPEG_QUALITY);
-    return { base64: dataUrl.split(",")[1], previewUrl: dataUrl, converted: true };
-  }catch(_){
-    return { base64: await fileToBase64(file), previewUrl: URL.createObjectURL(file), converted: false };
-  }
+    const dataUrl=c.toDataURL("image/jpeg",JPEG_QUALITY);
+    return {base64:dataUrl.split(",")[1],previewUrl:dataUrl,converted:true};
+  }catch(_){ return {base64:await fileToBase64(file),previewUrl:URL.createObjectURL(file),converted:false}; }
 }
 
-/* ---------- Add files ---------- */
+/* ---------- add files (upload) ---------- */
 async function addFiles(fileList){
-  const existingNames = new Set(slides.map(s => s.name));
-  const list = Array.from(fileList);
-  for(let i = 0; i < list.length; i++){
-    const file = list[i];
-    status(`Processing ${i + 1}/${list.length}…`, "busy");
-
-    const isVideo = file.type.startsWith("video/") || isVideoName(file.name);
-    const isGif   = file.type === "image/gif" || /\.gif$/i.test(file.name);
-
-    let base64, previewUrl, name = sanitize(file.name);
-    if(isVideo || isGif){
-      // leave videos and animated GIFs untouched
-      base64 = await fileToBase64(file);
-      previewUrl = URL.createObjectURL(file);
-    }else{
-      const c = await compressImage(file);
-      base64 = c.base64; previewUrl = c.previewUrl;
-      if(c.converted) name = name.replace(/\.(png|webp|jpe?g|bmp|heic|heif|tiff?)$/i, "") + ".jpg";
-    }
-
-    // ensure a unique filename
-    let unique = name, n = 1;
-    while(existingNames.has(unique)){
-      const dot = name.lastIndexOf(".");
-      unique = dot > 0 ? name.slice(0, dot) + "-" + n + name.slice(dot) : name + "-" + n;
-      n++;
-    }
-    existingNames.add(unique);
-
-    slides.push({ path:"images/"+unique, name:unique, isVideo,
-                  seconds:8, caption:"", fit:"", contentBase64:base64,
-                  previewUrl, existing:false });
+  const names=new Set(assets.map(a=>a.name));
+  const list=Array.from(fileList);
+  for(let i=0;i<list.length;i++){
+    const file=list[i];
+    status(`Processing ${i+1}/${list.length}…`,"busy");
+    const isVideo=file.type.startsWith("video/")||isVideoName(file.name);
+    const isGif=file.type==="image/gif"||/\.gif$/i.test(file.name);
+    let base64,previewUrl,name=sanitize(file.name);
+    if(isVideo||isGif){ base64=await fileToBase64(file); previewUrl=URL.createObjectURL(file); }
+    else{ const c=await compressImage(file); base64=c.base64; previewUrl=c.previewUrl;
+          if(c.converted) name=name.replace(/\.(png|webp|jpe?g|bmp|heic|heif|tiff?)$/i,"")+".jpg"; }
+    let unique=name,n=1;
+    while(names.has(unique)){ const d=name.lastIndexOf("."); unique=d>0?name.slice(0,d)+"-"+n+name.slice(d):name+"-"+n; n++; }
+    names.add(unique);
+    const asset={ name:unique, path:"images/"+unique, isVideo, previewUrl, pending:true, contentBase64:base64 };
+    assets.push(asset);
+    addToShow(asset);            // uploading usually means "put it on screen"
   }
-  hideStatus();
-  setDirty(true); render();
+  hideStatus(); setDirty(true); renderMedia(); renderSlides(); counts();
 }
 el("file").addEventListener("change",e=>{ addFiles(e.target.files); e.target.value=""; });
 el("drop").addEventListener("click",()=>el("file").click());
@@ -334,125 +287,235 @@ el("drop").addEventListener("click",()=>el("file").click());
 ["dragleave","drop"].forEach(ev=>el("drop").addEventListener(ev,e=>{e.preventDefault();el("drop").classList.remove("over");}));
 el("drop").addEventListener("drop",e=>{ if(e.dataTransfer.files.length) addFiles(e.dataTransfer.files); });
 
-/* mark settings dirty */
-["fit","showClock","tickerLabel","tickerText","tickerSpeed"].forEach(id=>
-  el(id).addEventListener("input",()=>setDirty(true)));
+/* ---------- media <-> slideshow ---------- */
+function inShow(path){ return slides.some(s=>s.path===path); }
+function addToShow(asset){
+  if(inShow(asset.path)) return;
+  slides.push({ path:asset.path, name:asset.name, isVideo:asset.isVideo,
+                seconds:8, caption:"", fit:"", previewUrl:asset.previewUrl });
+  setDirty(true);
+}
+function removeFromShow(path){ slides=slides.filter(s=>s.path!==path); setDirty(true); }
+function deleteAsset(path){
+  const a=assets.find(x=>x.path===path); if(!a) return;
+  if(inShow(path) && !confirm("This photo is in the slideshow. Delete it and remove it from the show?")) return;
+  if(!a.pending) pendingDeletes.add(path);   // committed file → schedule deletion
+  assets=assets.filter(x=>x.path!==path);
+  removeFromShow(path);
+  setDirty(true); renderMedia(); renderSlides(); counts();
+}
 
-/* ---------- Build content.json ---------- */
+/* ---------- render media grid ---------- */
+function renderMedia(){
+  const g=el("mediaGrid"); g.innerHTML="";
+  el("mediaEmpty").style.display=assets.length?"none":"block";
+  assets.forEach(a=>{
+    const card=document.createElement("div"); card.className="asset";
+    const thumb=a.isVideo ? `<div class="thumb vid">🎬</div>`
+      : `<img class="thumb" src="${a.previewUrl||a.path}" alt="" loading="lazy" onerror="this.style.opacity=.25"/>`;
+    const shown=inShow(a.path);
+    card.innerHTML=`
+      ${thumb}
+      <div class="meta">
+        <div class="nm">${a.name}</div>
+        <div class="tags">
+          ${shown?'<span class="badge inshow">In show</span>':''}
+          ${a.pending?'<span class="badge new">new</span>':''}
+        </div>
+        <div class="acts">
+          ${shown
+            ? `<button class="small ghost" data-remove="${a.path}">Remove</button>`
+            : `<button class="small solid" data-add="${a.path}">＋ Add to show</button>`}
+          <button class="small danger" data-del="${a.path}">🗑</button>
+        </div>
+      </div>`;
+    g.appendChild(card);
+  });
+  g.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{ addToShow(assets.find(a=>a.path===b.dataset.add)); renderMedia(); renderSlides(); counts(); });
+  g.querySelectorAll("[data-remove]").forEach(b=>b.onclick=()=>{ removeFromShow(b.dataset.remove); renderMedia(); renderSlides(); counts(); });
+  g.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>deleteAsset(b.dataset.del));
+}
+
+/* ---------- render slideshow list ---------- */
+function renderSlides(){
+  const box=el("slideList"); box.innerHTML="";
+  el("slidesEmpty").style.display=slides.length?"none":"block";
+  slides.forEach((s,i)=>{
+    const row=document.createElement("div"); row.className="slide";
+    const thumb=s.isVideo?`<div class="thumb vid">🎬</div>`
+      :`<img class="thumb" src="${s.previewUrl||s.path}" alt="" onerror="this.style.opacity=.25"/>`;
+    row.innerHTML=`
+      ${thumb}
+      <div class="body">
+        <div class="nm">${s.name}</div>
+        <div class="fields">
+          <div><label>Caption</label><input type="text" data-k="caption" data-i="${i}" value="${(s.caption||'').replace(/"/g,'&quot;')}" placeholder="(optional)"/></div>
+          <div><label>Seconds${s.isVideo?' (video plays full)':''}</label><input type="number" min="1" data-k="seconds" data-i="${i}" value="${s.seconds}" ${s.isVideo?'disabled':''}/></div>
+          <div><label>Fit</label><select data-k="fit" data-i="${i}">
+            <option value=""${s.fit===''?' selected':''}>Default</option>
+            <option value="cover"${s.fit==='cover'?' selected':''}>Cover</option>
+            <option value="contain"${s.fit==='contain'?' selected':''}>Contain</option>
+          </select></div>
+        </div>
+      </div>
+      <div class="ctrls">
+        <button class="small ghost" data-move="up" data-i="${i}" ${i===0?'disabled':''}>↑</button>
+        <button class="small ghost" data-move="down" data-i="${i}" ${i===slides.length-1?'disabled':''}>↓</button>
+        <button class="small danger" data-rm="${i}">✕</button>
+      </div>`;
+    box.appendChild(row);
+  });
+  box.querySelectorAll("input[data-k],select[data-k]").forEach(inp=>inp.addEventListener("input",e=>{
+    const i=+e.target.dataset.i,k=e.target.dataset.k;
+    slides[i][k]= k==="seconds"?(Number(e.target.value)||8):e.target.value; setDirty(true);
+  }));
+  box.querySelectorAll("[data-move]").forEach(b=>b.onclick=e=>{
+    const i=+e.target.dataset.i,j=i+(e.target.dataset.move==="up"?-1:1);
+    if(j<0||j>=slides.length)return; [slides[i],slides[j]]=[slides[j],slides[i]]; setDirty(true); renderSlides();
+  });
+  box.querySelectorAll("[data-rm]").forEach(b=>b.onclick=e=>{ slides.splice(+e.target.dataset.rm,1); setDirty(true); renderSlides(); renderMedia(); counts(); });
+}
+
+/* mark display settings dirty */
+["fit","showClock","tickerLabel","tickerText","tickerSpeed"].forEach(id=>el(id).addEventListener("input",()=>setDirty(true)));
+
+/* ---------- connection prefs ---------- */
+function loadPrefs(){
+  el("adminPw").value=sessionStorage.getItem("sg_pw")||"";
+  const t=sessionStorage.getItem("sg_tok")||"";
+  el("ghToken").value=/^(gh[pousr]_|github_pat_)/.test(t)?t:"";
+  el("ghRepo").value=localStorage.getItem("sg_repo")||"";
+  el("ghBranch").value=localStorage.getItem("sg_branch")||"main";
+  if(localStorage.getItem("sg_useTok")==="1"&&el("ghToken").value){ el("useToken").checked=true; el("tokenFields").style.display="block"; }
+}
+function savePrefs(){
+  sessionStorage.setItem("sg_pw",el("adminPw").value);
+  sessionStorage.setItem("sg_tok",el("ghToken").value);
+  localStorage.setItem("sg_repo",el("ghRepo").value.trim());
+  localStorage.setItem("sg_branch",el("ghBranch").value.trim());
+  localStorage.setItem("sg_useTok",el("useToken").checked?"1":"0");
+}
+el("useToken").addEventListener("change",e=>{ el("tokenFields").style.display=e.target.checked?"block":"none"; hideStatus(); });
+el("checkBtn").addEventListener("click",()=>{ savePrefs(); loadAssets(); });
+
+/* ---------- load content.json ---------- */
+async function loadContent(){
+  try{
+    const res=await fetch("content.json?t="+Date.now(),{cache:"no-store"}); if(!res.ok) throw 0;
+    const cfg=await res.json();
+    el("fit").value=cfg.fit==="contain"?"contain":"cover";
+    el("showClock").checked=!!cfg.showClock;
+    el("tickerLabel").value=cfg.tickerLabel||"";
+    el("tickerText").value=cfg.tickerText||"";
+    el("tickerSpeed").value=cfg.tickerSpeed||30;
+    const list=Array.isArray(cfg)?cfg:(cfg.slides||cfg.items||[]);
+    slides=list.map(raw=>{ const it=typeof raw==="string"?{src:raw}:(raw||{}); const src=it.src||it.url||it.image||it.video||"";
+      return { path:src, name:src.split("/").pop(), isVideo:isVideoName(src)||it.type==="video",
+               seconds:Number(it.seconds||it.duration)||8, caption:it.caption||"", fit:it.fit||"", previewUrl:src }; })
+      .filter(s=>s.path);
+  }catch(_){ slides=[]; }
+  renderSlides(); counts();
+}
+
+/* ---------- load media library ---------- */
+async function loadAssets(){
+  const pw=el("adminPw").value;
+  if(el("useToken").checked){ setConn("","Token mode — library listing uses secure mode only"); return; }
+  if(!pw){ setConn("","Enter your admin password"); return; }
+  setConn("busy","Connecting…"); status("Loading media…","busy");
+  try{
+    const res=await fetch("/api/list",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pw})});
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(data.error||("Server "+res.status));
+    const pending=assets.filter(a=>a.pending);           // keep not-yet-saved uploads
+    const committed=(data.files||[]).filter(f=>!pendingDeletes.has(f.path)).map(f=>({
+      name:f.name, path:f.path, isVideo:isVideoName(f.name), previewUrl:f.path, pending:false }));
+    const pendPaths=new Set(pending.map(a=>a.path));
+    assets=[...committed.filter(c=>!pendPaths.has(c.path)),...pending];
+    setConn("ok","Connected"); hideStatus(); renderMedia(); counts();
+  }catch(err){
+    setConn("err", /password/i.test(err.message)?"Wrong password":"Connection failed");
+    status("⚠ "+err.message,"err");
+  }
+}
+
+/* ---------- build content.json ---------- */
 function buildContent(){
-  const out = { fit: el("fit").value, showClock: el("showClock").checked };
+  const out={ fit:el("fit").value, showClock:el("showClock").checked };
   const label=el("tickerLabel").value.trim(), text=el("tickerText").value.trim();
   if(text){ out.tickerLabel=label||"INFO"; out.tickerText=text; out.tickerSpeed=Number(el("tickerSpeed").value)||30; }
-  out.slides = slides.map(s=>{
-    const o={ src:s.path };
-    if(!s.isVideo) o.seconds=Number(s.seconds)||8;
-    if(s.caption) o.caption=s.caption;
-    if(s.fit) o.fit=s.fit;
-    return o;
-  });
+  out.slides=slides.map(s=>{ const o={src:s.path}; if(!s.isVideo)o.seconds=Number(s.seconds)||8; if(s.caption)o.caption=s.caption; if(s.fit)o.fit=s.fit; return o; });
   return out;
 }
 
-/* ---------- Save (commit) ---------- */
-// Keep each request under Vercel's ~4.5 MB body limit (base64 length ≈ bytes sent).
-const MAX_BATCH_BYTES = 3_500_000;
-
+/* ---------- save ---------- */
 async function save(){
   savePrefs();
-  if(!slides.length && !confirm("No slides — save an empty display?")) return;
+  const usingToken=el("useToken").checked;
+  const uploads=assets.filter(a=>a.pending).map(a=>({path:a.path,contentBase64:a.contentBase64}));
+  const deletions=[...pendingDeletes];
 
-  const usingToken = el("useToken").checked;
-
-  // New media that still needs uploading
-  const media = [];
-  for(const s of slides){
-    if(s.contentBase64) media.push({ path:s.path, contentBase64:s.contentBase64, isVideo:s.isVideo, name:s.name });
-  }
-
-  // Secure mode can't push a single file bigger than the request limit (usually a video).
   if(!usingToken){
-    const tooBig = media.find(f => f.contentBase64.length > MAX_BATCH_BYTES);
-    if(tooBig){
-      status(`⚠ "${tooBig.name}" is too large to upload through the panel (Vercel caps requests at ~4.5 MB). Use a smaller/shorter video, or the Advanced GitHub-token mode which has no such limit.`, "err");
-      return;
-    }
+    const tooBig=uploads.find(f=>f.contentBase64.length>MAX_BATCH_BYTES);
+    if(tooBig){ status(`⚠ "${tooBig.path.split('/').pop()}" is too large (Vercel caps requests at ~4.5 MB). Use a smaller/shorter video.`,"err"); return; }
   }
+  const contentFile={ path:"content.json", contentBase64:b64utf8(JSON.stringify(buildContent(),null,2)) };
 
-  const contentFile = { path:"content.json", contentBase64: b64utf8(JSON.stringify(buildContent(), null, 2)) };
+  // batch uploads by size; content.json + deletions ride in the last batch
+  const batches=[]; let cur=[],sz=0;
+  for(const f of uploads){ if(cur.length&&sz+f.contentBase64.length>MAX_BATCH_BYTES){batches.push({files:cur,del:[]});cur=[];sz=0;}
+    cur.push(f); sz+=f.contentBase64.length; }
+  cur.push(contentFile); batches.push({files:cur,del:deletions});
 
-  // Pack media into size-bounded batches; content.json rides along in the last batch.
-  const batches = [];
-  let cur = [], curSize = 0;
-  for(const f of media){
-    if(cur.length && curSize + f.contentBase64.length > MAX_BATCH_BYTES){ batches.push(cur); cur = []; curSize = 0; }
-    cur.push({ path:f.path, contentBase64:f.contentBase64 });
-    curSize += f.contentBase64.length;
-  }
-  cur.push(contentFile);
-  batches.push(cur);
-
-  const commit = usingToken ? commitViaToken : commitViaServer;
-
-  el("saveBtn").disabled = true;
+  const commit=usingToken?commitViaToken:commitViaServer;
+  el("saveBtn").disabled=true; setConn("busy","Publishing…");
   try{
-    for(let i = 0; i < batches.length; i++){
-      status(batches.length > 1 ? `Publishing… (${i + 1}/${batches.length})` : "Publishing…", "busy");
-      await commit(batches[i]);   // sequential: each commit builds on the previous
-    }
-    // mark uploaded slides as existing so a re-save won't re-upload them
-    slides.forEach(s => { if(s.contentBase64){ delete s.contentBase64; s.existing = true; } });
-    setDirty(false); render();
-    status("✅ Published! Screens will update within a minute.","ok");
-  }catch(err){
-    status("⚠ "+(err.message||err),"err");
-  }finally{ el("saveBtn").disabled = false; }
+    for(let i=0;i<batches.length;i++){ status(batches.length>1?`Publishing… (${i+1}/${batches.length})`:"Publishing…","busy");
+      await commit(batches[i].files,batches[i].del); }
+    pendingDeletes.clear();
+    assets.forEach(a=>{ if(a.pending){ a.pending=false; delete a.contentBase64; } });
+    setDirty(false); setConn("ok","Connected"); renderMedia(); renderSlides(); counts();
+    status("✅ Published! Screens update within a minute.","ok");
+    if(!usingToken) loadAssets();   // refresh from server
+  }catch(err){ setConn("err","Save failed"); status("⚠ "+(err.message||err),"err"); }
+  finally{ el("saveBtn").disabled=false; }
 }
+el("saveBtn").addEventListener("click",save);
+window.addEventListener("beforeunload",e=>{ if(dirty){ e.preventDefault(); e.returnValue=""; } });
 
-function b64utf8(str){ return btoa(unescape(encodeURIComponent(str))); }
-
-/* Secure mode: post to the serverless function */
-async function commitViaServer(files){
-  const res = await fetch("/api/commit",{
-    method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({ password: el("adminPw").value, message:"Update signage content", files })
-  });
-  const data = await res.json().catch(()=>({}));
-  if(!res.ok) throw new Error(data.error || ("Server error "+res.status));
+/* ---------- secure mode ---------- */
+async function commitViaServer(files,deletions){
+  const res=await fetch("/api/commit",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({password:el("adminPw").value,message:"Update signage content",files,deletions:deletions||[]})});
+  const data=await res.json().catch(()=>({}));
+  if(!res.ok) throw new Error(data.error||("Server error "+res.status));
   return data;
 }
 
-/* Token mode: talk to GitHub directly from the browser */
-async function commitViaToken(files){
-  const token=el("ghToken").value.trim(), repo=el("ghRepo").value.trim(), branch=el("ghBranch").value.trim()||"main";
+/* ---------- token mode ---------- */
+async function commitViaToken(files,deletions){
+  const token=el("ghToken").value.trim(),repo=el("ghRepo").value.trim(),branch=el("ghBranch").value.trim()||"main";
   if(!token||!repo) throw new Error("Enter a GitHub token and repository (owner/name).");
-  // Catch the common mistake of pasting non-token text into the token box, which
-  // otherwise fails with a cryptic "invalid header value" error.
-  if(/\s/.test(token) || !/^(gh[pousr]_|github_pat_)/.test(token)){
+  if(/\s/.test(token)||!/^(gh[pousr]_|github_pat_)/.test(token))
     throw new Error("That doesn't look like a GitHub token. If you set an admin password in Vercel, untick “Use a GitHub token” and use the Admin password field instead.");
-  }
-  const api=(p,opts={})=>fetch(GH+p,{...opts,headers:{Authorization:"Bearer "+token,
-    Accept:"application/vnd.github+json","Content-Type":"application/json",...(opts.headers||{})}})
-    .then(async r=>{const d=await r.json().catch(()=>({})); if(!r.ok) throw new Error(d.message||("GitHub "+r.status)); return d;});
-  const ref=await api(`/repos/${repo}/git/ref/heads/${branch}`);
-  const latest=ref.object.sha;
+  const api=(p,o={})=>fetch(GH+p,{...o,headers:{Authorization:"Bearer "+token,Accept:"application/vnd.github+json","Content-Type":"application/json",...(o.headers||{})}})
+    .then(async r=>{const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.message||("GitHub "+r.status));return d;});
+  const ref=await api(`/repos/${repo}/git/ref/heads/${branch}`); const latest=ref.object.sha;
   const commitObj=await api(`/repos/${repo}/git/commits/${latest}`);
   const tree=[];
-  for(const f of files){
-    const blob=await api(`/repos/${repo}/git/blobs`,{method:"POST",body:JSON.stringify({content:f.contentBase64,encoding:"base64"})});
-    tree.push({path:f.path,mode:"100644",type:"blob",sha:blob.sha});
-  }
+  for(const f of files){ const blob=await api(`/repos/${repo}/git/blobs`,{method:"POST",body:JSON.stringify({content:f.contentBase64,encoding:"base64"})});
+    tree.push({path:f.path,mode:"100644",type:"blob",sha:blob.sha}); }
+  for(const p of (deletions||[])) tree.push({path:p,mode:"100644",type:"blob",sha:null});
   const newTree=await api(`/repos/${repo}/git/trees`,{method:"POST",body:JSON.stringify({base_tree:commitObj.tree.sha,tree})});
   const newCommit=await api(`/repos/${repo}/git/commits`,{method:"POST",body:JSON.stringify({message:"Update signage content",tree:newTree.sha,parents:[latest]})});
   await api(`/repos/${repo}/git/refs/heads/${branch}`,{method:"PATCH",body:JSON.stringify({sha:newCommit.sha})});
 }
 
-el("saveBtn").addEventListener("click",save);
-window.addEventListener("beforeunload",e=>{ if(dirty){ e.preventDefault(); e.returnValue=""; } });
-
-/* ---------- Boot ---------- */
-console.log("Signage Admin — build 3 (image auto-resize + token guard)");
+/* ---------- boot ---------- */
+console.log("Signage Dashboard — build 4 (sidebar + media library)");
 loadPrefs();
 loadContent();
+if(el("adminPw").value) loadAssets(); else setConn("","Enter your admin password in Connection");
 </script>
 </body>
 </html>
