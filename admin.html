@@ -109,7 +109,7 @@
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand">Signage <span class="build">build 14 ✓</span></div>
+    <div class="brand" id="brandName">Signage</div>
     <div class="status"><span class="dot" id="connDot"></span><span id="connLabel">Not connected</span></div>
     <span class="spacer"></span>
     <span id="dirty"></span>
@@ -742,8 +742,30 @@ async function commitViaToken(files,deletions){
   await api(`/repos/${repo}/git/refs/heads/${branch}`,{method:"PATCH",body:JSON.stringify({sha:newCommit.sha})});
 }
 
+/* ---------- white-label branding ----------
+   branding.json controls this client's identity — name, accent colour, favicon. */
+function setFavicon(emoji){
+  if(!emoji) return;
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><text y="52" font-size="52">'+emoji+'</text></svg>';
+  let link=document.querySelector("link[rel~='icon']");
+  if(!link){ link=document.createElement("link"); link.rel="icon"; document.head.appendChild(link); }
+  link.href="data:image/svg+xml,"+encodeURIComponent(svg);
+}
+async function applyBranding(){
+  try{
+    const r=await fetch("branding.json?t="+Date.now(),{cache:"no-store"});
+    if(!r.ok) return;
+    const b=await r.json();
+    const name=((b.businessName?b.businessName+" ":"")+(b.productName||"Signage")).trim();
+    el("brandName").textContent=name;
+    document.title=name+" Dashboard";
+    if(b.theme&&b.theme.accent) document.documentElement.style.setProperty("--accent",b.theme.accent);
+    setFavicon(b.favicon);
+  }catch(_){ /* no branding file — keep defaults */ }
+}
+
 /* ---------- boot ---------- */
-console.log("Signage Dashboard — build 14 (R2 self-test)");
+applyBranding();
 loadPrefs();
 loadContent();
 if(el("adminPw").value){ loadAssets(); loadScreenStatus(); } else setConn("","Enter your admin password in Connection");

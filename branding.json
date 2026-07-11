@@ -1,0 +1,13 @@
+{
+  "businessName": "Cruise the Creek",
+  "productName": "Signage",
+  "appName": "Cruise the Creek Signage",
+  "signageUrl": "https://bike-images.vercel.app/signage.html",
+  "favicon": "🚲",
+  "theme": {
+    "accent": "#1f6f8b",
+    "tickerBg": "#111111",
+    "tickerInk": "#ffffff",
+    "tickerAccent": "#ffcb05"
+  }
+}
