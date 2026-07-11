@@ -255,7 +255,7 @@ const DEFAULT_SECS = 8;           // seconds per image if not specified
 // Bump this whenever signage.html changes, and set the same value in signage-version.json.
 // A running TV compares the two and reloads itself to pull the new code — so feature
 // updates reach every TV automatically instead of needing a manual relaunch.
-const APP_VERSION  = "2026-07-11-sync1";
+const APP_VERSION  = "2026-07-11-preload1";
 async function checkForUpdate() {
   try {
     const r = await fetch("signage-version.json?t=" + Date.now(), { cache: "no-store" });
@@ -587,9 +587,63 @@ function applyConfig(fullCfg) {
   rebuildSlides();
 }
 
+/* ---------- Preload videos into memory ----------
+   Streaming a video from cloud storage on a low-power TV buffers (and hurts sync, which
+   seeks). So we download each clip once into a Blob and play it from memory — after which
+   playback and seeking are instant with no re-buffering. If a file is too big or the store
+   won't allow a cross-origin fetch, we silently keep streaming it. */
+const MAX_PRELOAD_BYTES = 150 * 1024 * 1024;   // don't cache anything huge into TV memory
+let videoBlobs = {};                           // src -> object URL (kept until content changes)
+
+function swapVideoSrc(v, url) {
+  if (!v || v._blobApplied === url) return;
+  const t = v.currentTime || 0, wasPlaying = !v.paused && !v.ended;
+  v._blobApplied = url;
+  v.src = url;
+  const onMeta = () => {
+    v.removeEventListener("loadedmetadata", onMeta);
+    try { v.currentTime = t; } catch (_) {}
+    if (wasPlaying) { const p = v.play(); if (p && p.catch) p.catch(() => {}); }
+  };
+  v.addEventListener("loadedmetadata", onMeta);
+  try { v.load(); } catch (_) {}
+}
+// Apply a ready blob, but don't yank the source from under the on-screen clip — defer that
+// swap until it's off-screen so there's no visible flicker.
+function applyBlob(v, url) {
+  if (!v) return;
+  const slide = v.closest(".slide");
+  if (slide && slide.classList.contains("active")) { v._pendingBlob = url; return; }
+  swapVideoSrc(v, url);
+}
+async function preloadVideo(src, v) {
+  if (videoBlobs[src]) { applyBlob(v, videoBlobs[src]); return; }
+  try {
+    const resp = await fetch(src, { cache: "force-cache" });
+    if (!resp.ok) return;                                   // 4xx/5xx — keep streaming
+    const len = Number(resp.headers.get("content-length") || 0);
+    if (len && len > MAX_PRELOAD_BYTES) return;             // too big to hold in memory
+    const blob = await resp.blob();
+    if (blob.size > MAX_PRELOAD_BYTES) return;
+    const url = URL.createObjectURL(blob);
+    videoBlobs[src] = url;
+    applyBlob(v, url);
+  } catch (_) { /* CORS / offline — streaming still works */ }
+}
+// When a video leaves the screen, pause it and apply any blob that finished downloading.
+function idleVideo(el) {
+  const v = el && el.querySelector && el.querySelector("video");
+  if (!v) return;
+  try { v.pause(); } catch (_) {}
+  if (v._pendingBlob) { const u = v._pendingBlob; v._pendingBlob = null; swapVideoSrc(v, u); }
+}
+
 /* ---------- Build slide DOM ---------- */
 function rebuildSlides() {
   clearTimeout(timer);
+  // Free any cached video memory from the previous playlist.
+  Object.values(videoBlobs).forEach(u => { try { URL.revokeObjectURL(u); } catch (_) {} });
+  videoBlobs = {};
   stage.innerHTML = "";
   slides = [];
 
@@ -617,6 +671,8 @@ function rebuildSlides() {
         }
       });
       el.appendChild(v);
+      preloadVideo(it.src, v);   // download to memory in the background; swap in when ready
+
     } else {
       const img = document.createElement("img");
       img.src = it.src;
@@ -641,7 +697,7 @@ function next() {
   clearTimeout(timer);
   if (!slides.length) return;
 
-  if (idx >= 0) slides[idx].classList.remove("active");
+  if (idx >= 0) { slides[idx].classList.remove("active"); idleVideo(slides[idx]); }
   idx = (idx + 1) % slides.length;
   const el = slides[idx];
   const it = items[idx];
@@ -687,8 +743,7 @@ function showSyncSlide(force) {
   if (s.index !== idx || force) {
     if (idx >= 0 && slides[idx]) {
       slides[idx].classList.remove("active");
-      const pv = slides[idx].querySelector("video");
-      if (pv) { try { pv.pause(); } catch (_) {} }
+      idleVideo(slides[idx]);   // pause the old clip and apply any downloaded blob
     }
     idx = s.index;
     const el = slides[idx], it = items[idx];
