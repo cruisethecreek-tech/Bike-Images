@@ -106,7 +106,7 @@
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand">Signage <span class="build">build 12 ✓</span></div>
+    <div class="brand">Signage <span class="build">build 13 ✓</span></div>
     <div class="status"><span class="dot" id="connDot"></span><span id="connLabel">Not connected</span></div>
     <span class="spacer"></span>
     <span id="dirty"></span>
@@ -235,7 +235,7 @@
 <div id="status"></div>
 
 <script>
-/* ===================== Signage Dashboard — build 12 (clearer size errors) ===================== */
+/* ===================== Signage Dashboard — build 13 (Cloudflare R2) ===================== */
 const GH="https://api.github.com";
 const MAX_EDGE=1920, JPEG_QUALITY=0.82, MAX_BATCH_BYTES=3_500_000;
 const ONLINE_MS=3*60*1000;   // seen within 3 min = online
@@ -304,13 +304,16 @@ function putWithProgress(url,file,onProgress){
     xhr.send(file);
   });
 }
+// Prefer Cloudflare R2 (no per-file cap); fall back to Supabase Storage if R2 isn't set up.
 async function uploadVideoToStorage(file,name,onProgress){
-  const r=await fetch("/api/storage",{method:"POST",headers:{"Content-Type":"application/json"},
+  const sign=async ep=>{ const r=await fetch(ep,{method:"POST",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({password:el("adminPw").value,action:"sign",path:"videos/"+name})});
-  const d=await r.json().catch(()=>({}));
-  if(!r.ok||d.configured===false||!d.uploadUrl) throw new Error(d.error||"Video storage isn't set up — add Supabase Storage (see SIGNAGE-SETUP.md).");
+    return { r, d:await r.json().catch(()=>({})) }; };
+  let {r,d}=await sign("/api/r2"); let provider="r2";
+  if(!r.ok||d.configured===false||!d.uploadUrl){ ({r,d}=await sign("/api/storage")); provider="supabase"; }
+  if(!r.ok||d.configured===false||!d.uploadUrl) throw new Error(d.error||"Video storage isn't set up — add Cloudflare R2 or Supabase (see SIGNAGE-SETUP.md).");
   await putWithProgress(d.uploadUrl,file,onProgress);
-  return d.publicUrl;
+  return { publicUrl:d.publicUrl, provider };
 }
 async function addFiles(fileList){
   const names=new Set(assets.map(a=>a.name)); const list=Array.from(fileList);
@@ -322,8 +325,8 @@ async function addFiles(fileList){
     if(isVideo){
       const uniq=uniqueName(sanitize(file.name));
       try{
-        const publicUrl=await uploadVideoToStorage(file,uniq,pct=>status(`Uploading “${uniq}” — ${pct}%`,"busy"));
-        const asset={ name:uniq, path:publicUrl, isVideo:true, previewUrl:publicUrl, pending:false, storage:true };
+        const {publicUrl,provider}=await uploadVideoToStorage(file,uniq,pct=>status(`Uploading “${uniq}” — ${pct}%`,"busy"));
+        const asset={ name:uniq, path:publicUrl, isVideo:true, previewUrl:publicUrl, pending:false, storage:true, provider };
         assets.push(asset); addToShow(asset); status(`“${uniq}” uploaded ✓`,"ok");
       }catch(err){ names.delete(uniq); status("⚠ "+err.message,"err"); }
       renderMedia(); renderSlides(); counts(); setDirty(true); continue;
@@ -357,7 +360,7 @@ async function importFromUrl(){
     if(!r.ok||!d.publicUrl) throw new Error(d.error||"Import failed");
     let name=d.name,n=1; const have=new Set(assets.map(a=>a.name));
     while(have.has(name)){ const dot=d.name.lastIndexOf("."); name=dot>0?d.name.slice(0,dot)+"-"+n+d.name.slice(dot):d.name+"-"+n; n++; }
-    const asset={ name, path:d.publicUrl, isVideo:!!d.isVideo, previewUrl:d.publicUrl, pending:false, storage:true };
+    const asset={ name, path:d.publicUrl, isVideo:!!d.isVideo, previewUrl:d.publicUrl, pending:false, storage:true, provider:d.provider||"r2" };
     assets.push(asset); addToShow(asset); el("importUrl").value="";
     setDirty(true); renderMedia(); renderSlides(); counts(); status(`Imported “${name}” ✓`,"ok");
   }catch(e){ status("⚠ "+e.message,"err"); }
@@ -374,9 +377,10 @@ function deleteAsset(path){
   const a=assets.find(x=>x.path===path); if(!a)return;
   const usedIn=Object.values(config.playlists).filter(p=>p.slides.some(s=>s.path===path)).length;
   if(usedIn && !confirm(`This is used in ${usedIn} playlist(s). Delete it and remove it everywhere?`)) return;
-  if(a.storage){   // video in Supabase Storage — remove it now
-    fetch("/api/storage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:el("adminPw").value,action:"delete",path})})
-      .then(r=>r.json()).then(d=>status(d&&d.ok?"Video deleted":"⚠ "+((d&&d.error)||"delete failed"),d&&d.ok?"ok":"err")).catch(()=>{});
+  if(a.storage){   // video/import in cloud storage — remove it now via the right backend
+    const ep = a.provider==="supabase" ? "/api/storage" : "/api/r2";
+    fetch(ep,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:el("adminPw").value,action:"delete",path})})
+      .then(r=>r.json()).then(d=>status(d&&d.ok?"Deleted":"⚠ "+((d&&d.error)||"delete failed"),d&&d.ok?"ok":"err")).catch(()=>{});
   } else if(!a.pending){ pendingDeletes.add(path); }
   assets=assets.filter(x=>x.path!==path);
   Object.values(config.playlists).forEach(p=>{ p.slides=p.slides.filter(s=>s.path!==path); });
@@ -607,7 +611,7 @@ async function loadAssets(){
     const res=await fetch("/api/list",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pw})});
     const data=await res.json().catch(()=>({})); if(!res.ok) throw new Error(data.error||("Server "+res.status));
     const pending=assets.filter(a=>a.pending);
-    const committed=(data.files||[]).filter(f=>!pendingDeletes.has(f.path)).map(f=>({name:f.name,path:f.path,isVideo:isVideoName(f.name),previewUrl:f.path,pending:false,storage:!!f.storage}));
+    const committed=(data.files||[]).filter(f=>!pendingDeletes.has(f.path)).map(f=>({name:f.name,path:f.path,isVideo:isVideoName(f.name),previewUrl:f.path,pending:false,storage:!!f.storage,provider:f.provider||"github"}));
     const pp=new Set(pending.map(a=>a.path));
     assets=[...committed.filter(c=>!pp.has(c.path)),...pending];
     setConn("ok","Connected"); hideStatus(); renderMedia(); counts();
@@ -682,7 +686,7 @@ async function commitViaToken(files,deletions){
 }
 
 /* ---------- boot ---------- */
-console.log("Signage Dashboard — build 12 (clearer size errors)");
+console.log("Signage Dashboard — build 13 (Cloudflare R2)");
 loadPrefs();
 loadContent();
 if(el("adminPw").value){ loadAssets(); loadScreenStatus(); } else setConn("","Enter your admin password in Connection");

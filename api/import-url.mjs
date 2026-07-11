@@ -7,7 +7,9 @@
 //
 // Env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, ADMIN_PASSWORD, optional SUPABASE_BUCKET
 
-const MAX_BYTES = 100 * 1024 * 1024;  // function-memory safety cap; Supabase enforces the real file-size limit
+import { r2cfg, r2ready, r2publicUrl, signedFetch } from "../lib/r2.mjs";
+
+const MAX_BYTES = 200 * 1024 * 1024;  // function-memory safety cap; storage enforces the real limit
 
 function sanitize(n){ return (n || "").toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "") || "file"; }
 
@@ -74,11 +76,13 @@ export default async function handler(req, res) {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const bucket = process.env.SUPABASE_BUCKET || "media";
   const adminPw = process.env.ADMIN_PASSWORD;
+  const r2 = r2cfg();
+  const useR2 = r2ready(r2) && r2.publicUrl;
 
   let body = req.body || {};
   if (typeof body === "string") { try { body = JSON.parse(body); } catch { body = {}; } }
   if (adminPw && body.password !== adminPw) { res.status(401).json({ error: "Wrong admin password." }); return; }
-  if (!supaUrl || !key) { res.status(200).json({ error: "Importing needs Supabase Storage — set it up first (see SIGNAGE-SETUP.md)." }); return; }
+  if (!useR2 && (!supaUrl || !key)) { res.status(200).json({ error: "Importing needs storage — set up Cloudflare R2 or Supabase Storage (see SIGNAGE-SETUP.md)." }); return; }
 
   const raw = String(body.url || "").trim();
   if (!/^https?:\/\//i.test(raw)) { res.status(400).json({ error: "Enter a valid http(s) link." }); return; }
@@ -106,6 +110,15 @@ export default async function handler(req, res) {
     if (!name || name === "file" + ext) name = "import-" + Date.now() + ext;
 
     const objectPath = "imported/" + name;
+
+    if (useR2) {
+      const up = await signedFetch(r2, "PUT", objectPath, { body: buf, contentType: ctype });
+      if (!up.ok) { const t = await up.text(); throw new Error("R2 upload failed: " + up.status + " " + t.slice(0, 150)); }
+      res.status(200).json({ publicUrl: r2publicUrl(r2, objectPath), name, isVideo, provider: "r2" });
+      return;
+    }
+
+    // Supabase fallback
     const up = await fetch(`${supaUrl}/storage/v1/object/${bucket}/${objectPath}`, {
       method: "POST",
       headers: { apikey: key, Authorization: "Bearer " + key, "Content-Type": ctype, "x-upsert": "true" },
@@ -114,15 +127,10 @@ export default async function handler(req, res) {
     if (!up.ok) {
       const t = await up.text();
       if (/bucket not found/i.test(t)) throw new Error(`Storage bucket "${bucket}" not found — create a public bucket named "${bucket}".`);
-      if (up.status === 413 || /maximum allowed size|exceeded|too large|payload/i.test(t)) throw new Error("Supabase rejected the file for size — it's over your Storage file-size limit (free plan max is 50 MB). Raise it in Supabase → Storage settings, or use a smaller file.");
+      if (up.status === 413 || /maximum allowed size|exceeded|too large|payload/i.test(t)) throw new Error("Supabase rejected the file for size (free plan max 50 MB). Use Cloudflare R2 for large files, or a smaller file.");
       throw new Error("Storage upload failed: " + up.status + " " + t.slice(0, 150));
     }
-
-    res.status(200).json({
-      publicUrl: `${supaUrl}/storage/v1/object/public/${bucket}/${objectPath}`,
-      name,
-      isVideo,
-    });
+    res.status(200).json({ publicUrl: `${supaUrl}/storage/v1/object/public/${bucket}/${objectPath}`, name, isVideo, provider: "supabase" });
   } catch (err) {
     res.status(200).json({ error: err.message || String(err) });
   }

@@ -307,6 +307,55 @@ videos above.)
 
 ---
 
+## Large videos without the 50 MB cap (Cloudflare R2)
+
+Supabase's free plan caps a single file at ~50 MB. **Cloudflare R2** has a free tier with
+**10 GB storage, no egress fees, and no small per-file cap** — so big videos upload for
+free. When R2 is configured, the dashboard uses it as the primary store for videos and
+link-imports (photos still go in the repo; screen monitoring still uses Supabase).
+
+### 1. Create the bucket
+Cloudflare dashboard → **R2** → **Create bucket** (you've made **`bikesales`**).
+
+### 2. Turn on a public URL
+Bucket → **Settings** → **Public access** → enable the **r2.dev subdomain** (Allow).
+Copy the URL it gives you, e.g. `https://pub-abc123.r2.dev` — that's your `R2_PUBLIC_URL`.
+
+### 3. Add a CORS policy (so the browser can upload directly)
+Bucket → **Settings** → **CORS policy** → add (replace the origin with your Vercel site):
+```json
+[
+  { "AllowedOrigins": ["https://bike-images.vercel.app"],
+    "AllowedMethods": ["PUT","GET"],
+    "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600 }
+]
+```
+
+### 4. Create an API token (S3 credentials)
+R2 → **Manage R2 API Tokens** → **Create API token** → permission **Object Read & Write**
+→ (optionally scope to the `bikesales` bucket) → Create. Copy the **Access Key ID** and
+**Secret Access Key** (shown once).
+
+### 5. Add env vars in Vercel → redeploy
+| Name | Value |
+|------|-------|
+| `R2_ACCOUNT_ID` | your Cloudflare account id (the hash in the dashboard URL) |
+| `R2_ACCESS_KEY_ID` | from step 4 |
+| `R2_SECRET_ACCESS_KEY` | from step 4 |
+| `R2_BUCKET` | `bikesales` |
+| `R2_PUBLIC_URL` | the `https://pub-….r2.dev` URL from step 2 |
+
+Then hard-refresh the dashboard and upload your big video — it goes straight to R2 with a
+progress %, no size error. Existing Supabase videos keep working and stay in your library.
+
+> How it works: `api/r2.mjs` mints a short-lived **presigned S3 URL** (signed server-side
+> with your R2 keys), the browser PUTs the file directly to R2 (nothing large touches
+> Vercel), and playlists reference the object's public r2.dev URL.
+
+---
+
 ## Why this beats a paid tool for you
 
 - **$0 forever** — no per-screen fees, no watermark, no account.

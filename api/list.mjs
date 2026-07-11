@@ -1,7 +1,9 @@
-// api/list.mjs — lists media files in the repo's images/ folder for the dashboard's
-// Media Library. Uses the server-side GitHub token, gated by the admin password.
+// api/list.mjs — lists media for the dashboard's Media Library: repo images/ (GitHub),
+// plus optional Supabase Storage and Cloudflare R2 objects. Admin-password gated.
 //
-// POST { password } -> { files: [{ name, path, size }] }
+// POST { password } -> { files: [{ name, path, size, provider, storage? }] }
+
+import { r2cfg, r2ready, r2publicUrl, signedFetch } from "../lib/r2.mjs";
 
 const GH = "https://api.github.com";
 
@@ -47,17 +49,32 @@ export default async function handler(req, res) {
       if (/not found/i.test(e.message)) items = [];
       else throw e;
     }
+    const mediaRe = /\.(jpe?g|png|webp|gif|mp4|webm|ogg|mov|m4v)$/i;
     const files = (Array.isArray(items) ? items : [])
-      .filter(f => f.type === "file" && /\.(jpe?g|png|webp|gif|mp4|webm|ogg|mov|m4v)$/i.test(f.name))
-      .map(f => ({ name: f.name, path: f.path, size: f.size }))
+      .filter(f => f.type === "file" && mediaRe.test(f.name))
+      .map(f => ({ name: f.name, path: f.path, size: f.size, provider: "github" }))
       .sort((a, b) => a.name.localeCompare(b.name));
 
-    // Also list media kept in Supabase Storage: uploaded videos (videos/) and
-    // link-imported photos/videos (imported/). Optional — only if configured.
+    // Cloudflare R2 objects (primary large-media store), if configured.
+    const r2 = r2cfg();
+    if (r2ready(r2) && r2.publicUrl) {
+      try {
+        const r = await signedFetch(r2, "GET", "", { query: "list-type=2&max-keys=1000" });
+        if (r.ok) {
+          const xml = await r.text();
+          const re = /<Key>([^<]+)<\/Key>/g; let m;
+          while ((m = re.exec(xml))) {
+            const k = m[1];
+            if (mediaRe.test(k)) files.push({ name: k.split("/").pop(), path: r2publicUrl(r2, k), provider: "r2", storage: true });
+          }
+        }
+      } catch (_) { /* optional */ }
+    }
+
+    // Legacy Supabase Storage objects (videos/ and imported/), if still configured.
     const sbUrl = (process.env.SUPABASE_URL || "").replace(/\/+$/, ""), sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (sbUrl && sbKey) {
       const bucket = process.env.SUPABASE_BUCKET || "media";
-      const mediaRe = /\.(jpe?g|png|webp|gif|mp4|webm|ogg|mov|m4v)$/i;
       for (const prefix of ["videos/", "imported/"]) {
         try {
           const r = await fetch(`${sbUrl}/storage/v1/object/list/${bucket}`, {
@@ -73,6 +90,7 @@ export default async function handler(req, res) {
                 name: o.name,
                 path: `${sbUrl}/storage/v1/object/public/${bucket}/${prefix}${o.name}`,
                 size: (o.metadata && o.metadata.size) || 0,
+                provider: "supabase",
                 storage: true,
               }));
           }
