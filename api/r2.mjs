@@ -56,6 +56,16 @@ export default async function handler(req, res) {
       return;
     }
 
+    if (body.action === "test") {
+      const r = await signedFetch(c, "GET", "", { query: "list-type=2&max-keys=1" });
+      if (r.ok) { res.status(200).json({ ok: true, bucket: c.bucket }); return; }
+      const t = await r.text();
+      const code = (t.match(/<Code>([^<]+)<\/Code>/) || [])[1];
+      const msg = (t.match(/<Message>([^<]+)<\/Message>/) || [])[1];
+      res.status(200).json({ ok: false, status: r.status, error: (code ? code + ": " : "") + (msg || t.slice(0, 160)) });
+      return;
+    }
+
     if (body.action === "list") {
       const r = await signedFetch(c, "GET", "", { query: "list-type=2&max-keys=1000" });
       const xml = await r.text();
