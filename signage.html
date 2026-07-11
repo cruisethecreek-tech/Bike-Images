@@ -185,12 +185,15 @@ let timer  = null;
 let lastSignature = "";   // detect content.json changes without flicker
 
 /* ---------- Load + normalize config ---------- */
+let currentConfig = null;   // last good config, re-evaluated on a timer for schedules
+
 async function loadConfig() {
   try {
     // cache-bust so TVs always pull the newest content
     const res = await fetch(CONFIG_URL + "?t=" + Date.now(), { cache: "no-store" });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const cfg = await res.json();
+    currentConfig = cfg;
     applyConfig(cfg);
   } catch (err) {
     // First run / missing file: show the helper message but keep trying.
@@ -199,19 +202,52 @@ async function loadConfig() {
   }
 }
 
+// Re-evaluate the schedule between fetches so a screen switches playlists at the
+// scheduled time even if content.json hasn't changed.
+function scheduleTick() { if (currentConfig) applyConfig(currentConfig); }
+
 // Which screen is this? ?screen=front (matches a screen id in the config).
 // ?playlist=rentals forces a specific playlist (handy for previewing).
 const SCREEN   = new URLSearchParams(location.search).get("screen")   || "";
 const FORCE_PL = new URLSearchParams(location.search).get("playlist") || "";
 
+// "HH:MM" -> minutes since midnight (null if malformed).
+function hm(str) {
+  if (!str || !/^\d{1,2}:\d{2}$/.test(str)) return null;
+  const [h, m] = str.split(":").map(Number);
+  return h * 60 + m;
+}
+
+// Which playlist should this screen show *right now*, honoring schedule rules?
+// A rule matches when today's weekday is in rule.days and the current time is in
+// [start, end). First matching rule wins; otherwise the screen's default playlist.
+function activePlaylistId(cfg, screen) {
+  const now = new Date();
+  const day = now.getDay();                       // 0 = Sunday
+  const mins = now.getHours() * 60 + now.getMinutes();
+  if (Array.isArray(screen.rules)) {
+    for (const r of screen.rules) {
+      if (!r || !r.playlist || !cfg.playlists[r.playlist]) continue;
+      const days = (Array.isArray(r.days) && r.days.length) ? r.days : [0,1,2,3,4,5,6];
+      if (!days.includes(day)) continue;
+      const s = hm(r.start), e = hm(r.end);
+      if (s == null || e == null) return r.playlist;      // no time bounds → all day
+      const inWindow = s <= e ? (mins >= s && mins < e) : (mins >= s || mins < e); // handles overnight
+      if (inWindow) return r.playlist;
+    }
+  }
+  return screen.playlist;
+}
+
 // Pick the playlist this screen should show. Supports the multi-playlist schema
-// { playlists:{...}, screens:[...] } and falls back to the old flat schema.
+// { playlists:{...}, screens:[...] } (with optional schedule rules) and falls back
+// to the old flat schema.
 function resolvePlaylist(cfg) {
   if (cfg && cfg.playlists && typeof cfg.playlists === "object") {
     let plId = FORCE_PL;
     if (!plId && Array.isArray(cfg.screens)) {
       const scr = cfg.screens.find(s => String(s.id) === String(SCREEN)) || cfg.screens[0];
-      if (scr) plId = scr.playlist;
+      if (scr) plId = activePlaylistId(cfg, scr);
     }
     if (!plId || !cfg.playlists[plId]) plId = Object.keys(cfg.playlists)[0];
     return cfg.playlists[plId] || {};
@@ -352,6 +388,7 @@ document.addEventListener("visibilitychange", () => {
 /* ---------- Boot ---------- */
 loadConfig();
 setInterval(loadConfig, RELOAD_MS);
+setInterval(scheduleTick, 20 * 1000);   // catch schedule boundaries between fetches
 setInterval(tickClock, 1000);
 tickClock();
 keepAwake();
