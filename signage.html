@@ -256,7 +256,7 @@ const DEFAULT_SECS = 8;           // seconds per image if not specified
 // Bump this whenever signage.html changes, and set the same value in signage-version.json.
 // A running TV compares the two and reloads itself to pull the new code — so feature
 // updates reach every TV automatically instead of needing a manual relaunch.
-const APP_VERSION  = "2026-07-11-preload2";
+const APP_VERSION  = "2026-07-11-brand1";
 async function checkForUpdate() {
   try {
     const r = await fetch("signage-version.json?t=" + Date.now(), { cache: "no-store" });
@@ -822,7 +822,33 @@ document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible") keepAwake();
 });
 
+/* ---------- White-label branding ----------
+   One file, branding.json, controls a client's whole identity (name, colors, app name,
+   favicon). Read it and theme the display; fall back to the built-in look if it's absent. */
+function setFavicon(emoji) {
+  if (!emoji) return;
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><text y="52" font-size="52">' + emoji + '</text></svg>';
+  let link = document.querySelector("link[rel~='icon']");
+  if (!link) { link = document.createElement("link"); link.rel = "icon"; document.head.appendChild(link); }
+  link.href = "data:image/svg+xml," + encodeURIComponent(svg);
+}
+async function applyBranding() {
+  try {
+    const r = await fetch("branding.json?t=" + Date.now(), { cache: "no-store" });
+    if (!r.ok) return;
+    const b = await r.json();
+    const t = b.theme || {};
+    const root = document.documentElement.style;
+    if (t.tickerBg)     root.setProperty("--ticker-bg", t.tickerBg);
+    if (t.tickerInk)    root.setProperty("--ticker-ink", t.tickerInk);
+    if (t.tickerAccent) root.setProperty("--ticker-accent", t.tickerAccent);
+    if (b.businessName) document.title = b.businessName + " Signage";
+    setFavicon(b.favicon);
+  } catch (_) { /* no branding file — keep defaults */ }
+}
+
 /* ---------- Boot ---------- */
+applyBranding();
 loadConfig();
 setInterval(loadConfig, RELOAD_MS);
 setInterval(scheduleTick, 20 * 1000);   // catch schedule boundaries between fetches
