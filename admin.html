@@ -66,7 +66,7 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>Signage Admin</h1>
+  <h1>Signage Admin <span id="build" style="font-size:.5em;color:#2ecc71;font-weight:600;vertical-align:middle;">build&nbsp;3&nbsp;✓</span></h1>
   <p class="sub">Upload photos/videos, arrange them, edit the ticker — then Save. Your TVs update within a minute.</p>
 
   <div class="bar">
@@ -160,10 +160,15 @@ function fileToBase64(file){
 /* ---------- Persisted connection prefs ---------- */
 function loadPrefs(){
   el("adminPw").value  = sessionStorage.getItem("sg_pw")   || "";
-  el("ghToken").value  = sessionStorage.getItem("sg_tok")  || "";
+  // Only restore a token that actually looks like one — never resurrect stray text
+  // that would break saving with an "invalid header value".
+  const savedTok = sessionStorage.getItem("sg_tok") || "";
+  el("ghToken").value  = /^(gh[pousr]_|github_pat_)/.test(savedTok) ? savedTok : "";
   el("ghRepo").value   = localStorage.getItem("sg_repo")   || "";
   el("ghBranch").value = localStorage.getItem("sg_branch") || "main";
-  if(localStorage.getItem("sg_useTok")==="1"){ el("useToken").checked=true; el("tokenFields").style.display="block"; }
+  if(localStorage.getItem("sg_useTok")==="1" && el("ghToken").value){
+    el("useToken").checked=true; el("tokenFields").style.display="block";
+  }
 }
 function savePrefs(){
   sessionStorage.setItem("sg_pw",  el("adminPw").value);
@@ -172,7 +177,7 @@ function savePrefs(){
   localStorage.setItem("sg_branch",el("ghBranch").value.trim());
   localStorage.setItem("sg_useTok",el("useToken").checked?"1":"0");
 }
-el("useToken").addEventListener("change",e=>{ el("tokenFields").style.display=e.target.checked?"block":"none"; });
+el("useToken").addEventListener("change",e=>{ el("tokenFields").style.display=e.target.checked?"block":"none"; hideStatus(); });
 
 /* ---------- Load current content.json ---------- */
 async function loadContent(){
@@ -445,6 +450,7 @@ el("saveBtn").addEventListener("click",save);
 window.addEventListener("beforeunload",e=>{ if(dirty){ e.preventDefault(); e.returnValue=""; } });
 
 /* ---------- Boot ---------- */
+console.log("Signage Admin — build 3 (image auto-resize + token guard)");
 loadPrefs();
 loadContent();
 </script>
