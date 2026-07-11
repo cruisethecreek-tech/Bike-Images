@@ -30,6 +30,9 @@
       "slides": [
         {
           "src": "https://hqkdphrtxjhqestnvome.supabase.co/storage/v1/object/public/Store Media/videos/velotric-bike-deck.mp4"
+        },
+        {
+          "src": "https://hqkdphrtxjhqestnvome.supabase.co/storage/v1/object/public/Store Media/imported/heybike-deck.mp4"
         }
       ]
     }
