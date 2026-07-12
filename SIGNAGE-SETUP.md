@@ -264,6 +264,22 @@ create table screen_status (
 > alter table screen_status add column if not exists command_id text;
 > ```
 
+**Demo-request leads (for the product landing page `product.html`):** if you're using the
+marketing page's "Request a demo" form, also create this table so submissions are saved:
+```sql
+create table leads (
+  id         bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  name       text,
+  email      text,
+  business   text,
+  screens    text,
+  message    text,
+  source     text
+);
+```
+View submissions any time in Supabase → **Table editor → leads**.
+
 ### 3. Get your keys
 Supabase → **Project Settings → API**:
 - **Project URL** (e.g. `https://abcd.supabase.co`)
