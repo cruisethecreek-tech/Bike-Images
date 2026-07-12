@@ -280,6 +280,35 @@ create table leads (
 ```
 View submissions any time in Supabase → **Table editor → leads**.
 
+**Offline-screen email alerts (Yodeck-style "your screen has been offline"):** to email
+yourself (or a client) when a screen stops checking in, add one column and set up a free
+email sender.
+
+1. Add the alert column (Supabase → SQL Editor):
+   ```sql
+   alter table screen_status add column if not exists offline_alerted_at timestamptz;
+   ```
+2. Create a free **Resend** account (resend.com), verify a sending domain, and grab an API key.
+3. In Vercel → Environment Variables, add:
+
+   | Name | Value |
+   |------|-------|
+   | `RESEND_API_KEY` | your Resend key |
+   | `ALERT_FROM` | e.g. `Signage Alerts <alerts@yourdomain.com>` (must be on your verified domain) |
+   | `ALERT_EMAIL` | who gets the alert (a client's email; comma-separate for several) |
+   | `SITE_URL` | your deploy, e.g. `https://bike-images.vercel.app` |
+   | `OFFLINE_MINUTES` | optional, how long offline before alerting (default 30) |
+   | `CRON_SECRET` | any random string, so only your scheduler can trigger it |
+   | `ALERT_BUSINESS` | optional, the name shown in the email |
+
+4. Turn on the schedule: in GitHub → **Settings → Secrets and variables → Actions**, add
+   secrets `SITE_URL` and `CRON_SECRET` (same values). The included **Offline screen alerts**
+   workflow then pings the checker every 15 minutes. (Alternatives: a free cron-job.org job
+   hitting `SITE_URL/api/check-offline?key=CRON_SECRET`, or Vercel Cron.)
+
+Each screen alerts **once** when it goes offline, and again only after it recovers and drops
+again — so no repeat spam. For a client copy, set that client's address in `ALERT_EMAIL`.
+
 ### 3. Get your keys
 Supabase → **Project Settings → API**:
 - **Project URL** (e.g. `https://abcd.supabase.co`)
