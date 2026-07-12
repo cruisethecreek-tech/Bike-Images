@@ -61,6 +61,11 @@
       "id": "4",
       "name": "Screen 4",
       "playlist": "main"
+    },
+    {
+      "id": "5",
+      "name": "Main Home",
+      "playlist": "main"
     }
   ],
   "weather": {
