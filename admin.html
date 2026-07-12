@@ -123,6 +123,7 @@
       <button class="navbtn" data-tab="slides"><span class="ico">🎬</span> Slideshow<span class="count" id="cSlides">0</span></button>
       <button class="navbtn" data-tab="ticker"><span class="ico">📰</span> Ticker &amp; Display</button>
       <button class="navbtn" data-tab="screens"><span class="ico">📺</span> Screens<span class="count" id="cScreens">0</span></button>
+      <button class="navbtn" data-tab="leads"><span class="ico">📨</span> Leads<span class="count" id="cLeads">0</span></button>
       <button class="navbtn" data-tab="conn"><span class="ico">🔑</span> Connection</button>
       <div class="hint">Build a playlist → assign it to a screen → Save. Each TV shows its own playlist.</div>
     </nav>
@@ -217,6 +218,13 @@
         <p class="muted" style="margin-top:14px;">Assigning a TV to a screen: on the Fire Stick app, when it first opens it asks <strong>“Which screen is this TV?”</strong> — pick this screen with the remote and it remembers. To change it later, press the <strong>☰ (menu)</strong> button on the remote. (Advanced: a kiosk browser can instead open the per-screen link below directly.)</p>
       </section>
 
+      <!-- LEADS -->
+      <section id="tab-leads" class="tab">
+        <h2>Demo requests</h2>
+        <p class="lede">People who filled out the “Request a demo” form on your product page.</p>
+        <div id="leadsList"></div>
+      </section>
+
       <!-- CONNECTION -->
       <section id="tab-conn" class="tab">
         <h2>Connection</h2>
@@ -282,6 +290,7 @@ document.querySelectorAll(".navbtn").forEach(b=>b.addEventListener("click",()=>{
   el("plbar").style.display=["media","slides","ticker"].includes(b.dataset.tab)?"flex":"none";
   if(b.dataset.tab==="media" && !assets.length && el("adminPw").value) loadAssets();
   if(b.dataset.tab==="screens"){ renderScreens(); loadScreenStatus(); }
+  if(b.dataset.tab==="leads") loadLeads();
 }));
 
 /* ---------- compression ---------- */
@@ -625,6 +634,37 @@ async function loadScreenStatus(){
   }catch(_){}
 }
 setInterval(()=>{ if(document.querySelector('.navbtn[data-tab=screens]').classList.contains("active")) loadScreenStatus(); }, 30000);
+
+/* ---------- leads (demo requests) ---------- */
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+async function loadLeads(){
+  const box=el("leadsList"); const pw=el("adminPw").value;
+  if(!pw){ box.innerHTML=`<p class="muted">Enter your admin password in the Connection tab to see demo requests.</p>`; return; }
+  box.innerHTML=`<p class="muted">Loading…</p>`;
+  try{
+    const res=await fetch("/api/leads",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password:pw})});
+    const d=await res.json().catch(()=>({}));
+    if(d.needsTable){ box.innerHTML=`<p class="muted">No <code>leads</code> table yet — create it in Supabase (see SIGNAGE-SETUP.md) and demo-request submissions will show up here.</p>`; el("cLeads").textContent=0; return; }
+    if(d.configured===false){ box.innerHTML=`<p class="muted">Connect Supabase to collect demo requests (see SIGNAGE-SETUP.md).</p>`; el("cLeads").textContent=0; return; }
+    const leads=d.leads||[];
+    el("cLeads").textContent=leads.length;
+    if(!leads.length){ box.innerHTML=`<p class="muted">No demo requests yet. Share your product page: <code>/product.html</code></p>`; return; }
+    box.innerHTML=leads.map(l=>{
+      const when=l.created_at?new Date(l.created_at).toLocaleString("en-US"):"";
+      const mail="mailto:"+encodeURIComponent(l.email||"");
+      return `<div class="screen">
+        <div class="top">
+          <div><label>Name</label><div style="font-weight:700">${esc(l.name)||"—"}</div></div>
+          <div><label>Email</label><div><a href="${mail}">${esc(l.email)||"—"}</a></div></div>
+          <div><label>Business</label><div>${esc(l.business)||"—"}</div></div>
+          <div style="flex:0 0 auto"><label>Screens</label><div>${esc(l.screens)||"—"}</div></div>
+        </div>
+        ${l.message?`<div class="scstatus" style="margin-top:8px">“${esc(l.message)}”</div>`:""}
+        <div class="muted" style="margin-top:8px;font-size:.82rem">${esc(when)}</div>
+      </div>`;
+    }).join("");
+  }catch(e){ box.innerHTML=`<p class="muted">Couldn't load leads: ${esc(e.message||e)}</p>`; }
+}
 
 /* ---------- migrate + load content.json ---------- */
 function normSlides(list){ return (list||[]).map(raw=>{ const it=typeof raw==="string"?{src:raw}:(raw||{}); const src=it.src||it.url||it.image||it.video||"";
