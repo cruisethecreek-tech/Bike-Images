@@ -356,6 +356,14 @@ after the first download they play and seek with no buffering — which also kee
 tight. Very large files (over ~150 MB) skip the cache and stream instead, so keep video
 exports reasonable (1080p at a few Mbps is plenty for signage).
 
+## Offline resilience
+
+A small service worker (`sw.js`) caches the display, its content, and its media on the TV,
+so a screen **keeps playing through a Wi-Fi/internet outage — even across a reboot** — with
+no extra hardware. When the connection returns, it automatically pulls the latest content
+and code again. On the rare TV whose browser doesn't support this, it simply falls back to
+normal online behavior (no regression).
+
 ## Large videos (Supabase Storage)
 
 Photos are auto-shrunk and stored in the repo, but **videos** can't be shrunk in the
