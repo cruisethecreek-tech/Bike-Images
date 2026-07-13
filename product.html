@@ -216,7 +216,9 @@ function setFavicon(emoji){
     const r=await fetch("branding.json?t="+Date.now(),{cache:"no-store"});
     if(r.ok){
       const b=await r.json();
-      const name=((b.businessName?b.businessName+" ":"")+(b.productName||"Signage")).trim();
+      // The marketing page shows the PRODUCT brand (e.g. CruiseCast). Falls back to the
+      // deployment's business+product name if no product brand is set.
+      const name=(b.product&&b.product.name) || ((b.businessName?b.businessName+" ":"")+(b.productName||"Signage")).trim();
       document.getElementById("brandName").innerHTML=name+'<span class="dot">.</span>';
       document.getElementById("footBrand").textContent=name;
       document.title=name+" — Digital Signage";
