@@ -256,7 +256,7 @@ const DEFAULT_SECS = 8;           // seconds per image if not specified
 // Bump this whenever signage.html changes, and set the same value in signage-version.json.
 // A running TV compares the two and reloads itself to pull the new code — so feature
 // updates reach every TV automatically instead of needing a manual relaunch.
-const APP_VERSION  = "2026-07-11-brand1";
+const APP_VERSION  = "2026-07-11-offline1";
 async function checkForUpdate() {
   try {
     const r = await fetch("signage-version.json?t=" + Date.now(), { cache: "no-store" });
@@ -345,14 +345,21 @@ async function loadConfig() {
     const res = await fetch(CONFIG_URL + "?t=" + Date.now(), { cache: "no-store" });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const cfg = await res.json();
+    try { localStorage.setItem("lastContent", JSON.stringify(cfg)); } catch (_) {}  // remember for offline
     currentConfig = cfg;
     applyConfig(cfg);
     setupWeather(cfg.weather);  // global weather widget
     heartbeat();               // check in with the up-to-date active playlist
     maybePromptScreen(cfg);    // first run on an unassigned TV: ask which screen this is
   } catch (err) {
-    // First run / missing file: show the helper message but keep trying.
-    if (!items.length) messageEl.classList.add("on");
+    // Offline / missing file: fall back to the last content we saw so the TV keeps playing.
+    if (!currentConfig) {
+      try {
+        const saved = localStorage.getItem("lastContent");
+        if (saved) { const cfg = JSON.parse(saved); currentConfig = cfg; applyConfig(cfg); setupWeather(cfg.weather); }
+      } catch (_) {}
+    }
+    if (!items.length && !currentConfig) messageEl.classList.add("on");
     console.warn("content.json not loaded:", err.message);
   }
 }
@@ -848,6 +855,8 @@ async function applyBranding() {
 }
 
 /* ---------- Boot ---------- */
+// Register the offline cache (no-op on TVs whose browser doesn't support it).
+if ("serviceWorker" in navigator) { navigator.serviceWorker.register("sw.js").catch(() => {}); }
 applyBranding();
 loadConfig();
 setInterval(loadConfig, RELOAD_MS);
