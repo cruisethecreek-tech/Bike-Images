@@ -6,6 +6,10 @@
   "tagline": "You bring the TVs. We bring them to life.",
   "subhead": "Turn any Fire TV or Android screen into professional digital signage — playlists, scheduling, live weather, and remote control from one simple dashboard. No per-screen fees.",
   "contactEmail": "cruisethecreek@gmail.com",
+  "product": {
+    "name": "CruiseCast",
+    "note": "This is the product/company brand shown on the marketing page (product.html). Your own shop dashboard and TVs use businessName/productName above, so they stay 'Cruise the Creek'."
+  },
   "demoUrl": "signage.html?screen=1",
   "favicon": "🚲",
   "theme": {
