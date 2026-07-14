@@ -12,6 +12,8 @@
   },
   "demoUrl": "signage.html?screen=1",
   "favicon": "🚲",
+  "logoUrl": "",
+  "logoPosition": "bottom-right",
   "theme": {
     "accent": "#1f6f8b",
     "tickerBg": "#111111",

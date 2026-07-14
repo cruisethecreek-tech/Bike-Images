@@ -58,6 +58,13 @@ This one file controls the client's whole look and app identity:
 - **signageUrl** — the client's own `…/signage.html`. **Must match their Vercel URL.**
 - **favicon** — an emoji used as the browser-tab icon.
 - **theme** — `accent` colours the dashboard; the `ticker*` values colour the TV's news bar.
+- **logoUrl** — (optional) a link to the client's logo image (PNG/SVG with a transparent
+  background works best). It shows in the dashboard header and in a corner of every TV.
+  Leave it `""` for no logo. Host the image anywhere public — e.g. drop it in the repo's
+  `images/` folder and use `"images/their-logo.png"`, or paste a full URL.
+- **logoPosition** — where the logo sits on the TV: `"bottom-right"` (default),
+  `"bottom-left"`, `"top-right"`, or `"top-left"`. (Weather uses top-left and the clock uses
+  top-right, so `bottom-right` avoids overlap.)
 
 Commit the change. The dashboard and TVs apply it automatically.
 

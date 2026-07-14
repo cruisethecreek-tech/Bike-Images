@@ -209,6 +209,20 @@
   }
   #takeover.on { display: flex; }
   #takeover .msg { font-size: 7vh; font-weight: 700; line-height: 1.25; max-width: 24ch; }
+
+  /* ---------- Brand logo overlay (from branding.json) ---------- */
+  #logo {
+    position: fixed; z-index: 6; display: none;
+    max-height: 9vh; max-width: 24vw;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+  }
+  #logo.on { display: block; }
+  #logo.tl { top: 2.4vh; left: 2.6vw; }
+  #logo.tr { top: 2.4vh; right: 2.6vw; }
+  #logo.bl { bottom: 2.4vh; left: 2.6vw; }
+  #logo.br { bottom: 2.4vh; right: 2.6vw; }
+  /* Lift bottom-anchored logos above the ticker when it's showing. */
+  body.tickeron #logo.bl, body.tickeron #logo.br { bottom: calc(var(--ticker-h) + 2.4vh); }
 </style>
 </head>
 <body>
@@ -239,6 +253,7 @@
     <div class="hint" id="pickerDiag" style="margin-top:1.5vh;font-size:1.7vh;color:#555;"></div>
   </div>
 
+  <img id="logo" alt="" />
   <div id="blank"></div>
   <div id="takeover"><div class="msg" id="takeoverMsg"></div></div>
 
@@ -256,7 +271,7 @@ const DEFAULT_SECS = 8;           // seconds per image if not specified
 // Bump this whenever signage.html changes, and set the same value in signage-version.json.
 // A running TV compares the two and reloads itself to pull the new code — so feature
 // updates reach every TV automatically instead of needing a manual relaunch.
-const APP_VERSION  = "2026-07-11-offline1";
+const APP_VERSION  = "2026-07-11-logo1";
 async function checkForUpdate() {
   try {
     const r = await fetch("signage-version.json?t=" + Date.now(), { cache: "no-store" });
@@ -587,9 +602,11 @@ function applyConfig(fullCfg) {
     tickerLabel.textContent = cfg.tickerLabel || "INFO";
     tickerEl.classList.add("on");
     stage.style.bottom = "var(--ticker-h)";
+    document.body.classList.add("tickeron");
   } else {
     tickerEl.classList.remove("on");
     stage.style.bottom = "0";
+    document.body.classList.remove("tickeron");
   }
 
   // Clock
@@ -851,6 +868,15 @@ async function applyBranding() {
     if (t.tickerAccent) root.setProperty("--ticker-accent", t.tickerAccent);
     if (b.businessName) document.title = b.businessName + " Signage";
     setFavicon(b.favicon);
+    const logo = document.getElementById("logo");
+    if (b.logoUrl) {
+      const posMap = { "top-left": "tl", "top-right": "tr", "bottom-left": "bl", "bottom-right": "br" };
+      logo.className = posMap[b.logoPosition] || "br";
+      logo.src = b.logoUrl;
+      logo.classList.add("on");
+    } else {
+      logo.classList.remove("on");
+    }
   } catch (_) { /* no branding file — keep defaults */ }
 }
 
