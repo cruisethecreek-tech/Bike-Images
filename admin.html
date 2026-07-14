@@ -109,7 +109,7 @@
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="brand" id="brandName">Signage</div>
+    <div class="brand"><img id="brandLogo" alt="" style="height:26px;vertical-align:middle;margin-right:8px;display:none;" /><span id="brandName">Signage</span></div>
     <div class="status"><span class="dot" id="connDot"></span><span id="connLabel">Not connected</span></div>
     <span class="spacer"></span>
     <span id="dirty"></span>
@@ -801,6 +801,9 @@ async function applyBranding(){
     document.title=name+" Dashboard";
     if(b.theme&&b.theme.accent) document.documentElement.style.setProperty("--accent",b.theme.accent);
     setFavicon(b.favicon);
+    const logo=el("brandLogo");
+    if(b.logoUrl){ logo.src=b.logoUrl; logo.alt=name; logo.style.display="inline-block"; el("brandName").style.display="none"; }
+    else { logo.style.display="none"; el("brandName").style.display=""; }
   }catch(_){ /* no branding file — keep defaults */ }
 }
 
