@@ -232,7 +232,8 @@
         <div class="card">
           <label>Admin password</label>
           <input type="password" id="adminPw" placeholder="the ADMIN_PASSWORD you set in Vercel" autocomplete="current-password" />
-          <p class="muted" style="margin:8px 0 0;">Secure mode: saves through this site's <code>/api/commit</code>. Your GitHub token stays on the server.</p>
+          <div class="check" style="margin-top:8px;"><input type="checkbox" id="rememberPw" checked /><label for="rememberPw">Remember me on this device (stay signed in)</label></div>
+          <p class="muted" style="margin:8px 0 0;">Secure mode: saves through this site's <code>/api/commit</code>. Your GitHub token stays on the server. Only tick “Remember me” on your own private computer.</p>
           <button id="checkBtn" class="chip small" type="button" style="margin-top:12px;">Check connection &amp; load media</button>
           <details style="margin-top:14px;">
             <summary style="cursor:pointer;font-weight:600;color:var(--accent);">Advanced: use a GitHub token directly</summary>
@@ -601,11 +602,22 @@ el("wxFind").addEventListener("click",async ()=>{
 });
 
 /* ---------- prefs ---------- */
-function loadPrefs(){ el("adminPw").value=sessionStorage.getItem("sg_pw")||"";
+function loadPrefs(){
+  // Admin password: remembered on this device (localStorage) if the box was ticked, else
+  // just for this browser session (sessionStorage).
+  const remembered=localStorage.getItem("sg_pw");
+  el("rememberPw").checked = localStorage.getItem("sg_remember")!=="0";
+  el("adminPw").value = remembered || sessionStorage.getItem("sg_pw") || "";
+  // GitHub token stays session-only (higher-risk secret, advanced mode).
   const t=sessionStorage.getItem("sg_tok")||""; el("ghToken").value=/^(gh[pousr]_|github_pat_)/.test(t)?t:"";
   el("ghRepo").value=localStorage.getItem("sg_repo")||""; el("ghBranch").value=localStorage.getItem("sg_branch")||"main";
   if(localStorage.getItem("sg_useTok")==="1"&&el("ghToken").value){ el("useToken").checked=true; el("tokenFields").style.display="block"; } }
-function savePrefs(){ sessionStorage.setItem("sg_pw",el("adminPw").value); sessionStorage.setItem("sg_tok",el("ghToken").value);
+function savePrefs(){
+  const pw=el("adminPw").value, remember=el("rememberPw").checked;
+  localStorage.setItem("sg_remember", remember?"1":"0");
+  if(remember){ localStorage.setItem("sg_pw",pw); sessionStorage.removeItem("sg_pw"); }
+  else { sessionStorage.setItem("sg_pw",pw); localStorage.removeItem("sg_pw"); }
+  sessionStorage.setItem("sg_tok",el("ghToken").value);
   localStorage.setItem("sg_repo",el("ghRepo").value.trim()); localStorage.setItem("sg_branch",el("ghBranch").value.trim()); localStorage.setItem("sg_useTok",el("useToken").checked?"1":"0"); }
 el("useToken").addEventListener("change",e=>{ el("tokenFields").style.display=e.target.checked?"block":"none"; hideStatus(); });
 el("checkBtn").addEventListener("click",()=>{ savePrefs(); loadAssets(); loadScreenStatus(); testR2(); });
@@ -810,6 +822,9 @@ async function applyBranding(){
 /* ---------- boot ---------- */
 applyBranding();
 loadPrefs();
+// Persist the password (and remember-me choice) as soon as it's entered or toggled.
+el("adminPw").addEventListener("change", savePrefs);
+el("rememberPw").addEventListener("change", savePrefs);
 loadContent();
 if(el("adminPw").value){ loadAssets(); loadScreenStatus(); } else setConn("","Enter your admin password in Connection");
 </script>
