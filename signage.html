@@ -271,7 +271,7 @@ const DEFAULT_SECS = 8;           // seconds per image if not specified
 // Bump this whenever signage.html changes, and set the same value in signage-version.json.
 // A running TV compares the two and reloads itself to pull the new code — so feature
 // updates reach every TV automatically instead of needing a manual relaunch.
-const APP_VERSION  = "2026-07-11-logo1";
+const APP_VERSION  = "2026-07-13-nosw1";
 async function checkForUpdate() {
   try {
     const r = await fetch("signage-version.json?t=" + Date.now(), { cache: "no-store" });
@@ -881,8 +881,13 @@ async function applyBranding() {
 }
 
 /* ---------- Boot ---------- */
-// Register the offline cache (no-op on TVs whose browser doesn't support it).
-if ("serviceWorker" in navigator) { navigator.serviceWorker.register("sw.js").catch(() => {}); }
+// Offline caching was removed — it made some TVs serve stale/broken copies of themselves.
+// Proactively unregister any previously-installed worker and wipe its caches so every TV
+// goes back to always-fresh content and code.
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())).catch(() => {});
+}
+if (window.caches && caches.keys) { caches.keys().then(ks => ks.forEach(k => caches.delete(k))).catch(() => {}); }
 applyBranding();
 loadConfig();
 setInterval(loadConfig, RELOAD_MS);
