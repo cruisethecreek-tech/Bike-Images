@@ -356,13 +356,13 @@ after the first download they play and seek with no buffering — which also kee
 tight. Very large files (over ~150 MB) skip the cache and stream instead, so keep video
 exports reasonable (1080p at a few Mbps is plenty for signage).
 
-## Offline resilience
+## Offline behavior
 
-A small service worker (`sw.js`) caches the display, its content, and its media on the TV,
-so a screen **keeps playing through a Wi-Fi/internet outage — even across a reboot** — with
-no extra hardware. When the connection returns, it automatically pulls the latest content
-and code again. On the rare TV whose browser doesn't support this, it simply falls back to
-normal online behavior (no regression).
+Offline caching via a service worker was **removed** — on some Fire TVs it caused the screen
+to get stuck serving a stale/broken copy of itself (black screen, unresponsive, content not
+updating). The TV now always loads fresh, which is the reliable behavior for signage. If a
+screen briefly loses Wi-Fi it keeps showing whatever it last loaded and recovers on its own
+when the connection returns; a reboot during an outage needs the internet back to start up.
 
 ## Large videos (Supabase Storage)
 
