@@ -70,6 +70,11 @@
       "id": "5",
       "name": "Main Home",
       "playlist": "main"
+    },
+    {
+      "id": "6",
+      "name": "Pat phone test",
+      "playlist": "main"
     }
   ],
   "weather": {
