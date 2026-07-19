@@ -40,7 +40,8 @@
           "fit": "contain"
         },
         {
-          "src": "https://pub-446d04cee64c4cdcb4ff8c9ef7447061.r2.dev/videos/heybike-deck.mp4"
+          "src": "https://pub-446d04cee64c4cdcb4ff8c9ef7447061.r2.dev/videos/heybike-deck.mp4",
+          "fit": "contain"
         }
       ]
     }
