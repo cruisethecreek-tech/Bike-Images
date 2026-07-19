@@ -38,9 +38,6 @@
         {
           "src": "https://hqkdphrtxjhqestnvome.supabase.co/storage/v1/object/public/Store Media/videos/velotric-bike-deck.mp4",
           "fit": "contain"
-        },
-        {
-          "src": "https://pub-446d04cee64c4cdcb4ff8c9ef7447061.r2.dev/imported/heybike.mp4"
         }
       ]
     }
@@ -69,11 +66,6 @@
     {
       "id": "5",
       "name": "Main Home",
-      "playlist": "main"
-    },
-    {
-      "id": "6",
-      "name": "Pat phone test",
       "playlist": "main"
     }
   ],
