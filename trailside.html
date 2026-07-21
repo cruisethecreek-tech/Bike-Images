@@ -161,10 +161,13 @@
   </div>
 
   <script>
-    // ── Drop your real Peek booking URLs here ──────────────────────
+    // ── Booking links ──────────────────────────────────────────────
     const BOOKING = {
-      cyc:  "https://www.cruisethecreek.com/?journey=cyc",   // 🚴 e-bikes
-      trek: "https://www.cruisethecreek.com/?journey=trek",  // 🚶🏽‍♀️ walking poles
+      // 🚴 Cyc — live Peek e-bike booking
+      cyc:  "https://book.peek.com/s/57e3b62e-4f48-4cc4-8876-7b79f4c11baa/rlAkb",
+      // 🚶🏽‍♀️ Trek — walking poles. INTERIM: texts the shop until the Peek
+      // pole-booking exists. Replace with its Peek URL when ready.
+      trek: "sms:330-406-9682?&body=Hi!%20I'd%20like%20to%20book%20the%20Trek%20(walking%20poles)%20journey.",
     };
     const LABELS = { cyc: "🚴 Cyc — E-Bikes", trek: "🚶🏽‍♀️ Trek — Walking" };
     // ───────────────────────────────────────────────────────────────
