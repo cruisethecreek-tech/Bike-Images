@@ -48,6 +48,17 @@
           "fit": "contain"
         }
       ]
+    },
+    "closed": {
+      "name": "closed",
+      "fit": "cover",
+      "showClock": true,
+      "slides": [
+        {
+          "src": "images/9381.jpg",
+          "seconds": 8
+        }
+      ]
     }
   },
   "screens": [
