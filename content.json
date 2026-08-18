@@ -65,22 +65,22 @@
     {
       "id": "1",
       "name": "Screen 1",
-      "playlist": "closed"
+      "playlist": "sales"
     },
     {
       "id": "2",
       "name": "Screen 2",
-      "playlist": "closed"
+      "playlist": "main"
     },
     {
       "id": "3",
       "name": "Screen 3",
-      "playlist": "closed"
+      "playlist": "sales"
     },
     {
       "id": "4",
       "name": "Screen 4",
-      "playlist": "closed"
+      "playlist": "main"
     },
     {
       "id": "5",
