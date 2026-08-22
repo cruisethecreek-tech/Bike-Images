@@ -5,6 +5,9 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Fire the daily wake/sleep alarms at an exact time, even in Doze -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 
     <!-- Allow install on Fire TV / TVs that have no touchscreen -->
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
@@ -42,5 +45,11 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <!-- Receives the daily wake / sleep alarms -->
+        <receiver
+            android:name=".AlarmReceiver"
+            android:enabled="true"
+            android:exported="false" />
     </application>
 </manifest>
