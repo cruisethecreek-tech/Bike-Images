@@ -487,6 +487,9 @@ function hm(str) {
 // A rule matches when today's weekday is in rule.days and the current time is in
 // [start, end). First matching rule wins; otherwise the screen's default playlist.
 function activePlaylistId(cfg, screen) {
+  // A live manual override (flipped on from the dashboard) beats the schedule
+  // until it's switched back off.
+  if (screen.override && cfg.playlists[screen.override]) return screen.override;
   const now = new Date();
   const day = now.getDay();                       // 0 = Sunday
   const mins = now.getHours() * 60 + now.getMinutes();
