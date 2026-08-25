@@ -65,7 +65,7 @@
     {
       "id": "1",
       "name": "Screen 1",
-      "playlist": "sales",
+      "playlist": "main",
       "rules": [
         {
           "playlist": "closed",
@@ -77,7 +77,8 @@
           "start": "17:00",
           "end": "21:00"
         }
-      ]
+      ],
+      "override": "main"
     },
     {
       "id": "2",
@@ -94,7 +95,8 @@
           "start": "17:00",
           "end": "21:00"
         }
-      ]
+      ],
+      "override": "sales"
     },
     {
       "id": "3",
@@ -111,7 +113,8 @@
           "start": "17:00",
           "end": "21:00"
         }
-      ]
+      ],
+      "override": "main"
     },
     {
       "id": "4",
@@ -128,7 +131,8 @@
           "start": "17:00",
           "end": "21:00"
         }
-      ]
+      ],
+      "override": "sales"
     },
     {
       "id": "5",
