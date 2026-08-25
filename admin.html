@@ -91,6 +91,12 @@
   .controls.note{color:var(--muted);font-size:.82rem;}
   .sched{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px;}
   .sched .sctitle{font-size:.8rem;font-weight:700;color:#5a534a;margin-bottom:8px;}
+  .screen .override{margin-top:12px;border-top:1px dashed var(--line);padding-top:12px;}
+  .screen .override.on{border:1px solid var(--accent);border-radius:10px;background:var(--accent-soft);padding:10px 12px;margin-top:12px;}
+  .screen .override .sctitle{font-size:.8rem;font-weight:700;color:#5a534a;margin-bottom:2px;}
+  .screen .override .ovrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px;}
+  .screen .override select{width:auto;min-width:150px;}
+  .screen .override .ovhint{font-size:.78rem;color:var(--accent);font-weight:700;}
   .rule{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#faf8f3;border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px;}
   .rule select{width:auto;min-width:130px;padding:6px 8px;}
   .rule input[type=time]{width:auto;padding:6px 8px;}
@@ -473,7 +479,7 @@ el("plRename").onclick=()=>{ const name=prompt("Rename playlist:",pl().name); if
 el("plDelete").onclick=()=>{ if(Object.keys(config.playlists).length<=1){ alert("You need at least one playlist."); return; }
   if(!confirm(`Delete playlist "${pl().name}"? Screens using it will move to another playlist.`))return;
   const del=curPl; delete config.playlists[del]; const first=Object.keys(config.playlists)[0];
-  config.screens.forEach(s=>{ if(s.playlist===del)s.playlist=first; }); curPl=first; setDirty(true); refreshPl(); };
+  config.screens.forEach(s=>{ if(s.playlist===del)s.playlist=first; if(s.override===del)s.override=""; }); curPl=first; setDirty(true); refreshPl(); };
 
 /* ---------- screens ---------- */
 function nextScreenId(){ let n=1; const ids=new Set(config.screens.map(s=>String(s.id))); while(ids.has(String(n)))n++; return String(n); }
@@ -517,6 +523,17 @@ function renderScreens(){
         ${rulesHtml}
         <button class="small chip" data-addrule="${i}">＋ Add schedule rule</button>
       </div>
+      <div class="override${s.override?' on':''}">
+        <div class="sctitle">Override schedule</div>
+        <div class="check">
+          <input type="checkbox" data-ov="on" data-i="${i}" id="ov${i}" ${s.override?'checked':''}/>
+          <label for="ov${i}">Force one playlist now — ignore the schedule until turned off</label>
+        </div>
+        <div class="ovrow">
+          <select data-ov="pl" data-i="${i}" ${s.override?'':'disabled'}>${plOptions(s.override||s.playlist)}</select>
+          ${s.override?`<span class="ovhint">⚡ Live — showing “${(config.playlists[s.override]&&config.playlists[s.override].name)||s.override}” regardless of schedule</span>`:''}
+        </div>
+      </div>
       ${monitoringConfigured===false
         ? `<div class="controls note">💡 Remote control (Restart, Blank, Takeover…) turns on once Supabase monitoring is set up — see SIGNAGE-SETUP.md</div>`
         : `<div class="controls">
@@ -553,6 +570,15 @@ function renderScreens(){
     const i=+e.target.dataset.addrule; const first=Object.keys(config.playlists)[0];
     config.screens[i].rules.push({playlist:first,days:[0,1,2,3,4,5,6],start:"09:00",end:"17:00"}); setDirty(true); renderScreens(); });
   box.querySelectorAll("[data-rmr]").forEach(b=>b.onclick=e=>{ config.screens[+e.target.dataset.rmr].rules.splice(+e.target.dataset.j,1); setDirty(true); renderScreens(); });
+  box.querySelectorAll('input[data-ov="on"]').forEach(inp=>inp.onchange=e=>{
+    const i=+e.target.dataset.i, s=config.screens[i];
+    s.override = e.target.checked ? (s.override || s.playlist || Object.keys(config.playlists)[0]) : "";
+    setDirty(true); renderScreens();
+  });
+  box.querySelectorAll('select[data-ov="pl"]').forEach(sel=>sel.onchange=e=>{
+    const i=+e.target.dataset.i, s=config.screens[i];
+    if(s.override){ s.override=e.target.value; setDirty(true); renderScreens(); }
+  });
 }
 el("addScreen").onclick=()=>{ const id=nextScreenId(); config.screens.push({id,name:"Screen "+id,playlist:curPl||Object.keys(config.playlists)[0],rules:[]}); setDirty(true); renderScreens(); counts(); };
 
@@ -734,7 +760,9 @@ function buildContent(){
       const x={ playlist:r.playlist }; const days=Array.isArray(r.days)?r.days:[];
       if(days.length && days.length<7) x.days=days.slice().sort();
       if(r.start) x.start=r.start; if(r.end) x.end=r.end; return x; });
-    if(rules.length) o.rules=rules; return o;
+    if(rules.length) o.rules=rules;
+    if(s.override && config.playlists[s.override]) o.override=s.override;
+    return o;
   }) };
   for(const [id,p] of Object.entries(config.playlists)){
     const o={ name:p.name, fit:p.fit==="contain"?"contain":"cover", showClock:!!p.showClock };
