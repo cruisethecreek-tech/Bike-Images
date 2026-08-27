@@ -92,6 +92,46 @@
         {
           "src": "images/10393.jpg",
           "seconds": 8
+        },
+        {
+          "src": "images/10665.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10666.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10668.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10669.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10670.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10672.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10673.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10674.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10675.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10676.jpg",
+          "seconds": 8
         }
       ]
     }
@@ -112,8 +152,7 @@
           "start": "17:00",
           "end": "21:00"
         }
-      ],
-      "override": "sales-2-0"
+      ]
     },
     {
       "id": "2",
@@ -147,8 +186,7 @@
           "start": "17:00",
           "end": "21:00"
         }
-      ],
-      "override": "sales-2-0"
+      ]
     },
     {
       "id": "4",
