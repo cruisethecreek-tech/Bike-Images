@@ -100,7 +100,7 @@
     {
       "id": "1",
       "name": "Screen 1",
-      "playlist": "main",
+      "playlist": "sales-2-0",
       "rules": [
         {
           "playlist": "main",
