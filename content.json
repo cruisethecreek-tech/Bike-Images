@@ -103,7 +103,7 @@
       "playlist": "sales-2-0",
       "rules": [
         {
-          "playlist": "sales",
+          "playlist": "sales-2-0",
           "start": "06:00",
           "end": "14:00"
         },
