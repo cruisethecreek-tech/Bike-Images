@@ -485,6 +485,10 @@ el("plDelete").onclick=()=>{ if(Object.keys(config.playlists).length<=1){ alert(
 function nextScreenId(){ let n=1; const ids=new Set(config.screens.map(s=>String(s.id))); while(ids.has(String(n)))n++; return String(n); }
 const DAY_LABELS=["S","M","T","W","T","F","S"];
 function plOptions(sel){ return Object.entries(config.playlists).map(([id,p])=>`<option value="${id}"${id===sel?' selected':''}>${p.name||id}</option>`).join(""); }
+// Reserved on/off targets for schedule rules & overrides (not real playlists).
+const SPECIAL_PL={ "__on__":"☀ On (wake — show default)", "__off__":"⏻ Off (blank screen)" };
+function plLabel(id){ return (config.playlists[id]&&config.playlists[id].name) || SPECIAL_PL[id] || id; }
+function plOptionsSched(sel){ return plOptions(sel)+Object.entries(SPECIAL_PL).map(([v,l])=>`<option value="${v}"${v===sel?' selected':''}>${l}</option>`).join(""); }
 function renderScreens(){
   const box=el("screenList"); box.innerHTML="";
   config.screens.forEach((s,i)=>{
@@ -493,7 +497,7 @@ function renderScreens(){
       const days=Array.isArray(r.days)?r.days:[];
       const dayBtns=DAY_LABELS.map((d,idx)=>`<button type="button" data-day="${idx}" data-i="${i}" data-j="${j}" class="${days.includes(idx)?'on':''}">${d}</button>`).join("");
       return `<div class="rule">
-        <select data-rk="playlist" data-i="${i}" data-j="${j}">${plOptions(r.playlist)}</select>
+        <select data-rk="playlist" data-i="${i}" data-j="${j}">${plOptionsSched(r.playlist)}</select>
         <div class="days">${dayBtns}</div>
         <input type="time" data-rk="start" data-i="${i}" data-j="${j}" value="${r.start||''}"/>
         <span class="sep">–</span>
@@ -504,7 +508,7 @@ function renderScreens(){
     const st=screenStatus[String(s.id)];
     let statusHtml="";
     if(st){ const online=(Date.now()-new Date(st.last_seen).getTime())<ONLINE_MS;
-      const plName=st.playlist&&config.playlists[st.playlist]?config.playlists[st.playlist].name:st.playlist;
+      const plName=st.playlist?plLabel(st.playlist):st.playlist;
       statusHtml=`<div class="scstatus"><span class="dot ${online?'ok':'err'}"></span><strong>${online?'Online':'Offline'}</strong> · last seen ${ago(st.last_seen)}${plName?` · showing “${plName}”`:''}</div>`;
     } else if(monitoringConfigured===true){ statusHtml=`<div class="scstatus muted"><span class="dot"></span>No check-in yet — this screen hasn't loaded since monitoring was enabled</div>`;
     } else if(monitoringConfigured===false){ statusHtml=`<div class="scstatus muted">💡 Turn on live online/offline status by adding Supabase — see SIGNAGE-SETUP.md</div>`; }
@@ -530,8 +534,8 @@ function renderScreens(){
           <label for="ov${i}">Force one playlist now — ignore the schedule until turned off</label>
         </div>
         <div class="ovrow">
-          <select data-ov="pl" data-i="${i}" ${s.override?'':'disabled'}>${plOptions(s.override||s.playlist)}</select>
-          ${s.override?`<span class="ovhint">⚡ Live — showing “${(config.playlists[s.override]&&config.playlists[s.override].name)||s.override}” regardless of schedule</span>`:''}
+          <select data-ov="pl" data-i="${i}" ${s.override?'':'disabled'}>${plOptionsSched(s.override||s.playlist)}</select>
+          ${s.override?`<span class="ovhint">⚡ Live — ${s.override==="__off__"?'screen blanked (⏻ Off)':`showing “${plLabel(s.override)}”`} regardless of schedule</span>`:''}
         </div>
       </div>
       ${monitoringConfigured===false
@@ -761,7 +765,7 @@ function buildContent(){
       if(days.length && days.length<7) x.days=days.slice().sort();
       if(r.start) x.start=r.start; if(r.end) x.end=r.end; return x; });
     if(rules.length) o.rules=rules;
-    if(s.override && config.playlists[s.override]) o.override=s.override;
+    if(s.override && (config.playlists[s.override] || SPECIAL_PL[s.override])) o.override=s.override;
     return o;
   }) };
   for(const [id,p] of Object.entries(config.playlists)){

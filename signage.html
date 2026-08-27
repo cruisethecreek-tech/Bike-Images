@@ -271,7 +271,7 @@ const DEFAULT_SECS = 8;           // seconds per image if not specified
 // Bump this whenever signage.html changes, and set the same value in signage-version.json.
 // A running TV compares the two and reloads itself to pull the new code — so feature
 // updates reach every TV automatically instead of needing a manual relaunch.
-const APP_VERSION  = "2026-08-27-override1";
+const APP_VERSION  = "2026-08-27-onoff1";
 async function checkForUpdate() {
   try {
     const r = await fetch("signage-version.json?t=" + Date.now(), { cache: "no-store" });
@@ -475,6 +475,9 @@ function savedScreen(){ try { return localStorage.getItem("signageScreen") || ""
 const URL_SCREEN = new URLSearchParams(location.search).get("screen") || "";
 let SCREEN   = URL_SCREEN || savedScreen();
 const FORCE_PL = new URLSearchParams(location.search).get("playlist") || "";
+// Reserved schedule/override targets (not real playlists):
+const PL_OFF = "__off__";   // blank the screen
+const PL_ON  = "__on__";    // wake — show the screen's default playlist
 
 // "HH:MM" -> minutes since midnight (null if malformed).
 function hm(str) {
@@ -489,13 +492,14 @@ function hm(str) {
 function activePlaylistId(cfg, screen) {
   // A live manual override (flipped on from the dashboard) beats the schedule
   // until it's switched back off.
-  if (screen.override && cfg.playlists[screen.override]) return screen.override;
+  if (screen.override && (cfg.playlists[screen.override] || screen.override === PL_OFF || screen.override === PL_ON)) return screen.override;
   const now = new Date();
   const day = now.getDay();                       // 0 = Sunday
   const mins = now.getHours() * 60 + now.getMinutes();
   if (Array.isArray(screen.rules)) {
     for (const r of screen.rules) {
-      if (!r || !r.playlist || !cfg.playlists[r.playlist]) continue;
+      if (!r || !r.playlist) continue;
+      if (!cfg.playlists[r.playlist] && r.playlist !== PL_OFF && r.playlist !== PL_ON) continue;
       const days = (Array.isArray(r.days) && r.days.length) ? r.days : [0,1,2,3,4,5,6];
       if (!days.includes(day)) continue;
       const s = hm(r.start), e = hm(r.end);
@@ -511,13 +515,16 @@ function activePlaylistId(cfg, screen) {
 // { playlists:{...}, screens:[...] } (with optional schedule rules) and falls back
 // to the old flat schema.
 let currentPlId = "";   // active playlist id, reported in the heartbeat
+let screenOff = false;  // true when the active schedule/override target is ⏻ Off
 function resolvePlaylist(cfg) {
+  screenOff = false;
   if (cfg && cfg.playlists && typeof cfg.playlists === "object") {
-    let plId = FORCE_PL;
-    if (!plId && Array.isArray(cfg.screens)) {
-      const scr = cfg.screens.find(s => String(s.id) === String(SCREEN)) || cfg.screens[0];
-      if (scr) plId = activePlaylistId(cfg, scr);
-    }
+    const scr = Array.isArray(cfg.screens)
+      ? (cfg.screens.find(s => String(s.id) === String(SCREEN)) || cfg.screens[0])
+      : null;
+    let plId = FORCE_PL || (scr ? activePlaylistId(cfg, scr) : "");
+    if (plId === PL_ON) plId = (scr && scr.playlist) || "";   // wake → the screen's default playlist
+    if (plId === PL_OFF) { screenOff = true; currentPlId = PL_OFF; return {}; }
     if (!plId || !cfg.playlists[plId]) plId = Object.keys(cfg.playlists)[0];
     currentPlId = plId;
     return cfg.playlists[plId] || {};
@@ -545,10 +552,15 @@ function heartbeat(ackCommand) {
 function lastCmd(){ try { return localStorage.getItem("signageLastCmd") || ""; } catch { return ""; } }
 function setLastCmd(id){ try { localStorage.setItem("signageLastCmd", id); } catch (_) {} }
 
+let cmdBlank = false;    // manual Blank/Wake remote command
+let schedBlank = false;  // scheduled/override ⏻ Off
+function refreshBlank(){ blankEl.classList.toggle("on", cmdBlank || schedBlank); }
 function setBlank(on){
-  blankEl.classList.toggle("on", !!on);
+  cmdBlank = !!on;
   try { on ? localStorage.setItem("signageBlank","1") : localStorage.removeItem("signageBlank"); } catch (_) {}
+  refreshBlank();
 }
+function setScheduleOff(on){ schedBlank = !!on; refreshBlank(); }
 function setTakeover(msg){
   if (msg == null){ takeoverEl.classList.remove("on"); try { localStorage.removeItem("signageTakeover"); } catch(_){} return; }
   takeoverMsg.textContent = msg;
@@ -578,7 +590,7 @@ async function runCommand(command, id){
 // Re-apply any remembered "off"/takeover state immediately on load (before content shows).
 (function restoreOverlays(){
   try {
-    if (localStorage.getItem("signageBlank")) blankEl.classList.add("on");
+    if (localStorage.getItem("signageBlank")) { cmdBlank = true; blankEl.classList.add("on"); }
     const t = localStorage.getItem("signageTakeover");
     if (t != null) { takeoverMsg.textContent = t; takeoverEl.classList.add("on"); }
   } catch (_) {}
@@ -586,13 +598,15 @@ async function runCommand(command, id){
 
 function applyConfig(fullCfg) {
   const cfg = resolvePlaylist(fullCfg);
+  setScheduleOff(screenOff);                 // ⏻ Off blanks the screen on schedule
   const list = Array.isArray(cfg) ? cfg : (cfg.slides || cfg.items || []);
   // Sync playback across TVs unless explicitly disabled. When on, every TV shows the
   // slide the wall clock says should be on now, so identical playlists stay in step.
   const wantSync = !(fullCfg && fullCfg.sync === false);
-  const signature = JSON.stringify({ screen: SCREEN, list, t: cfg.tickerText, l: cfg.tickerLabel, f: cfg.fit, y: wantSync });
+  const signature = JSON.stringify({ screen: SCREEN, list, t: cfg.tickerText, l: cfg.tickerLabel, f: cfg.fit, y: wantSync, off: screenOff });
   if (signature === lastSignature) return;   // nothing changed; leave playback alone
   lastSignature = signature;
+  if (screenOff) return;                     // screen is blanked; skip building content
   syncMode = wantSync;
 
   const globalFit = cfg.fit === "cover" ? "cover" : "contain";
