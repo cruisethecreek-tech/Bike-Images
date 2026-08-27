@@ -59,6 +59,41 @@
           "seconds": 8
         }
       ]
+    },
+    "sales-2-0": {
+      "name": "sales 2.0",
+      "fit": "cover",
+      "showClock": true,
+      "slides": [
+        {
+          "src": "images/10379.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10381.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10380.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10382.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10385.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10386.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10393.jpg",
+          "seconds": 8
+        }
+      ]
     }
   },
   "screens": [
