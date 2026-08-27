@@ -103,7 +103,7 @@
       "playlist": "sales-2-0",
       "rules": [
         {
-          "playlist": "main",
+          "playlist": "sales",
           "start": "06:00",
           "end": "14:00"
         },
@@ -112,7 +112,8 @@
           "start": "17:00",
           "end": "21:00"
         }
-      ]
+      ],
+      "override": "sales-2-0"
     },
     {
       "id": "2",
