@@ -486,7 +486,7 @@ function nextScreenId(){ let n=1; const ids=new Set(config.screens.map(s=>String
 const DAY_LABELS=["S","M","T","W","T","F","S"];
 function plOptions(sel){ return Object.entries(config.playlists).map(([id,p])=>`<option value="${id}"${id===sel?' selected':''}>${p.name||id}</option>`).join(""); }
 // Reserved on/off targets for schedule rules & overrides (not real playlists).
-const SPECIAL_PL={ "__on__":"☀ On (wake — show default)", "__off__":"⏻ Off (blank screen)" };
+const SPECIAL_PL={ "__on__":"☀ On (wake — show default)", "__off__":"🌙 Off (blank screen)" };
 function plLabel(id){ return (config.playlists[id]&&config.playlists[id].name) || SPECIAL_PL[id] || id; }
 function plOptionsSched(sel){ return plOptions(sel)+Object.entries(SPECIAL_PL).map(([v,l])=>`<option value="${v}"${v===sel?' selected':''}>${l}</option>`).join(""); }
 function renderScreens(){
@@ -535,7 +535,7 @@ function renderScreens(){
         </div>
         <div class="ovrow">
           <select data-ov="pl" data-i="${i}" ${s.override?'':'disabled'}>${plOptionsSched(s.override||s.playlist)}</select>
-          ${s.override?`<span class="ovhint">⚡ Live — ${s.override==="__off__"?'screen blanked (⏻ Off)':`showing “${plLabel(s.override)}”`} regardless of schedule</span>`:''}
+          ${s.override?`<span class="ovhint">⚡ Live — ${s.override==="__off__"?'screen blanked (🌙 Off)':`showing “${plLabel(s.override)}”`} regardless of schedule</span>`:''}
         </div>
       </div>
       ${monitoringConfigured===false
