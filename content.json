@@ -140,7 +140,7 @@
     {
       "id": "1",
       "name": "Screen 1",
-      "playlist": "sales-2-0",
+      "playlist": "closed",
       "rules": [
         {
           "playlist": "closed",
@@ -148,66 +148,64 @@
           "end": "14:00"
         },
         {
-          "playlist": "__off__",
+          "playlist": "closed",
           "start": "17:00",
           "end": "21:00"
         }
-      ],
-      "override": "__off__"
+      ]
     },
     {
       "id": "2",
       "name": "Screen 2",
-      "playlist": "main",
+      "playlist": "closed",
       "rules": [
         {
-          "playlist": "sales",
+          "playlist": "closed",
           "start": "06:00",
           "end": "14:00"
         },
         {
-          "playlist": "__off__",
+          "playlist": "closed",
           "start": "17:00",
           "end": "21:00"
         }
       ],
-      "override": "__off__"
+      "override": "closed"
     },
     {
       "id": "3",
       "name": "Screen 3",
-      "playlist": "sales-2-0",
+      "playlist": "closed",
       "rules": [
         {
-          "playlist": "main",
+          "playlist": "closed",
           "start": "06:00",
           "end": "14:00"
         },
         {
-          "playlist": "__off__",
+          "playlist": "closed",
           "start": "17:00",
           "end": "21:00"
         }
       ],
-      "override": "__off__"
+      "override": "closed"
     },
     {
       "id": "4",
       "name": "Screen 4",
-      "playlist": "sales",
+      "playlist": "closed",
       "rules": [
         {
-          "playlist": "sales",
+          "playlist": "closed",
           "start": "06:00",
           "end": "14:00"
         },
         {
-          "playlist": "__off__",
+          "playlist": "closed",
           "start": "17:00",
           "end": "21:00"
         }
-      ],
-      "override": "__off__"
+      ]
     },
     {
       "id": "5",
