@@ -97,6 +97,31 @@
   .screen .override .ovrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px;}
   .screen .override select{width:auto;min-width:150px;}
   .screen .override .ovhint{font-size:.78rem;color:var(--accent);font-weight:700;}
+  /* collapsible screen cards */
+  details.screen{padding:0;overflow:hidden;}
+  details.screen>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:14px;user-select:none;}
+  details.screen>summary::-webkit-details-marker{display:none;}
+  details.screen>summary:hover{background:#faf8f3;}
+  details.screen[open]>summary{border-bottom:1px solid var(--line);background:#faf8f3;}
+  .schead-name{font-weight:800;font-size:1rem;}
+  .schead-now{color:var(--muted);font-size:.8rem;margin-left:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .schead .chev{margin-left:auto;color:var(--muted);transition:transform .15s ease;flex:0 0 auto;font-size:.8rem;}
+  details.screen[open]>summary .chev{transform:rotate(180deg);}
+  .scbody{padding:14px;}
+  .secblock{padding-bottom:2px;}
+  .secblock>.sectitle{font-size:.72rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#8a8073;margin-bottom:8px;}
+  /* remote-control disclosure */
+  details.ctrlwrap{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px;}
+  details.ctrlwrap>summary{list-style:none;cursor:pointer;font-size:.82rem;font-weight:700;color:var(--accent);}
+  details.ctrlwrap>summary::-webkit-details-marker{display:none;}
+  details.ctrlwrap>summary::before{content:"▸ ";}
+  details.ctrlwrap[open]>summary::before{content:"▾ ";}
+  details.ctrlwrap .controls{border-top:0;padding-top:8px;margin-top:6px;}
+  /* status summary strip */
+  .scsummary{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:14px;}
+  .scsummary .scsum-head{font-weight:800;margin-bottom:8px;}
+  .scsum-chips{display:flex;flex-wrap:wrap;gap:6px;}
+  .scsum-chip{display:inline-flex;align-items:center;gap:6px;background:#faf8f3;border:1px solid var(--line);border-radius:20px;padding:4px 10px;font-size:.8rem;}
   .rule{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#faf8f3;border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px;}
   .rule select{width:auto;min-width:130px;padding:6px 8px;}
   .rule input[type=time]{width:auto;padding:6px 8px;}
@@ -486,11 +511,26 @@ function nextScreenId(){ let n=1; const ids=new Set(config.screens.map(s=>String
 const DAY_LABELS=["S","M","T","W","T","F","S"];
 function plOptions(sel){ return Object.entries(config.playlists).map(([id,p])=>`<option value="${id}"${id===sel?' selected':''}>${p.name||id}</option>`).join(""); }
 // Reserved on/off targets for schedule rules & overrides (not real playlists).
-const SPECIAL_PL={ "__on__":"☀ On (wake — show default)", "__off__":"⏻ Off (blank screen)" };
+const SPECIAL_PL={ "__on__":"☀ On (wake — show default)", "__off__":"🌙 Off (blank screen)" };
 function plLabel(id){ return (config.playlists[id]&&config.playlists[id].name) || SPECIAL_PL[id] || id; }
 function plOptionsSched(sel){ return plOptions(sel)+Object.entries(SPECIAL_PL).map(([v,l])=>`<option value="${v}"${v===sel?' selected':''}>${l}</option>`).join(""); }
+let expandedScreens = new Set();   // screen ids currently expanded (kept across re-renders)
+function screenOnline(st){ return !!(st && (Date.now()-new Date(st.last_seen).getTime())<ONLINE_MS); }
 function renderScreens(){
-  const box=el("screenList"); box.innerHTML="";
+  const box=el("screenList");
+
+  // ---- status summary strip ----
+  const total=config.screens.length; let onlineCount=0;
+  const chips=config.screens.map(s=>{
+    const st=screenStatus[String(s.id)], on=screenOnline(st); if(on) onlineCount++;
+    return `<span class="scsum-chip"><span class="dot ${st?(on?'ok':'err'):''}"></span>${(s.name||('Screen '+s.id)).replace(/</g,'&lt;')}</span>`;
+  }).join("");
+  const headTxt=monitoringConfigured===true
+    ? `${onlineCount} of ${total} screen${total===1?'':'s'} online`
+    : `${total} screen${total===1?'':'s'}`;
+  box.innerHTML=`<div class="scsummary"><div class="scsum-head">📺 ${headTxt}</div><div class="scsum-chips">${chips}</div></div>`;
+
+  // ---- one collapsible card per screen ----
   config.screens.forEach((s,i)=>{
     if(!Array.isArray(s.rules)) s.rules=[];
     const rulesHtml=s.rules.map((r,j)=>{
@@ -505,43 +545,18 @@ function renderScreens(){
         <button class="small danger" data-rmr="${i}" data-j="${j}">✕</button>
       </div>`;
     }).join("");
-    const st=screenStatus[String(s.id)];
+    const st=screenStatus[String(s.id)]; const online=screenOnline(st);
     let statusHtml="";
-    if(st){ const online=(Date.now()-new Date(st.last_seen).getTime())<ONLINE_MS;
-      const plName=st.playlist?plLabel(st.playlist):st.playlist;
-      statusHtml=`<div class="scstatus"><span class="dot ${online?'ok':'err'}"></span><strong>${online?'Online':'Offline'}</strong> · last seen ${ago(st.last_seen)}${plName?` · showing “${plName}”`:''}</div>`;
+    if(st){ statusHtml=`<div class="scstatus"><span class="dot ${online?'ok':'err'}"></span><strong>${online?'Online':'Offline'}</strong> · last seen ${ago(st.last_seen)}${st.playlist?` · showing “${plLabel(st.playlist)}”`:''}</div>`;
     } else if(monitoringConfigured===true){ statusHtml=`<div class="scstatus muted"><span class="dot"></span>No check-in yet — this screen hasn't loaded since monitoring was enabled</div>`;
     } else if(monitoringConfigured===false){ statusHtml=`<div class="scstatus muted">💡 Turn on live online/offline status by adding Supabase — see SIGNAGE-SETUP.md</div>`; }
-    const div=document.createElement("div"); div.className="screen";
-    div.innerHTML=`<div class="top">
-      <div><label>Screen name</label><input type="text" data-sk="name" data-i="${i}" value="${(s.name||'').replace(/"/g,'&quot;')}"/></div>
-      <div><label>Default playlist (when no schedule matches)</label><select data-sk="playlist" data-i="${i}">${plOptions(s.playlist)}</select></div>
-      <div style="flex:0 0 auto;"><label>&nbsp;</label>${config.screens.length>1?`<button class="small danger" data-rms="${i}">Remove</button>`:''}</div>
-      </div>
-      ${statusHtml}
-      <div class="urlrow"><input type="text" readonly value="${screenUrl(s.id)}"/>
-        <button class="small chip" data-copy="${s.id}">Copy</button>
-        <a href="${screenUrl(s.id)}" target="_blank"><button class="small ghost" type="button">Open</button></a></div>
-      <div class="sched">
-        <div class="sctitle">Schedule (optional) — override the default playlist at set times</div>
-        ${rulesHtml}
-        <button class="small chip" data-addrule="${i}">＋ Add schedule rule</button>
-      </div>
-      <div class="override${s.override?' on':''}">
-        <div class="sctitle">Override schedule</div>
-        <div class="check">
-          <input type="checkbox" data-ov="on" data-i="${i}" id="ov${i}" ${s.override?'checked':''}/>
-          <label for="ov${i}">Force one playlist now — ignore the schedule until turned off</label>
-        </div>
-        <div class="ovrow">
-          <select data-ov="pl" data-i="${i}" ${s.override?'':'disabled'}>${plOptionsSched(s.override||s.playlist)}</select>
-          ${s.override?`<span class="ovhint">⚡ Live — ${s.override==="__off__"?'screen blanked (⏻ Off)':`showing “${plLabel(s.override)}”`} regardless of schedule</span>`:''}
-        </div>
-      </div>
-      ${monitoringConfigured===false
-        ? `<div class="controls note">💡 Remote control (Restart, Blank, Takeover…) turns on once Supabase monitoring is set up — see SIGNAGE-SETUP.md</div>`
-        : `<div class="controls">
-        <span class="ctitle">Remote control this TV — applies within ~15 seconds:</span>
+
+    const headDot=st?(online?'ok':'err'):'';
+    const nowShow=plLabel(st&&st.playlist?st.playlist:s.playlist);
+    const controlsHtml=monitoringConfigured===false
+      ? `<div class="controls note">💡 Remote control (Restart, Blank, Takeover…) turns on once Supabase monitoring is set up — see SIGNAGE-SETUP.md</div>`
+      : `<details class="ctrlwrap"><summary>Remote control this TV</summary>
+        <div class="controls"><span class="ctitle">Applies within ~15 seconds:</span>
         <button class="small chip" data-cmd="restart" data-sid="${s.id}">↻ Restart app</button>
         <button class="small chip" data-cmd="refresh" data-sid="${s.id}">⟳ Refresh now</button>
         <button class="small chip" data-cmd="blank" data-sid="${s.id}">◐ Blank (off)</button>
@@ -549,9 +564,52 @@ function renderScreens(){
         <button class="small chip" data-cmd="takeover" data-sid="${s.id}">📢 Takeover…</button>
         <button class="small ghost" data-cmd="endtakeover" data-sid="${s.id}">End takeover</button>
         <button class="small danger" data-cmd="clear" data-sid="${s.id}">Clear data &amp; re-pick</button>
-      </div>`}`;
-    box.appendChild(div);
+      </div></details>`;
+
+    const d=document.createElement("details"); d.className="screen"; d.dataset.scrid=String(s.id);
+    if(expandedScreens.has(String(s.id))) d.open=true;
+    d.innerHTML=`<summary class="schead">
+        <span class="dot ${headDot}"></span>
+        <span class="schead-name">${(s.name||('Screen '+s.id)).replace(/</g,'&lt;')}</span>
+        <span class="schead-now">${s.override?'⚡ override · ':''}${nowShow}</span>
+        <span class="chev">▾</span>
+      </summary>
+      <div class="scbody">
+        ${statusHtml}
+        <div class="secblock">
+          <div class="sectitle">Name &amp; default playlist</div>
+          <div class="top">
+            <div><label>Screen name</label><input type="text" data-sk="name" data-i="${i}" value="${(s.name||'').replace(/"/g,'&quot;')}"/></div>
+            <div><label>Default playlist (when no schedule matches)</label><select data-sk="playlist" data-i="${i}">${plOptions(s.playlist)}</select></div>
+            <div style="flex:0 0 auto;"><label>&nbsp;</label>${config.screens.length>1?`<button class="small danger" data-rms="${i}">Remove</button>`:''}</div>
+          </div>
+          <div class="urlrow"><input type="text" readonly value="${screenUrl(s.id)}"/>
+            <button class="small chip" data-copy="${s.id}">Copy</button>
+            <a href="${screenUrl(s.id)}" target="_blank"><button class="small ghost" type="button">Open</button></a></div>
+        </div>
+        <div class="sched">
+          <div class="sctitle">Schedule (optional) — override the default playlist at set times</div>
+          ${rulesHtml}
+          <button class="small chip" data-addrule="${i}">＋ Add schedule rule</button>
+        </div>
+        <div class="override${s.override?' on':''}">
+          <div class="sctitle">Override schedule</div>
+          <div class="check">
+            <input type="checkbox" data-ov="on" data-i="${i}" id="ov${i}" ${s.override?'checked':''}/>
+            <label for="ov${i}">Force one playlist now — ignore the schedule until turned off</label>
+          </div>
+          <div class="ovrow">
+            <select data-ov="pl" data-i="${i}" ${s.override?'':'disabled'}>${plOptionsSched(s.override||s.playlist)}</select>
+            ${s.override?`<span class="ovhint">⚡ Live — ${s.override==="__off__"?'screen blanked (🌙 Off)':`showing “${plLabel(s.override)}”`} regardless of schedule</span>`:''}
+          </div>
+        </div>
+        ${controlsHtml}
+      </div>`;
+    box.appendChild(d);
   });
+  box.querySelectorAll("details.screen").forEach(d=>d.addEventListener("toggle",()=>{
+    const id=d.dataset.scrid; if(d.open) expandedScreens.add(id); else expandedScreens.delete(id);
+  }));
   box.querySelectorAll("[data-cmd]").forEach(b=>b.onclick=e=>{
     const sid=e.currentTarget.dataset.sid, cmd=e.currentTarget.dataset.cmd;
     if(cmd==="takeover"){ const m=prompt("Message to show fullscreen on this TV right now:"); if(m==null||!m.trim())return; sendCommand(sid,"takeover:"+m.trim()); return; }
@@ -584,7 +642,7 @@ function renderScreens(){
     if(s.override){ s.override=e.target.value; setDirty(true); renderScreens(); }
   });
 }
-el("addScreen").onclick=()=>{ const id=nextScreenId(); config.screens.push({id,name:"Screen "+id,playlist:curPl||Object.keys(config.playlists)[0],rules:[]}); setDirty(true); renderScreens(); counts(); };
+el("addScreen").onclick=()=>{ const id=nextScreenId(); config.screens.push({id,name:"Screen "+id,playlist:curPl||Object.keys(config.playlists)[0],rules:[]}); expandedScreens.add(String(id)); setDirty(true); renderScreens(); counts(); };
 
 // Push a remote-control command to one screen. The TV picks it up on its next check-in.
 async function sendCommand(sid,command){
