@@ -157,15 +157,15 @@
         {
           "playlist": "sales-2-0",
           "start": "10:00",
-          "end": "14:00"
+          "end": "15:00"
         },
         {
           "playlist": "sales-2-0",
-          "start": "17:00",
+          "start": "18:00",
           "end": "21:00"
         },
         {
-          "playlist": "main",
+          "playlist": "closed",
           "start": "06:00",
           "end": "09:59"
         }
