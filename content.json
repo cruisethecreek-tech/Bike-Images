@@ -333,25 +333,25 @@
     {
       "id": "6",
       "name": "Screen 1 top",
-      "playlist": "sales-2-0",
+      "playlist": "vertical-sales",
       "orientation": "portrait-right"
     },
     {
       "id": "7",
       "name": "Screen 2 top",
-      "playlist": "sales-2-0",
+      "playlist": "vertical-sales",
       "orientation": "portrait-right"
     },
     {
       "id": "8",
       "name": "Screen 3 top",
-      "playlist": "main",
+      "playlist": "vertical-sales",
       "orientation": "portrait-right"
     },
     {
       "id": "9",
       "name": "Screen 4 top",
-      "playlist": "main",
+      "playlist": "vertical-sales",
       "orientation": "portrait-right"
     }
   ],
