@@ -366,11 +366,15 @@ For portrait screens, **tall content (e.g. 1080×1920) fills best** — landscap
 show upright, just letterboxed or cropped to fit the tall frame.
 
 **Keeping a landscape TV and a portrait TV in sync (same message, different shapes):** put
-both screens on the **same playlist**, and on each image slide set a **Portrait version**
-(in the Slideshow tab) — the tall version of that slide. The landscape TV shows the normal
-image, the portrait TV shows the portrait version, and because they run the identical
-playlist they stay **perfectly in sync**. (Portrait versions are for image slides; for video,
-use matching-length exports.)
+both screens on the **same playlist**, and give each slide both a landscape and a portrait
+image. The landscape TV shows the wide image, the portrait TV shows the tall one, and because
+they run the identical playlist they stay **perfectly in sync**.
+
+Easiest way to build the pairs: in the **Slideshow** tab, switch to **▦ Paired view**. You get
+a media palette up top and one row per slide — **drag a landscape image into the left cell and
+its portrait version into the right** (or click a slot, then click an image). Add as many pairs
+as you like and reorder them. (Pairing is for image slides; for a synced video, use
+matching-length exports on two playlists instead.)
 
 ## Offline behavior
 
