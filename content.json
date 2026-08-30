@@ -261,17 +261,17 @@
           "end": "20:59"
         },
         {
-          "playlist": "main",
+          "playlist": "closed",
           "start": "06:00",
           "end": "09:59"
         },
         {
-          "playlist": "main",
+          "playlist": "__off__",
           "start": "15:00",
           "end": "17:59"
         },
         {
-          "playlist": "main",
+          "playlist": "__off__",
           "start": "21:00",
           "end": "17:59"
         }
