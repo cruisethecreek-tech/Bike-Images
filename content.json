@@ -345,12 +345,14 @@
     {
       "id": "8",
       "name": "Screen 3 top",
-      "playlist": "main"
+      "playlist": "main",
+      "orientation": "portrait-right"
     },
     {
       "id": "9",
       "name": "Screen 4 top",
-      "playlist": "main"
+      "playlist": "main",
+      "orientation": "portrait-right"
     }
   ],
   "weather": {
