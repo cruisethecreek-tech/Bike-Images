@@ -166,6 +166,11 @@
           "src": "images/10857.jpg",
           "seconds": 8,
           "fit": "contain"
+        },
+        {
+          "src": "images/10859.jpg",
+          "seconds": 8,
+          "fit": "contain"
         }
       ]
     }
