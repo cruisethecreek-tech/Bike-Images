@@ -282,7 +282,7 @@ const DEFAULT_SECS = 8;           // seconds per image if not specified
 // Bump this whenever signage.html changes, and set the same value in signage-version.json.
 // A running TV compares the two and reloads itself to pull the new code — so feature
 // updates reach every TV automatically instead of needing a manual relaunch.
-const APP_VERSION  = "2026-08-30-portrait1";
+const APP_VERSION  = "2026-08-30-pvar1";
 async function checkForUpdate() {
   try {
     const r = await fetch("signage-version.json?t=" + Date.now(), { cache: "no-store" });
@@ -630,7 +630,7 @@ function applyConfig(fullCfg) {
   // Sync playback across TVs unless explicitly disabled. When on, every TV shows the
   // slide the wall clock says should be on now, so identical playlists stay in step.
   const wantSync = !(fullCfg && fullCfg.sync === false);
-  const signature = JSON.stringify({ screen: SCREEN, list, t: cfg.tickerText, l: cfg.tickerLabel, f: cfg.fit, y: wantSync, off: screenOff });
+  const signature = JSON.stringify({ screen: SCREEN, list, t: cfg.tickerText, l: cfg.tickerLabel, f: cfg.fit, y: wantSync, off: screenOff, ori: scrForOri.orientation });
   if (signature === lastSignature) return;   // nothing changed; leave playback alone
   lastSignature = signature;
   if (screenOff) return;                     // screen is blanked; skip building content
@@ -656,10 +656,13 @@ function applyConfig(fullCfg) {
   // Clock
   clockEl.classList.toggle("on", !!cfg.showClock);
 
-  // Build playlist
+  // Build playlist. Portrait screens use each slide's portrait image when one is provided,
+  // so a landscape TV and a portrait TV can run the SAME playlist (identical timing = perfect
+  // sync) while each shows the correctly-shaped image for the same moment.
+  const isPortrait = scrForOri.orientation === "portrait-right" || scrForOri.orientation === "portrait-left";
   items = list.map(raw => {
     const it = (typeof raw === "string") ? { src: raw } : (raw || {});
-    const src = it.src || it.url || it.image || it.video || "";
+    const src = (isPortrait && it.srcPortrait) ? it.srcPortrait : (it.src || it.url || it.image || it.video || "");
     const isVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(src) || it.type === "video";
     return {
       src,
