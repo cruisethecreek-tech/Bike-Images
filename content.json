@@ -67,71 +67,83 @@
       "slides": [
         {
           "src": "images/10379.jpg",
-          "seconds": 12
+          "seconds": 12,
+          "fit": "contain"
         },
         {
           "src": "images/10381.jpg",
-          "seconds": 12
+          "seconds": 12,
+          "fit": "contain"
         },
         {
           "src": "images/10380.jpg",
-          "seconds": 12
+          "seconds": 12,
+          "fit": "contain"
         },
         {
           "src": "images/10382.jpg",
-          "seconds": 12
+          "seconds": 12,
+          "fit": "contain"
         },
         {
           "src": "images/10385.jpg",
-          "seconds": 12
-        },
-        {
-          "src": "images/10386.jpg",
-          "seconds": 12
+          "seconds": 12,
+          "fit": "contain"
         },
         {
           "src": "images/10393.jpg",
-          "seconds": 12
+          "seconds": 12,
+          "fit": "contain"
         },
         {
           "src": "images/10665.jpg",
-          "seconds": 12
+          "seconds": 12,
+          "fit": "contain"
         },
         {
           "src": "images/10666.jpg",
-          "seconds": 12
+          "seconds": 12,
+          "fit": "contain"
         },
         {
           "src": "images/10668.jpg",
-          "seconds": 12
+          "seconds": 12,
+          "fit": "contain"
         },
         {
           "src": "images/10669.jpg",
-          "seconds": 12
+          "seconds": 12,
+          "fit": "contain"
         },
         {
           "src": "images/10670.jpg",
-          "seconds": 12
+          "seconds": 12,
+          "fit": "contain"
         },
         {
           "src": "images/10672.jpg",
-          "seconds": 12
+          "seconds": 12,
+          "fit": "contain"
         },
         {
           "src": "images/10673.jpg",
-          "seconds": 12
+          "seconds": 12,
+          "fit": "contain"
         },
         {
           "src": "images/10674.jpg",
-          "seconds": 12
+          "seconds": 12,
+          "fit": "contain"
         },
         {
           "src": "images/10675.jpg",
-          "seconds": 12
+          "seconds": 12,
+          "fit": "contain"
         },
         {
           "src": "images/10676.jpg",
-          "seconds": 12
+          "seconds": 12,
+          "fit": "contain"
         }
       ]
     }
@@ -182,7 +194,7 @@
       "playlist": "closed",
       "rules": [
         {
-          "playlist": "closed",
+          "playlist": "sales-2-0",
           "start": "06:00",
           "end": "14:00"
         },
