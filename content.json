@@ -154,7 +154,8 @@
       "slides": [
         {
           "src": "images/10852.jpg",
-          "seconds": 8
+          "seconds": 8,
+          "fit": "contain"
         }
       ]
     }
