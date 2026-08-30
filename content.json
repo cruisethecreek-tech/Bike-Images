@@ -160,14 +160,14 @@
           "end": "14:00"
         },
         {
-          "playlist": "closed",
+          "playlist": "sales-2-0",
           "start": "17:00",
           "end": "21:00"
         },
         {
           "playlist": "main",
-          "start": "09:00",
-          "end": "17:00"
+          "start": "06:00",
+          "end": "09:59"
         }
       ]
     },
