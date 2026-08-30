@@ -356,6 +356,15 @@ after the first download they play and seek with no buffering — which also kee
 tight. Very large files (over ~150 MB) skip the cache and stream instead, so keep video
 exports reasonable (1080p at a few Mbps is plenty for signage).
 
+## Portrait / vertical screens
+
+Fire TV has no built-in screen-rotation setting, so rotation is done in the app. In the
+dashboard, each screen has an **Orientation** option: *Landscape (default) · Portrait
+(rotate right) · Portrait (rotate left) · Upside-down*. Set it, mount the TV that way, and
+the whole display rotates to read upright. It's per screen, so landscape TVs are unaffected.
+For portrait screens, **tall content (e.g. 1080×1920) fills best** — landscape images still
+show upright, just letterboxed or cropped to fit the tall frame.
+
 ## Offline behavior
 
 Offline caching via a service worker was **removed** — on some Fire TVs it caused the screen

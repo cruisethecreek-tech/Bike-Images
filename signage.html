@@ -23,6 +23,15 @@
     user-select: none;
   }
 
+  /* ---------- Rotation wrapper (per-screen portrait / upside-down) ---------- */
+  /* Everything visible lives inside #rotator so one transform rotates the whole display.
+     A transformed ancestor also becomes the containing block for its fixed/absolute kids,
+     so overlays (blank, takeover, picker, logo) rotate together with the content. */
+  #rotator { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; overflow: hidden; }
+  body.rot-cw  #rotator { width: 100vh; height: 100vw; transform-origin: top left; transform: translateX(100vw) rotate(90deg); }
+  body.rot-ccw #rotator { width: 100vh; height: 100vw; transform-origin: top left; transform: translateY(100vh) rotate(-90deg); }
+  body.rot-180 #rotator { transform: rotate(180deg); }
+
   /* ---------- Stage (media area) ---------- */
   #stage {
     position: absolute;
@@ -226,6 +235,7 @@
 </style>
 </head>
 <body>
+ <div id="rotator">
   <div id="stage"></div>
   <div id="clock"></div>
   <div id="weather">
@@ -256,6 +266,7 @@
   <img id="logo" alt="" />
   <div id="blank"></div>
   <div id="takeover"><div class="msg" id="takeoverMsg"></div></div>
+ </div><!-- /#rotator -->
 
 <script>
 /* =========================================================================
@@ -271,7 +282,7 @@ const DEFAULT_SECS = 8;           // seconds per image if not specified
 // Bump this whenever signage.html changes, and set the same value in signage-version.json.
 // A running TV compares the two and reloads itself to pull the new code — so feature
 // updates reach every TV automatically instead of needing a manual relaunch.
-const APP_VERSION  = "2026-08-27-onoff1";
+const APP_VERSION  = "2026-08-30-portrait1";
 async function checkForUpdate() {
   try {
     const r = await fetch("signage-version.json?t=" + Date.now(), { cache: "no-store" });
@@ -596,7 +607,23 @@ async function runCommand(command, id){
   } catch (_) {}
 })();
 
+// Rotate the whole display for portrait-mounted / upside-down TVs (Fire TV has no rotate
+// setting, so we do it here). Per-screen, default landscape — existing TVs are untouched.
+function applyOrientation(orientation) {
+  const map = { "portrait-right": "rot-cw", "portrait-left": "rot-ccw", "upside-down": "rot-180" };
+  const cls = map[orientation] || "";
+  document.body.classList.remove("rot-cw", "rot-ccw", "rot-180");
+  if (cls) document.body.classList.add(cls);
+}
+
 function applyConfig(fullCfg) {
+  // Orientation is applied every load (before the "nothing changed" bail-out) so a change
+  // to just the screen's orientation still takes effect.
+  const scrForOri = (fullCfg && Array.isArray(fullCfg.screens))
+    ? (fullCfg.screens.find(s => String(s.id) === String(SCREEN)) || fullCfg.screens[0] || {})
+    : {};
+  applyOrientation(scrForOri.orientation);
+
   const cfg = resolvePlaylist(fullCfg);
   setScheduleOff(screenOff);                 // ⏻ Off blanks the screen on schedule
   const list = Array.isArray(cfg) ? cfg : (cfg.slides || cfg.items || []);
