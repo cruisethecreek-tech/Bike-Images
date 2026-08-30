@@ -161,37 +161,44 @@
         {
           "src": "images/10862-1.jpg",
           "seconds": 8,
-          "fit": "contain"
+          "fit": "contain",
+          "srcPortrait": "images/10862.jpg"
         },
         {
           "src": "images/10856.jpg",
           "seconds": 8,
-          "fit": "contain"
+          "fit": "contain",
+          "srcPortrait": "images/10856.jpg"
         },
         {
           "src": "images/10857.jpg",
           "seconds": 8,
-          "fit": "contain"
+          "fit": "contain",
+          "srcPortrait": "images/10857.jpg"
         },
         {
           "src": "images/10859.jpg",
           "seconds": 8,
-          "fit": "contain"
+          "fit": "contain",
+          "srcPortrait": "images/10859.jpg"
         },
         {
           "src": "images/10860.jpg",
           "seconds": 8,
-          "fit": "contain"
+          "fit": "contain",
+          "srcPortrait": "images/10860.jpg"
         },
         {
           "src": "images/10861.jpg",
           "seconds": 8,
-          "fit": "contain"
+          "fit": "contain",
+          "srcPortrait": "images/10861.jpg"
         },
         {
           "src": "images/10865.jpg",
           "seconds": 8,
-          "fit": "contain"
+          "fit": "contain",
+          "srcPortrait": "images/10865.jpg"
         }
       ]
     }
