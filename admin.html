@@ -510,6 +510,8 @@ el("plDelete").onclick=()=>{ if(Object.keys(config.playlists).length<=1){ alert(
 function nextScreenId(){ let n=1; const ids=new Set(config.screens.map(s=>String(s.id))); while(ids.has(String(n)))n++; return String(n); }
 const DAY_LABELS=["S","M","T","W","T","F","S"];
 function plOptions(sel){ return Object.entries(config.playlists).map(([id,p])=>`<option value="${id}"${id===sel?' selected':''}>${p.name||id}</option>`).join(""); }
+function oriOptions(val){ const o=[["landscape","Landscape (normal)"],["portrait-right","Portrait ⟳ (rotate right)"],["portrait-left","Portrait ⟲ (rotate left)"],["upside-down","Upside-down"]];
+  return o.map(([v,l])=>`<option value="${v}"${(val||"landscape")===v?" selected":""}>${l}</option>`).join(""); }
 // Reserved on/off targets for schedule rules & overrides (not real playlists).
 const SPECIAL_PL={ "__on__":"☀ On (wake — show default)", "__off__":"🌙 Off (blank screen)" };
 function plLabel(id){ return (config.playlists[id]&&config.playlists[id].name) || SPECIAL_PL[id] || id; }
@@ -581,6 +583,7 @@ function renderScreens(){
           <div class="top">
             <div><label>Screen name</label><input type="text" data-sk="name" data-i="${i}" value="${(s.name||'').replace(/"/g,'&quot;')}"/></div>
             <div><label>Default playlist (when no schedule matches)</label><select data-sk="playlist" data-i="${i}">${plOptions(s.playlist)}</select></div>
+            <div><label>Orientation</label><select data-sk="orientation" data-i="${i}">${oriOptions(s.orientation)}</select></div>
             <div style="flex:0 0 auto;"><label>&nbsp;</label>${config.screens.length>1?`<button class="small danger" data-rms="${i}">Remove</button>`:''}</div>
           </div>
           <div class="urlrow"><input type="text" readonly value="${screenUrl(s.id)}"/>
@@ -771,7 +774,7 @@ function normSlides(list){ return (list||[]).map(raw=>{ const it=typeof raw==="s
   return { path:src, name:src.split("/").pop(), isVideo:isVideoName(src)||it.type==="video", seconds:Number(it.seconds||it.duration)||8, caption:it.caption||"", fit:it.fit||"", previewUrl:src }; }).filter(s=>s.path); }
 function migrate(cfg){
   if(cfg && cfg.playlists && typeof cfg.playlists==="object"){
-    const out={ playlists:{}, screens:Array.isArray(cfg.screens)?cfg.screens.map(s=>({id:String(s.id),name:s.name||("Screen "+s.id),playlist:s.playlist,
+    const out={ playlists:{}, screens:Array.isArray(cfg.screens)?cfg.screens.map(s=>({id:String(s.id),name:s.name||("Screen "+s.id),playlist:s.playlist,orientation:s.orientation||"landscape",
       rules:Array.isArray(s.rules)?s.rules.map(r=>({playlist:r.playlist,days:Array.isArray(r.days)?r.days.slice():[0,1,2,3,4,5,6],start:r.start||"",end:r.end||""})):[]})):[] };
     for(const [id,p] of Object.entries(cfg.playlists)){
       out.playlists[id]={ name:p.name||id, fit:p.fit==="contain"?"contain":"cover", showClock:!!p.showClock,
@@ -818,6 +821,7 @@ async function loadAssets(){
 function buildContent(){
   const out={ playlists:{}, screens:config.screens.map(s=>{
     const o={ id:s.id, name:s.name, playlist:s.playlist };
+    if(s.orientation && s.orientation!=="landscape") o.orientation=s.orientation;
     const rules=(s.rules||[]).filter(r=>r.playlist).map(r=>{
       const x={ playlist:r.playlist }; const days=Array.isArray(r.days)?r.days:[];
       if(days.length && days.length<7) x.days=days.slice().sort();
