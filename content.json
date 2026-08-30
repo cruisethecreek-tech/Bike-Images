@@ -146,6 +146,17 @@
           "fit": "contain"
         }
       ]
+    },
+    "vertical-sales": {
+      "name": "vertical sales",
+      "fit": "cover",
+      "showClock": true,
+      "slides": [
+        {
+          "src": "images/10852.jpg",
+          "seconds": 8
+        }
+      ]
     }
   },
   "screens": [
