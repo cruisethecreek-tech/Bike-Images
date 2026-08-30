@@ -281,6 +281,12 @@
       "id": "5",
       "name": "Main Home",
       "playlist": "sales"
+    },
+    {
+      "id": "6",
+      "name": "Screen 2 top",
+      "playlist": "main",
+      "orientation": "portrait-right"
     }
   ],
   "weather": {
