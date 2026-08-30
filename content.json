@@ -159,7 +159,8 @@
         },
         {
           "src": "images/10856.jpg",
-          "seconds": 8
+          "seconds": 8,
+          "fit": "contain"
         }
       ]
     }
