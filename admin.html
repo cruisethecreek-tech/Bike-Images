@@ -135,6 +135,29 @@
   #status.show{transform:translate(-50%,0);}
   #status.ok{background:#e5f4ea;color:#1e7d43;} #status.err{background:#f9e4e2;color:var(--err);} #status.busy{background:#eef3f6;color:var(--accent);}
   @media(max-width:760px){ .body{flex-direction:column;} .sidebar{flex:0 0 auto;flex-direction:row;overflow-x:auto;padding:8px;} .sidebar .navbtn{width:auto;white-space:nowrap;} .sidebar .hint{display:none;} .content{padding:16px;} }
+  /* ---- Paired view (landscape + portrait synced pairs) ---- */
+  .viewtoggle{display:flex;gap:8px;margin-bottom:14px;}
+  #pairEditor .hint2{color:var(--muted);font-size:.9rem;margin-bottom:12px;}
+  .palette{display:flex;flex-wrap:wrap;gap:8px;padding:10px;background:var(--accent-soft);border:1px dashed var(--line);border-radius:10px;margin-bottom:16px;max-height:200px;overflow:auto;}
+  .palette:empty::after{content:"Upload images in the Media tab first — they'll appear here to drag.";color:var(--muted);font-size:.85rem;}
+  .palette .pi{width:66px;height:42px;object-fit:cover;border-radius:6px;cursor:grab;border:2px solid transparent;background:var(--panel);}
+  .palette .pi:hover{border-color:var(--accent);}
+  .pairrow{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:var(--panel);}
+  .pairnum{font-weight:800;color:var(--muted);width:20px;text-align:center;flex:0 0 auto;}
+  .cell{border:2px dashed var(--line);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.72rem;text-align:center;overflow:hidden;background:var(--bg);cursor:pointer;flex:0 0 auto;position:relative;}
+  .cell.land{width:168px;height:94px;}
+  .cell.port{width:58px;height:103px;}
+  .cell img{width:100%;height:100%;object-fit:cover;}
+  .cell.over,.cell.armed{border-color:var(--accent);border-style:solid;box-shadow:0 0 0 2px var(--accent-soft);}
+  .cell .clearx{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.6);color:#fff;border:0;border-radius:50%;width:18px;height:18px;font-size:11px;line-height:1;cursor:pointer;display:none;}
+  .cell:hover .clearx{display:block;}
+  .pairlink{color:var(--muted);flex:0 0 auto;font-size:1.1rem;}
+  .pairmeta{display:flex;flex-direction:column;gap:6px;flex:1 1 auto;min-width:90px;}
+  .pairmeta label{font-size:.72rem;color:var(--muted);font-weight:700;}
+  .pairmeta input{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;}
+  .pairctrls{display:flex;flex-direction:column;gap:4px;flex:0 0 auto;}
+  .celllabel{font-size:.7rem;color:var(--muted);text-align:center;margin-bottom:3px;font-weight:700;}
+  .cellwrap{display:flex;flex-direction:column;}
 </style>
 </head>
 <body>
@@ -192,8 +215,20 @@
       <section id="tab-slides" class="tab">
         <h2>Slideshow</h2>
         <p class="lede">The order this playlist plays. Add captions, timing, reorder with ↑ ↓.</p>
+        <div class="viewtoggle">
+          <button class="small chip" id="viewSimple">☰ Simple list</button>
+          <button class="small ghost" id="viewPaired">▦ Paired view (landscape + portrait)</button>
+        </div>
         <div id="slideList"></div>
         <div id="slidesEmpty" class="empty">No slides in this playlist yet. Go to <strong>🖼 Media</strong> and click this playlist’s chip on the photos you want.</div>
+        <div id="pairEditor" style="display:none;">
+          <div class="hint2">Each row is <strong>one synced slide</strong>. Drag an image from the palette into a row —
+            <strong>landscape on the left</strong>, its <strong>portrait version on the right</strong> — or click a slot then click an image.
+            Screens set to Portrait show the right image; everyone stays in sync.</div>
+          <div id="palette" class="palette"></div>
+          <div id="pairList"></div>
+          <button class="small chip" id="addPair">＋ Add pair</button>
+        </div>
       </section>
 
       <!-- TICKER & DISPLAY -->
@@ -462,6 +497,7 @@ function renderMedia(){
   });
   g.querySelectorAll("[data-pl]").forEach(b=>b.onclick=()=>togglePlaylist(b.dataset.pl,b.dataset.path));
   g.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>deleteAsset(b.dataset.del));
+  if(pairMode) renderPairs();   // keep the paired-view palette in sync with the media library
 }
 
 /* ---------- render slideshow ---------- */
@@ -497,6 +533,74 @@ function renderSlides(){
   box.querySelectorAll("[data-move]").forEach(b=>b.onclick=e=>{ const i=+e.target.dataset.i,j=i+(e.target.dataset.move==="up"?-1:1);
     if(j<0||j>=S.length)return; [S[i],S[j]]=[S[j],S[i]]; setDirty(true); renderSlides(); });
   box.querySelectorAll("[data-rm]").forEach(b=>b.onclick=e=>{ S.splice(+e.target.dataset.rm,1); setDirty(true); renderSlides(); renderMedia(); counts(); });
+  if(pairMode) renderPairs();
+}
+
+/* ---------- paired view: landscape + portrait synced pairs ---------- */
+let pairMode=false, armedCell=null;
+function setPairMode(on){
+  pairMode=on; armedCell=null;
+  el("viewPaired").className=on?"small chip":"small ghost";
+  el("viewSimple").className=on?"small ghost":"small chip";
+  el("pairEditor").style.display=on?"block":"none";
+  el("slideList").style.display=on?"none":"";
+  el("slidesEmpty").style.display=(!on && !pl().slides.length)?"block":"none";
+  on?renderPairs():renderSlides();
+}
+function assignCell(i,side,path){
+  const a=assets.find(x=>x.path===path); if(!a) return; const S=pl().slides; if(!S[i]) return;
+  if(side==="land"){ S[i].path=path; S[i].name=a.name; S[i].isVideo=!!a.isVideo; S[i].previewUrl=a.previewUrl||a.path; }
+  else { if(a.isVideo || S[i].isVideo) return; S[i].portraitPath=path; S[i].portraitPreviewUrl=a.previewUrl||a.path; }
+  setDirty(true); armedCell=null; renderPairs();
+}
+function clearCell(i,side){ const S=pl().slides; if(!S[i]) return;
+  if(side==="land"){ S[i].path=""; S[i].previewUrl=""; S[i].name=""; } else { S[i].portraitPath=""; S[i].portraitPreviewUrl=""; }
+  setDirty(true); renderPairs(); }
+function addEmptyPair(){ pl().slides.push({path:"",name:"",isVideo:false,seconds:8,caption:"",fit:"",previewUrl:"",portraitPath:"",portraitPreviewUrl:""}); setDirty(true); renderPairs(); }
+function cellInner(has,preview,side,i,placeholder){
+  return has?`<img src="${preview}"/><button class="clearx" data-clear="${side}" data-i="${i}">✕</button>`:placeholder;
+}
+function renderPairs(){
+  const S=pl().slides;
+  const pal=el("palette"); pal.innerHTML="";
+  assets.filter(a=>!a.isVideo).forEach(a=>{
+    const img=document.createElement("img"); img.className="pi"; img.src=a.previewUrl||a.path; img.title=a.name; img.draggable=true;
+    img.addEventListener("dragstart",e=>{ e.dataTransfer.setData("text/plain",a.path); e.dataTransfer.effectAllowed="copy"; });
+    img.addEventListener("click",()=>{ if(armedCell) assignCell(armedCell.i,armedCell.side,a.path); });
+    pal.appendChild(img);
+  });
+  const list=el("pairList"); list.innerHTML="";
+  S.forEach((s,i)=>{
+    const armL=armedCell&&armedCell.i===i&&armedCell.side==="land"?" armed":"";
+    const armP=armedCell&&armedCell.i===i&&armedCell.side==="port"?" armed":"";
+    const landInner=s.isVideo?'🎬 video':cellInner(!!s.path,s.previewUrl||s.path,"land",i,"Drop / click");
+    const portInner=s.isVideo?'—':cellInner(!!s.portraitPath,s.portraitPreviewUrl||s.portraitPath,"port",i,"Drop / click");
+    const row=document.createElement("div"); row.className="pairrow";
+    row.innerHTML=`<div class="pairnum">${i+1}</div>
+      <div class="cellwrap"><div class="celllabel">Landscape ▭</div><div class="cell land${armL}" data-i="${i}" data-side="land">${landInner}</div></div>
+      <div class="pairlink">↔</div>
+      <div class="cellwrap"><div class="celllabel">Portrait ▯</div><div class="cell port${armP}" data-i="${i}" data-side="port">${portInner}</div></div>
+      <div class="pairmeta">
+        <div><label>Caption</label><input data-pc="caption" data-i="${i}" value="${(s.caption||'').replace(/"/g,'&quot;')}" placeholder="(optional)"/></div>
+        <div><label>Seconds</label><input type="number" min="1" data-pc="seconds" data-i="${i}" value="${s.seconds||8}"/></div>
+      </div>
+      <div class="pairctrls">
+        <button class="small ghost" data-pmove="up" data-i="${i}" ${i===0?'disabled':''}>↑</button>
+        <button class="small ghost" data-pmove="down" data-i="${i}" ${i===S.length-1?'disabled':''}>↓</button>
+        <button class="small danger" data-prm="${i}">✕</button>
+      </div>`;
+    list.appendChild(row);
+  });
+  list.querySelectorAll(".cell").forEach(cell=>{
+    cell.addEventListener("dragover",e=>{ e.preventDefault(); cell.classList.add("over"); e.dataTransfer.dropEffect="copy"; });
+    cell.addEventListener("dragleave",()=>cell.classList.remove("over"));
+    cell.addEventListener("drop",e=>{ e.preventDefault(); cell.classList.remove("over"); const path=e.dataTransfer.getData("text/plain"); if(path) assignCell(+cell.dataset.i,cell.dataset.side,path); });
+    cell.addEventListener("click",e=>{ if(e.target.classList.contains("clearx"))return; armedCell={i:+cell.dataset.i,side:cell.dataset.side}; renderPairs(); });
+  });
+  list.querySelectorAll("[data-clear]").forEach(b=>b.addEventListener("click",e=>{ e.stopPropagation(); clearCell(+b.dataset.i,b.dataset.clear); }));
+  list.querySelectorAll("input[data-pc]").forEach(inp=>inp.addEventListener("input",e=>{ const i=+e.target.dataset.i,k=e.target.dataset.pc; pl().slides[i][k]=k==="seconds"?(Number(e.target.value)||8):e.target.value; setDirty(true); }));
+  list.querySelectorAll("[data-pmove]").forEach(b=>b.addEventListener("click",e=>{ const i=+b.dataset.i,j=i+(b.dataset.pmove==="up"?-1:1),A=pl().slides; if(j<0||j>=A.length)return; [A[i],A[j]]=[A[j],A[i]]; setDirty(true); renderPairs(); }));
+  list.querySelectorAll("[data-prm]").forEach(b=>b.addEventListener("click",e=>{ pl().slides.splice(+b.dataset.prm,1); setDirty(true); renderPairs(); }));
 }
 
 /* ---------- playlists ---------- */
@@ -844,7 +948,7 @@ function buildContent(){
   for(const [id,p] of Object.entries(config.playlists)){
     const o={ name:p.name, fit:p.fit==="contain"?"contain":"cover", showClock:!!p.showClock };
     if((p.tickerText||"").trim()){ o.tickerLabel=p.tickerLabel||"INFO"; o.tickerText=p.tickerText; o.tickerSpeed=Number(p.tickerSpeed)||30; }
-    o.slides=p.slides.map(s=>{ const x={src:s.path}; if(!s.isVideo)x.seconds=Number(s.seconds)||8; if(s.caption)x.caption=s.caption; if(s.fit)x.fit=s.fit; if(!s.isVideo && s.portraitPath) x.srcPortrait=s.portraitPath; return x; });
+    o.slides=p.slides.filter(s=>s.path).map(s=>{ const x={src:s.path}; if(!s.isVideo)x.seconds=Number(s.seconds)||8; if(s.caption)x.caption=s.caption; if(s.fit)x.fit=s.fit; if(!s.isVideo && s.portraitPath) x.srcPortrait=s.portraitPath; return x; });
     out.playlists[id]=o;
   }
   const w=config.weather;
@@ -876,6 +980,9 @@ async function save(){
   }catch(err){ setConn("err","Save failed"); status("⚠ "+(err.message||err),"err"); }
   finally{ el("saveBtn").disabled=false; }
 }
+el("viewSimple").onclick=()=>setPairMode(false);
+el("viewPaired").onclick=()=>setPairMode(true);
+el("addPair").onclick=addEmptyPair;
 el("saveBtn").addEventListener("click",save);
 window.addEventListener("beforeunload",e=>{ if(dirty){ e.preventDefault(); e.returnValue=""; } });
 
