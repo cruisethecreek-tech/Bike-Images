@@ -465,6 +465,10 @@ function renderMedia(){
 }
 
 /* ---------- render slideshow ---------- */
+function portraitOptions(sel){
+  return `<option value="">(none — use the landscape image)</option>`+
+    assets.filter(a=>!a.isVideo).map(a=>`<option value="${a.path}"${a.path===sel?' selected':''}>${a.name}</option>`).join("");
+}
 function renderSlides(){
   const box=el("slideList"); box.innerHTML=""; const S=pl().slides;
   el("slidesEmpty").style.display=S.length?"none":"block";
@@ -475,6 +479,9 @@ function renderSlides(){
       <div><label>Caption</label><input type="text" data-k="caption" data-i="${i}" value="${(s.caption||'').replace(/"/g,'&quot;')}" placeholder="(optional)"/></div>
       <div><label>Seconds${s.isVideo?' (video plays full)':''}</label><input type="number" min="1" data-k="seconds" data-i="${i}" value="${s.seconds}" ${s.isVideo?'disabled':''}/></div>
       <div><label>Fit</label><select data-k="fit" data-i="${i}"><option value=""${s.fit===''?' selected':''}>Default</option><option value="cover"${s.fit==='cover'?' selected':''}>Cover</option><option value="contain"${s.fit==='contain'?' selected':''}>Contain</option></select></div>
+      ${s.isVideo?'':`<div style="flex:1 1 220px;"><label title="Shown on screens set to Portrait orientation. Both screens keep the same timing, so they stay perfectly in sync.">Portrait version <span style="font-weight:400;color:var(--muted)">(vertical screens)</span></label>
+        <div style="display:flex;align-items:center;gap:8px;">${s.portraitPath?`<img src="${s.portraitPreviewUrl||s.portraitPath}" style="width:22px;height:34px;object-fit:cover;border-radius:4px;flex:0 0 auto;" onerror="this.style.opacity=.25"/>`:''}
+          <select data-pk="${i}" style="flex:1;">${portraitOptions(s.portraitPath)}</select></div></div>`}
       </div></div><div class="ctrls">
       <button class="small ghost" data-move="up" data-i="${i}" ${i===0?'disabled':''}>↑</button>
       <button class="small ghost" data-move="down" data-i="${i}" ${i===S.length-1?'disabled':''}>↓</button>
@@ -483,6 +490,10 @@ function renderSlides(){
   });
   box.querySelectorAll("input[data-k],select[data-k]").forEach(inp=>inp.addEventListener("input",e=>{
     const i=+e.target.dataset.i,k=e.target.dataset.k; S[i][k]=k==="seconds"?(Number(e.target.value)||8):e.target.value; setDirty(true); }));
+  box.querySelectorAll("select[data-pk]").forEach(sel=>sel.addEventListener("change",e=>{
+    const i=+e.target.dataset.pk, path=e.target.value; S[i].portraitPath=path;
+    const a=assets.find(x=>x.path===path); S[i].portraitPreviewUrl=a?(a.previewUrl||a.path):path;
+    setDirty(true); renderSlides(); }));
   box.querySelectorAll("[data-move]").forEach(b=>b.onclick=e=>{ const i=+e.target.dataset.i,j=i+(e.target.dataset.move==="up"?-1:1);
     if(j<0||j>=S.length)return; [S[i],S[j]]=[S[j],S[i]]; setDirty(true); renderSlides(); });
   box.querySelectorAll("[data-rm]").forEach(b=>b.onclick=e=>{ S.splice(+e.target.dataset.rm,1); setDirty(true); renderSlides(); renderMedia(); counts(); });
@@ -771,7 +782,7 @@ async function loadLeads(){
 
 /* ---------- migrate + load content.json ---------- */
 function normSlides(list){ return (list||[]).map(raw=>{ const it=typeof raw==="string"?{src:raw}:(raw||{}); const src=it.src||it.url||it.image||it.video||"";
-  return { path:src, name:src.split("/").pop(), isVideo:isVideoName(src)||it.type==="video", seconds:Number(it.seconds||it.duration)||8, caption:it.caption||"", fit:it.fit||"", previewUrl:src }; }).filter(s=>s.path); }
+  return { path:src, name:src.split("/").pop(), isVideo:isVideoName(src)||it.type==="video", seconds:Number(it.seconds||it.duration)||8, caption:it.caption||"", fit:it.fit||"", previewUrl:src, portraitPath:it.srcPortrait||"", portraitPreviewUrl:it.srcPortrait||"" }; }).filter(s=>s.path); }
 function migrate(cfg){
   if(cfg && cfg.playlists && typeof cfg.playlists==="object"){
     const out={ playlists:{}, screens:Array.isArray(cfg.screens)?cfg.screens.map(s=>({id:String(s.id),name:s.name||("Screen "+s.id),playlist:s.playlist,orientation:s.orientation||"landscape",
@@ -833,7 +844,7 @@ function buildContent(){
   for(const [id,p] of Object.entries(config.playlists)){
     const o={ name:p.name, fit:p.fit==="contain"?"contain":"cover", showClock:!!p.showClock };
     if((p.tickerText||"").trim()){ o.tickerLabel=p.tickerLabel||"INFO"; o.tickerText=p.tickerText; o.tickerSpeed=Number(p.tickerSpeed)||30; }
-    o.slides=p.slides.map(s=>{ const x={src:s.path}; if(!s.isVideo)x.seconds=Number(s.seconds)||8; if(s.caption)x.caption=s.caption; if(s.fit)x.fit=s.fit; return x; });
+    o.slides=p.slides.map(s=>{ const x={src:s.path}; if(!s.isVideo)x.seconds=Number(s.seconds)||8; if(s.caption)x.caption=s.caption; if(s.fit)x.fit=s.fit; if(!s.isVideo && s.portraitPath) x.srcPortrait=s.portraitPath; return x; });
     out.playlists[id]=o;
   }
   const w=config.weather;

@@ -365,6 +365,13 @@ the whole display rotates to read upright. It's per screen, so landscape TVs are
 For portrait screens, **tall content (e.g. 1080×1920) fills best** — landscape images still
 show upright, just letterboxed or cropped to fit the tall frame.
 
+**Keeping a landscape TV and a portrait TV in sync (same message, different shapes):** put
+both screens on the **same playlist**, and on each image slide set a **Portrait version**
+(in the Slideshow tab) — the tall version of that slide. The landscape TV shows the normal
+image, the portrait TV shows the portrait version, and because they run the identical
+playlist they stay **perfectly in sync**. (Portrait versions are for image slides; for video,
+use matching-length exports.)
+
 ## Offline behavior
 
 Offline caching via a service worker was **removed** — on some Fire TVs it caused the screen
