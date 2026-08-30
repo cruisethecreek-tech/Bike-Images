@@ -335,6 +335,12 @@
       "name": "Screen 2 top",
       "playlist": "vertical-sales",
       "orientation": "portrait-right"
+    },
+    {
+      "id": "7",
+      "name": "Screen 1 top",
+      "playlist": "sales-2-0",
+      "orientation": "portrait-right"
     }
   ],
   "weather": {
