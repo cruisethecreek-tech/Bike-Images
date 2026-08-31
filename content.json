@@ -25,6 +25,54 @@
         {
           "src": "images/9381.jpg",
           "seconds": 25
+        },
+        {
+          "src": "images/10901.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10902.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10903.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10904.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10905.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10906.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10907.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10908.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10909.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10910.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10911.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10912.jpg",
+          "seconds": 8
         }
       ]
     },
@@ -101,52 +149,62 @@
         {
           "src": "images/10665.jpg",
           "seconds": 12,
-          "fit": "contain"
+          "fit": "contain",
+          "srcPortrait": "images/10903.jpg"
         },
         {
           "src": "images/10666.jpg",
           "seconds": 12,
-          "fit": "contain"
+          "fit": "contain",
+          "srcPortrait": "images/10901.jpg"
         },
         {
           "src": "images/10668.jpg",
           "seconds": 12,
-          "fit": "contain"
+          "fit": "contain",
+          "srcPortrait": "images/10905.jpg"
         },
         {
           "src": "images/10669.jpg",
           "seconds": 12,
-          "fit": "contain"
+          "fit": "contain",
+          "srcPortrait": "images/10906.jpg"
         },
         {
           "src": "images/10670.jpg",
           "seconds": 12,
-          "fit": "contain"
+          "fit": "contain",
+          "srcPortrait": "images/10907.jpg"
         },
         {
           "src": "images/10672.jpg",
           "seconds": 12,
-          "fit": "contain"
+          "fit": "contain",
+          "srcPortrait": "images/10908.jpg"
         },
         {
           "src": "images/10673.jpg",
           "seconds": 12,
-          "fit": "contain"
+          "fit": "contain",
+          "srcPortrait": "images/10909.jpg"
         },
         {
           "src": "images/10674.jpg",
           "seconds": 12,
-          "fit": "contain"
+          "fit": "contain",
+          "srcPortrait": "images/10910.jpg"
         },
         {
           "src": "images/10675.jpg",
           "seconds": 12,
-          "fit": "contain"
+          "fit": "contain",
+          "srcPortrait": "images/10911.jpg"
         },
         {
           "src": "images/10676.jpg",
           "seconds": 12,
-          "fit": "contain"
+          "fit": "contain",
+          "srcPortrait": "images/10912.jpg"
         }
       ]
     },
