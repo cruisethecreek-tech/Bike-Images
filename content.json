@@ -28,6 +28,10 @@
         },
         {
           "src": "https://pub-446d04cee64c4cdcb4ff8c9ef7447061.r2.dev/videos/ctc-60-second-spot-h-d1.mp4"
+        },
+        {
+          "src": "images/10667.jpg",
+          "seconds": 8
         }
       ]
     },
@@ -180,14 +184,6 @@
           "caption": "Breeze 1",
           "fit": "contain",
           "srcPortrait": "images/10904.jpg"
-        },
-        {
-          "src": "images/10386.jpg",
-          "seconds": 8
-        },
-        {
-          "src": "images/10860.jpg",
-          "seconds": 8
         }
       ]
     },
