@@ -178,6 +178,7 @@
           "src": "images/10904.jpg",
           "seconds": 12,
           "caption": "Breeze 1",
+          "fit": "contain",
           "srcPortrait": "images/10904.jpg"
         }
       ]
