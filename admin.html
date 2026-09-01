@@ -321,7 +321,7 @@
 <script>
 /* ===================== Signage Dashboard — build 14 (R2 self-test) ===================== */
 const GH="https://api.github.com";
-const MAX_EDGE=1920, JPEG_QUALITY=0.82, MAX_BATCH_BYTES=3_500_000;
+const MAX_EDGE=1920, JPEG_QUALITY=0.82, MAX_BATCH_BYTES=3_500_000, TARGET_B64=2_500_000;
 const ONLINE_MS=3*60*1000;   // seen within 3 min = online
 const SIGNAGE_BASE = location.origin + location.pathname.replace(/admin(\.html)?$/,"signage.html");
 
@@ -362,13 +362,35 @@ document.querySelectorAll(".navbtn").forEach(b=>b.addEventListener("click",()=>{
 
 /* ---------- compression ---------- */
 function loadImage(f){ return new Promise((res,rej)=>{const u=URL.createObjectURL(f);const i=new Image();i.onload=()=>res({img:i,url:u});i.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("Could not read image"));};i.src=u;}); }
+function canvasFrom(src,w,h){ const c=document.createElement("canvas"); c.width=w; c.height=h;
+  const x=c.getContext("2d"); x.fillStyle="#000"; x.fillRect(0,0,w,h); x.drawImage(src,0,0,w,h); return c; }
+function encodeUnder(canvas){   // drop JPEG quality until the payload is safely under the cap
+  let q=JPEG_QUALITY, d=canvas.toDataURL("image/jpeg",q);
+  while(d.length>TARGET_B64 && q>0.42){ q=Math.max(0.42,q-0.1); d=canvas.toDataURL("image/jpeg",q); }
+  return d; }
 async function compressImage(f){
+  // Preferred: createImageBitmap decodes + downscales efficiently — avoids the out-of-memory
+  // canvas failures big phone photos hit, which used to fall back to the raw (huge) file.
+  try{
+    if(self.createImageBitmap){
+      const probe=await createImageBitmap(f);
+      let w=probe.width,h=probe.height; const sc=Math.min(1,MAX_EDGE/Math.max(w,h));
+      let tw=Math.max(1,Math.round(w*sc)), th=Math.max(1,Math.round(h*sc)), bmp=probe;
+      if(sc<1){ try{ bmp=await createImageBitmap(f,{resizeWidth:tw,resizeHeight:th,resizeQuality:"high"}); probe.close&&probe.close(); }catch(_){ bmp=probe; } }
+      let c=canvasFrom(bmp,tw,th); bmp.close&&bmp.close();
+      let d=encodeUnder(c);
+      if(d.length>MAX_BATCH_BYTES){ tw=Math.max(1,Math.round(tw*0.7)); th=Math.max(1,Math.round(th*0.7));
+        try{ const b2=await createImageBitmap(f,{resizeWidth:tw,resizeHeight:th,resizeQuality:"high"}); d=encodeUnder(canvasFrom(b2,tw,th)); b2.close&&b2.close(); }catch(_){}
+      }
+      return { base64:d.split(",")[1], previewUrl:d, converted:true, tooBig:d.length>MAX_BATCH_BYTES };
+    }
+  }catch(_){ /* fall through to the <img>/canvas path */ }
   try{ const {img,url}=await loadImage(f); let w=img.naturalWidth,h=img.naturalHeight;
     const sc=Math.min(1,MAX_EDGE/Math.max(w,h)); w=Math.max(1,Math.round(w*sc)); h=Math.max(1,Math.round(h*sc));
-    const c=document.createElement("canvas"); c.width=w; c.height=h; const x=c.getContext("2d");
-    x.fillStyle="#000"; x.fillRect(0,0,w,h); x.drawImage(img,0,0,w,h); URL.revokeObjectURL(url);
-    const d=c.toDataURL("image/jpeg",JPEG_QUALITY); return {base64:d.split(",")[1],previewUrl:d,converted:true};
-  }catch(_){ return {base64:await fileToBase64(f),previewUrl:URL.createObjectURL(f),converted:false}; }
+    const c=canvasFrom(img,w,h); URL.revokeObjectURL(url);
+    const d=encodeUnder(c);
+    return {base64:d.split(",")[1],previewUrl:d,converted:true,tooBig:d.length>MAX_BATCH_BYTES};
+  }catch(_){ const b=await fileToBase64(f); return {base64:b,previewUrl:URL.createObjectURL(f),converted:false,tooBig:b.length>MAX_BATCH_BYTES}; }
 }
 
 /* ---------- upload ---------- */
@@ -962,10 +984,15 @@ function buildContent(){
 /* ---------- save ---------- */
 async function save(){
   savePrefs(); const usingToken=el("useToken").checked;
-  const uploads=assets.filter(a=>a.pending).map(a=>({path:a.path,contentBase64:a.contentBase64}));
+  let uploads=assets.filter(a=>a.pending).map(a=>({path:a.path,contentBase64:a.contentBase64}));
   const deletions=[...pendingDeletes].filter(p=>p.startsWith("images/"));  // storage videos deleted live
-  if(!usingToken){ const big=uploads.find(f=>f.contentBase64.length>MAX_BATCH_BYTES);
-    if(big){ status(`⚠ "${big.path.split('/').pop()}" is too large (Vercel caps requests at ~4.5 MB). Use a smaller/shorter video.`,"err"); return; } }
+  // A single oversized file used to abort the whole publish. Instead, skip just that file,
+  // publish everything else, and keep the skipped one pending so nothing is lost.
+  let skipped=[];
+  if(!usingToken){
+    skipped=uploads.filter(f=>f.contentBase64.length>MAX_BATCH_BYTES).map(f=>f.path);
+    if(skipped.length) uploads=uploads.filter(f=>f.contentBase64.length<=MAX_BATCH_BYTES);
+  }
   const contentFile={ path:"content.json", contentBase64:b64utf8(JSON.stringify(buildContent(),null,2)) };
   const batches=[]; let cur=[],sz=0;
   for(const f of uploads){ if(cur.length&&sz+f.contentBase64.length>MAX_BATCH_BYTES){batches.push({files:cur,del:[]});cur=[];sz=0;} cur.push(f); sz+=f.contentBase64.length; }
@@ -974,9 +1001,12 @@ async function save(){
   el("saveBtn").disabled=true; setConn("busy","Publishing…");
   try{
     for(let i=0;i<batches.length;i++){ status(batches.length>1?`Publishing… (${i+1}/${batches.length})`:"Publishing…","busy"); await commit(batches[i].files,batches[i].del); }
-    pendingDeletes.clear(); assets.forEach(a=>{ if(a.pending){a.pending=false; delete a.contentBase64;} });
-    setDirty(false); setConn("ok","Connected"); renderMedia(); renderSlides(); counts();
-    status("✅ Published! Screens update within a minute.","ok"); if(!usingToken) loadAssets();
+    pendingDeletes.clear(); assets.forEach(a=>{ if(a.pending && skipped.indexOf(a.path)===-1){a.pending=false; delete a.contentBase64;} });
+    setConn("ok","Connected"); renderSlides(); counts();
+    if(!usingToken) await loadAssets().catch(()=>{}); else renderMedia();  // refresh library, then show the final message
+    if(skipped.length){ setDirty(true);
+      status(`✅ Published, but skipped ${skipped.length} oversized image(s): ${skipped.map(p=>p.split('/').pop()).join(', ')}. Re-save that one from a smaller/re-exported copy.`,"err");
+    } else { setDirty(false); status("✅ Published! Screens update within a minute.","ok"); }
   }catch(err){ setConn("err","Save failed"); status("⚠ "+(err.message||err),"err"); }
   finally{ el("saveBtn").disabled=false; }
 }
