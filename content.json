@@ -28,10 +28,6 @@
         },
         {
           "src": "https://pub-446d04cee64c4cdcb4ff8c9ef7447061.r2.dev/videos/ctc-60-second-spot-h-d1.mp4"
-        },
-        {
-          "src": "images/10870.jpg",
-          "seconds": 8
         }
       ]
     },
@@ -86,7 +82,7 @@
           "seconds": 12,
           "caption": "Venus",
           "fit": "contain",
-          "srcPortrait": "images/10856.jpg"
+          "srcPortrait": "images/10870.jpg"
         },
         {
           "src": "images/10385.jpg",
