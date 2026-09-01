@@ -180,6 +180,14 @@
           "caption": "Breeze 1",
           "fit": "contain",
           "srcPortrait": "images/10904.jpg"
+        },
+        {
+          "src": "images/10386.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10860.jpg",
+          "seconds": 8
         }
       ]
     },
