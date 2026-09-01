@@ -28,10 +28,6 @@
         },
         {
           "src": "https://pub-446d04cee64c4cdcb4ff8c9ef7447061.r2.dev/videos/ctc-60-second-spot-h-d1.mp4"
-        },
-        {
-          "src": "images/10667.jpg",
-          "seconds": 8
         }
       ]
     },
@@ -65,7 +61,7 @@
           "seconds": 12,
           "caption": "Heybike Banner",
           "fit": "contain",
-          "srcPortrait": "images/10862-1.jpg"
+          "srcPortrait": "images/10862.jpg"
         },
         {
           "src": "images/10381.jpg",
@@ -86,7 +82,7 @@
           "seconds": 12,
           "caption": "Venus",
           "fit": "contain",
-          "srcPortrait": "images/10870.jpg"
+          "srcPortrait": "images/10856.jpg"
         },
         {
           "src": "images/10385.jpg",
@@ -203,6 +199,22 @@
         },
         {
           "src": "images/10857.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10667.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10386.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10671.jpg",
+          "seconds": 8
+        },
+        {
+          "src": "images/10860.jpg",
           "seconds": 8
         }
       ]
