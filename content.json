@@ -329,25 +329,29 @@
       "id": "6",
       "name": "Screen 1 top",
       "playlist": "sales-2-0",
-      "orientation": "portrait-right"
+      "orientation": "portrait-right",
+      "override": "__off__"
     },
     {
       "id": "7",
       "name": "Screen 2 top",
       "playlist": "sales-2-0",
-      "orientation": "portrait-right"
+      "orientation": "portrait-right",
+      "override": "__off__"
     },
     {
       "id": "8",
       "name": "Screen 3 top",
       "playlist": "sales-2-0",
-      "orientation": "portrait-right"
+      "orientation": "portrait-right",
+      "override": "__off__"
     },
     {
       "id": "9",
       "name": "Screen 4 top",
       "playlist": "sales-2-0",
-      "orientation": "portrait-right"
+      "orientation": "portrait-right",
+      "override": "sales-2-0"
     }
   ],
   "weather": {
