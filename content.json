@@ -28,6 +28,10 @@
         },
         {
           "src": "https://pub-446d04cee64c4cdcb4ff8c9ef7447061.r2.dev/videos/ctc-60-second-spot-h-d1.mp4"
+        },
+        {
+          "src": "images/11719.jpg",
+          "seconds": 8
         }
       ]
     },
@@ -329,29 +333,25 @@
       "id": "6",
       "name": "Screen 1 top",
       "playlist": "sales-2-0",
-      "orientation": "portrait-right",
-      "override": "__off__"
+      "orientation": "portrait-right"
     },
     {
       "id": "7",
       "name": "Screen 2 top",
       "playlist": "sales-2-0",
-      "orientation": "portrait-right",
-      "override": "__off__"
+      "orientation": "portrait-right"
     },
     {
       "id": "8",
       "name": "Screen 3 top",
       "playlist": "sales-2-0",
-      "orientation": "portrait-right",
-      "override": "__off__"
+      "orientation": "portrait-right"
     },
     {
       "id": "9",
       "name": "Screen 4 top",
       "playlist": "sales-2-0",
-      "orientation": "portrait-right",
-      "override": "sales-2-0"
+      "orientation": "portrait-right"
     }
   ],
   "weather": {
