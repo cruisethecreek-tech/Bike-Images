@@ -339,7 +339,8 @@
       "id": "7",
       "name": "Screen 2 top",
       "playlist": "main",
-      "orientation": "portrait-right"
+      "orientation": "portrait-right",
+      "override": "main"
     },
     {
       "id": "8",
