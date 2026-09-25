@@ -343,8 +343,13 @@
       "rules": [
         {
           "playlist": "main",
-          "start": "09:00",
-          "end": "17:00"
+          "start": "10:00",
+          "end": "14:59"
+        },
+        {
+          "playlist": "main",
+          "start": "18:00",
+          "end": "20:59"
         }
       ]
     },
