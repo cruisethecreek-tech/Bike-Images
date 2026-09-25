@@ -340,7 +340,13 @@
       "name": "Screen 2 top",
       "playlist": "main",
       "orientation": "portrait-right",
-      "override": "main"
+      "rules": [
+        {
+          "playlist": "main",
+          "start": "09:00",
+          "end": "17:00"
+        }
+      ]
     },
     {
       "id": "8",
