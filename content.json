@@ -234,12 +234,12 @@
       "playlist": "sales",
       "rules": [
         {
-          "playlist": "main",
+          "playlist": "sales-2-0",
           "start": "10:00",
           "end": "14:59"
         },
         {
-          "playlist": "main",
+          "playlist": "sales-2-0",
           "start": "18:00",
           "end": "20:59"
         },
@@ -298,12 +298,12 @@
       "playlist": "closed",
       "rules": [
         {
-          "playlist": "main",
+          "playlist": "sales-2-0",
           "start": "10:00",
           "end": "14:59"
         },
         {
-          "playlist": "main",
+          "playlist": "sales-2-0",
           "start": "18:00",
           "end": "20:59"
         },
@@ -320,41 +320,29 @@
         {
           "playlist": "__off__",
           "start": "21:00",
-          "end": "17:59"
+          "end": "05:59"
         }
       ]
     },
     {
       "id": "5",
       "name": "Main Home",
-      "playlist": "sales"
-    },
-    {
-      "id": "6",
-      "name": "Screen 1 top",
-      "playlist": "sales-2-0",
-      "orientation": "portrait-right"
-    },
-    {
-      "id": "7",
-      "name": "Screen 2 top",
-      "playlist": "main",
-      "orientation": "portrait-right",
+      "playlist": "sales",
       "rules": [
         {
-          "playlist": "main",
+          "playlist": "sales-2-0",
           "start": "10:00",
           "end": "14:59"
         },
         {
-          "playlist": "main",
+          "playlist": "sales-2-0",
           "start": "18:00",
           "end": "20:59"
         },
         {
           "playlist": "closed",
           "start": "06:00",
-          "end": "21:59"
+          "end": "09:59"
         },
         {
           "playlist": "__off__",
@@ -363,23 +351,142 @@
         },
         {
           "playlist": "__off__",
-          "start": "09:00",
-          "end": "17:00"
+          "start": "21:00",
+          "end": "05:59"
         }
-      ],
-      "override": "main"
+      ]
+    },
+    {
+      "id": "6",
+      "name": "Screen 1 top",
+      "playlist": "sales-2-0",
+      "orientation": "portrait-right",
+      "rules": [
+        {
+          "playlist": "sales-2-0",
+          "start": "10:00",
+          "end": "14:59"
+        },
+        {
+          "playlist": "sales-2-0",
+          "start": "18:00",
+          "end": "20:59"
+        },
+        {
+          "playlist": "closed",
+          "start": "06:00",
+          "end": "09:59"
+        },
+        {
+          "playlist": "__off__",
+          "start": "15:00",
+          "end": "17:59"
+        },
+        {
+          "playlist": "__off__",
+          "start": "21:00",
+          "end": "05:59"
+        }
+      ]
+    },
+    {
+      "id": "7",
+      "name": "Screen 2 top",
+      "playlist": "main",
+      "orientation": "portrait-right",
+      "rules": [
+        {
+          "playlist": "sales-2-0",
+          "start": "10:00",
+          "end": "14:59"
+        },
+        {
+          "playlist": "sales-2-0",
+          "start": "18:00",
+          "end": "20:59"
+        },
+        {
+          "playlist": "closed",
+          "start": "06:00",
+          "end": "09:59"
+        },
+        {
+          "playlist": "__off__",
+          "start": "15:00",
+          "end": "17:59"
+        },
+        {
+          "playlist": "__off__",
+          "start": "21:00",
+          "end": "05:59"
+        }
+      ]
     },
     {
       "id": "8",
       "name": "Screen 3 top",
       "playlist": "sales-2-0",
-      "orientation": "portrait-right"
+      "orientation": "portrait-right",
+      "rules": [
+        {
+          "playlist": "sales-2-0",
+          "start": "10:00",
+          "end": "14:59"
+        },
+        {
+          "playlist": "sales-2-0",
+          "start": "18:00",
+          "end": "20:59"
+        },
+        {
+          "playlist": "closed",
+          "start": "06:00",
+          "end": "09:59"
+        },
+        {
+          "playlist": "__off__",
+          "start": "15:00",
+          "end": "17:59"
+        },
+        {
+          "playlist": "__off__",
+          "start": "21:00",
+          "end": "05:59"
+        }
+      ]
     },
     {
       "id": "9",
       "name": "Screen 4 top",
       "playlist": "sales-2-0",
-      "orientation": "portrait-right"
+      "orientation": "portrait-right",
+      "rules": [
+        {
+          "playlist": "sales-2-0",
+          "start": "10:00",
+          "end": "14:59"
+        },
+        {
+          "playlist": "sales-2-0",
+          "start": "18:00",
+          "end": "20:59"
+        },
+        {
+          "playlist": "closed",
+          "start": "06:00",
+          "end": "09:59"
+        },
+        {
+          "playlist": "__off__",
+          "start": "15:00",
+          "end": "17:59"
+        },
+        {
+          "playlist": "__off__",
+          "start": "21:00",
+          "end": "05:59"
+        }
+      ]
     }
   ],
   "weather": {
