@@ -731,6 +731,7 @@ function renderScreens(){
           <div class="sctitle">Schedule (optional) — override the default playlist at set times</div>
           ${rulesHtml}
           <button class="small chip" data-addrule="${i}">＋ Add schedule rule</button>
+          ${config.screens.length>1?`<button class="small ghost" data-copysched="${i}" title="Copy these schedule rules to every screen">⧉ Copy schedule to all screens</button>`:''}
         </div>
         <div class="override${s.override?' on':''}">
           <div class="sctitle">Override schedule</div>
@@ -772,6 +773,14 @@ function renderScreens(){
     const i=+e.target.dataset.addrule; const first=Object.keys(config.playlists)[0];
     config.screens[i].rules.push({playlist:first,days:[0,1,2,3,4,5,6],start:"09:00",end:"17:00"}); setDirty(true); renderScreens(); });
   box.querySelectorAll("[data-rmr]").forEach(b=>b.onclick=e=>{ config.screens[+e.target.dataset.rmr].rules.splice(+e.target.dataset.j,1); setDirty(true); renderScreens(); });
+  box.querySelectorAll("[data-copysched]").forEach(b=>b.onclick=e=>{
+    const i=+e.currentTarget.dataset.copysched; const rules=config.screens[i].rules||[];
+    if(!rules.length){ alert("This screen has no schedule rules yet — add at least one, then copy it to the others."); return; }
+    const others=config.screens.length-1;
+    if(!confirm(`Copy this schedule (${rules.length} rule${rules.length>1?'s':''}) to the other ${others} screen${others>1?'s':''}? This replaces their current schedules. Each screen keeps its own name, playlist and orientation.`)) return;
+    config.screens.forEach((s,j)=>{ if(j!==i) s.rules=JSON.parse(JSON.stringify(rules)); });
+    setDirty(true); renderScreens(); status(`Schedule copied to all ${config.screens.length} screens. Review, then Save & publish.`,"ok");
+  });
   box.querySelectorAll('input[data-ov="on"]').forEach(inp=>inp.onchange=e=>{
     const i=+e.target.dataset.i, s=config.screens[i];
     s.override = e.target.checked ? (s.override || s.playlist || Object.keys(config.playlists)[0]) : "";
