@@ -357,9 +357,14 @@
           "end": "21:59"
         },
         {
-          "playlist": "main",
+          "playlist": "__off__",
           "start": "15:00",
           "end": "17:59"
+        },
+        {
+          "playlist": "__off__",
+          "start": "09:00",
+          "end": "17:00"
         }
       ],
       "override": "main"
