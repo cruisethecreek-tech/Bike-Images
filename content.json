@@ -338,7 +338,7 @@
     {
       "id": "7",
       "name": "Screen 2 top",
-      "playlist": "sales-2-0",
+      "playlist": "main",
       "orientation": "portrait-right"
     },
     {
@@ -350,7 +350,7 @@
     {
       "id": "9",
       "name": "Screen 4 top",
-      "playlist": "main",
+      "playlist": "sales-2-0",
       "orientation": "portrait-right"
     }
   ],
