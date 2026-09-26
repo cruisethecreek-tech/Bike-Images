@@ -234,12 +234,12 @@
       "playlist": "sales",
       "rules": [
         {
-          "playlist": "sales-2-0",
+          "playlist": "main",
           "start": "10:00",
           "end": "14:59"
         },
         {
-          "playlist": "sales-2-0",
+          "playlist": "main",
           "start": "18:00",
           "end": "20:59"
         },
@@ -298,44 +298,12 @@
       "playlist": "closed",
       "rules": [
         {
-          "playlist": "sales-2-0",
+          "playlist": "main",
           "start": "10:00",
           "end": "14:59"
         },
         {
-          "playlist": "sales-2-0",
-          "start": "18:00",
-          "end": "20:59"
-        },
-        {
-          "playlist": "closed",
-          "start": "06:00",
-          "end": "09:59"
-        },
-        {
-          "playlist": "__off__",
-          "start": "15:00",
-          "end": "17:59"
-        },
-        {
-          "playlist": "__off__",
-          "start": "21:00",
-          "end": "05:59"
-        }
-      ]
-    },
-    {
-      "id": "5",
-      "name": "Main Home",
-      "playlist": "sales",
-      "rules": [
-        {
-          "playlist": "sales-2-0",
-          "start": "10:00",
-          "end": "14:59"
-        },
-        {
-          "playlist": "sales-2-0",
+          "playlist": "main",
           "start": "18:00",
           "end": "20:59"
         },
@@ -396,12 +364,12 @@
       "orientation": "portrait-right",
       "rules": [
         {
-          "playlist": "sales-2-0",
+          "playlist": "main",
           "start": "10:00",
           "end": "14:59"
         },
         {
-          "playlist": "sales-2-0",
+          "playlist": "main",
           "start": "18:00",
           "end": "20:59"
         },
@@ -462,12 +430,12 @@
       "orientation": "portrait-right",
       "rules": [
         {
-          "playlist": "sales-2-0",
+          "playlist": "main",
           "start": "10:00",
           "end": "14:59"
         },
         {
-          "playlist": "sales-2-0",
+          "playlist": "main",
           "start": "18:00",
           "end": "20:59"
         },
