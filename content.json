@@ -11,27 +11,27 @@
         {
           "src": "images/mascot.jpg",
           "seconds": 10,
-          "caption": "Have Questions? Chat With Me On The Website!"
+          "caption": "Have Questions? Chat With Me On The Website!",
+          "srcPortrait": "images/mascot.jpg"
         },
         {
           "src": "images/gemini_generated_image_o8ptr1o8ptr1o8pt.jpg",
           "seconds": 20,
-          "caption": "See The Adventure map at www.cruisethecreek.com"
+          "caption": "See The Adventure map at www.cruisethecreek.com",
+          "srcPortrait": "images/gemini_generated_image_o8ptr1o8ptr1o8pt.jpg"
         },
         {
           "src": "images/pickup-compare.jpg",
-          "seconds": 20
+          "seconds": 20,
+          "srcPortrait": "images/pickup-compare.jpg"
         },
         {
           "src": "images/9381.jpg",
-          "seconds": 25
+          "seconds": 25,
+          "srcPortrait": "images/9381.jpg"
         },
         {
           "src": "https://pub-446d04cee64c4cdcb4ff8c9ef7447061.r2.dev/videos/ctc-60-second-spot-h-d1.mp4"
-        },
-        {
-          "src": "images/11719.jpg",
-          "seconds": 8
         }
       ]
     },
@@ -103,7 +103,7 @@
           "srcPortrait": "images/10857.jpg"
         },
         {
-          "src": "images/10859.jpg",
+          "src": "images/10386.jpg",
           "seconds": 12,
           "caption": "Mars 3.0",
           "fit": "contain",
@@ -426,7 +426,7 @@
     {
       "id": "9",
       "name": "Screen 4 top",
-      "playlist": "main",
+      "playlist": "sales-2-0",
       "orientation": "portrait-right",
       "rules": [
         {
