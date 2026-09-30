@@ -426,7 +426,7 @@
     {
       "id": "9",
       "name": "Screen 4 top",
-      "playlist": "sales-2-0",
+      "playlist": "main",
       "orientation": "portrait-right",
       "rules": [
         {
