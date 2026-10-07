@@ -282,7 +282,7 @@ const DEFAULT_SECS = 8;           // seconds per image if not specified
 // Bump this whenever signage.html changes, and set the same value in signage-version.json.
 // A running TV compares the two and reloads itself to pull the new code — so feature
 // updates reach every TV automatically instead of needing a manual relaunch.
-const APP_VERSION  = "2026-08-30-pvar1";
+const APP_VERSION  = "2026-10-07-mirror1";
 async function checkForUpdate() {
   try {
     const r = await fetch("signage-version.json?t=" + Date.now(), { cache: "no-store" });
@@ -530,11 +530,14 @@ let screenOff = false;  // true when the active schedule/override target is ⏻ 
 function resolvePlaylist(cfg) {
   screenOff = false;
   if (cfg && cfg.playlists && typeof cfg.playlists === "object") {
-    const scr = Array.isArray(cfg.screens)
-      ? (cfg.screens.find(s => String(s.id) === String(SCREEN)) || cfg.screens[0])
-      : null;
-    let plId = FORCE_PL || (scr ? activePlaylistId(cfg, scr) : "");
-    if (plId === PL_ON) plId = (scr && scr.playlist) || "";   // wake → the screen's default playlist
+    const screens = Array.isArray(cfg.screens) ? cfg.screens : [];
+    const scr = screens.find(s => String(s.id) === String(SCREEN)) || screens[0] || null;
+    // A mirroring screen follows another screen's playlist + schedule + override.
+    // (Its own orientation is kept — that's handled separately in applyConfig.)
+    let src = scr;
+    if (scr && scr.mirror) { const m = screens.find(s => String(s.id) === String(scr.mirror)); if (m) src = m; }
+    let plId = FORCE_PL || (src ? activePlaylistId(cfg, src) : "");
+    if (plId === PL_ON) plId = (src && src.playlist) || "";   // wake → the (source) screen's default playlist
     if (plId === PL_OFF) { screenOff = true; currentPlId = PL_OFF; return {}; }
     if (!plId || !cfg.playlists[plId]) plId = Object.keys(cfg.playlists)[0];
     currentPlId = plId;
