@@ -330,6 +330,7 @@
       "name": "Screen 1 top",
       "playlist": "sales-2-0",
       "orientation": "portrait-right",
+      "mirror": "1",
       "rules": [
         {
           "playlist": "sales-2-0",
@@ -363,6 +364,7 @@
       "name": "Screen 2 top",
       "playlist": "main",
       "orientation": "portrait-right",
+      "mirror": "2",
       "rules": [
         {
           "playlist": "main",
@@ -396,6 +398,7 @@
       "name": "Screen 3 top",
       "playlist": "sales-2-0",
       "orientation": "portrait-right",
+      "mirror": "3",
       "rules": [
         {
           "playlist": "sales-2-0",
@@ -429,6 +432,7 @@
       "name": "Screen 4 top",
       "playlist": "main",
       "orientation": "portrait-right",
+      "mirror": "4",
       "rules": [
         {
           "playlist": "main",
