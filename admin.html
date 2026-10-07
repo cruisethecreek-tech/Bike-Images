@@ -110,6 +110,7 @@
   .scbody{padding:14px;}
   .secblock{padding-bottom:2px;}
   .secblock>.sectitle{font-size:.72rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:#8a8073;margin-bottom:8px;}
+  .mirrornote{font-size:.85rem;color:var(--muted);padding:9px 0;line-height:1.4;}
   /* remote-control disclosure */
   details.ctrlwrap{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px;}
   details.ctrlwrap>summary{list-style:none;cursor:pointer;font-size:.82rem;font-weight:700;color:var(--accent);}
@@ -655,6 +656,10 @@ const DAY_LABELS=["S","M","T","W","T","F","S"];
 function plOptions(sel){ return Object.entries(config.playlists).map(([id,p])=>`<option value="${id}"${id===sel?' selected':''}>${p.name||id}</option>`).join(""); }
 function oriOptions(val){ const o=[["landscape","Landscape (normal)"],["portrait-right","Portrait ⟳ (rotate right)"],["portrait-left","Portrait ⟲ (rotate left)"],["upside-down","Upside-down"]];
   return o.map(([v,l])=>`<option value="${v}"${(val||"landscape")===v?" selected":""}>${l}</option>`).join(""); }
+function mirrorName(id){ const m=config.screens.find(x=>String(x.id)===String(id)); return m?(m.name||("Screen "+m.id)):""; }
+function isMirroring(s){ return !!(s.mirror && config.screens.some(x=>String(x.id)===String(s.mirror))); }
+function mirrorOptions(curId,sel){ return `<option value="">— this screen's own —</option>`+
+  config.screens.filter(s=>String(s.id)!==String(curId)).map(s=>`<option value="${s.id}"${String(s.id)===String(sel)?' selected':''}>Mirror “${(s.name||('Screen '+s.id)).replace(/"/g,'&quot;')}”</option>`).join(""); }
 // Reserved on/off targets for schedule rules & overrides (not real playlists).
 const SPECIAL_PL={ "__on__":"☀ On (wake — show default)", "__off__":"🌙 Off (blank screen)" };
 function plLabel(id){ return (config.playlists[id]&&config.playlists[id].name) || SPECIAL_PL[id] || id; }
@@ -725,7 +730,10 @@ function renderScreens(){
           <div class="sectitle">Name &amp; default playlist</div>
           <div class="top">
             <div><label>Screen name</label><input type="text" data-sk="name" data-i="${i}" value="${(s.name||'').replace(/"/g,'&quot;')}"/></div>
-            <div><label>Default playlist (when no schedule matches)</label><select data-sk="playlist" data-i="${i}">${plOptions(s.playlist)}</select></div>
+            ${config.screens.length>1?`<div><label>Mirror another screen</label><select data-sk="mirror" data-i="${i}">${mirrorOptions(s.id,s.mirror)}</select></div>`:''}
+            ${isMirroring(s)
+              ? `<div><label>Playlist &amp; schedule</label><div class="mirrornote">↳ from <strong>${mirrorName(s.mirror).replace(/</g,'&lt;')}</strong></div></div>`
+              : `<div><label>Default playlist (when no schedule matches)</label><select data-sk="playlist" data-i="${i}">${plOptions(s.playlist)}</select></div>`}
             <div><label>Orientation</label><select data-sk="orientation" data-i="${i}">${oriOptions(s.orientation)}</select></div>
             <div style="flex:0 0 auto;"><label>&nbsp;</label>${config.screens.length>1?`<button class="small danger" data-rms="${i}">Remove</button>`:''}</div>
           </div>
@@ -733,7 +741,9 @@ function renderScreens(){
             <button class="small chip" data-copy="${s.id}">Copy</button>
             <a href="${screenUrl(s.id)}" target="_blank"><button class="small ghost" type="button">Open</button></a></div>
         </div>
-        <div class="sched">
+        ${isMirroring(s)
+          ? `<div class="sched"><div class="sctitle">Playlist &amp; schedule</div><div class="mirrornote">↳ This screen mirrors <strong>${mirrorName(s.mirror).replace(/</g,'&lt;')}</strong>. Its playlist, schedule and override all come from that screen — edit them there and this screen follows automatically. Only this screen's <strong>orientation</strong> stays set here.</div></div>`
+          : `<div class="sched">
           <div class="sctitle">Schedule (optional) — override the default playlist at set times</div>
           ${rulesHtml}
           <button class="small chip" data-addrule="${i}">＋ Add schedule rule</button>
@@ -749,7 +759,7 @@ function renderScreens(){
             <select data-ov="pl" data-i="${i}" ${s.override?'':'disabled'}>${plOptionsSched(s.override||s.playlist)}</select>
             ${s.override?`<span class="ovhint">⚡ Live — ${s.override==="__off__"?'screen blanked (🌙 Off)':`showing “${plLabel(s.override)}”`} regardless of schedule</span>`:''}
           </div>
-        </div>
+        </div>`}
         ${controlsHtml}
       </div>`;
     box.appendChild(d);
@@ -766,6 +776,7 @@ function renderScreens(){
   });
   box.querySelectorAll("input[data-sk],select[data-sk]").forEach(inp=>inp.addEventListener("input",e=>{
     config.screens[+e.target.dataset.i][e.target.dataset.sk]=e.target.value; setDirty(true); }));
+  box.querySelectorAll('select[data-sk="mirror"]').forEach(sel=>sel.addEventListener("change",()=>renderScreens()));
   box.querySelectorAll("[data-rk]").forEach(inp=>inp.addEventListener("input",e=>{
     config.screens[+e.target.dataset.i].rules[+e.target.dataset.j][e.target.dataset.rk]=e.target.value; setDirty(true); }));
   box.querySelectorAll("[data-day]").forEach(b=>b.onclick=e=>{
@@ -926,7 +937,7 @@ function normSlides(list){ return (list||[]).map(raw=>{ const it=typeof raw==="s
   return { path:src, name:src.split("/").pop(), isVideo:isVideoName(src)||it.type==="video", seconds:Number(it.seconds||it.duration)||8, caption:it.caption||"", fit:it.fit||"", previewUrl:src, portraitPath:it.srcPortrait||"", portraitPreviewUrl:it.srcPortrait||"", portraitIsVideo:isVideoName(it.srcPortrait||"") }; }).filter(s=>s.path); }
 function migrate(cfg){
   if(cfg && cfg.playlists && typeof cfg.playlists==="object"){
-    const out={ playlists:{}, screens:Array.isArray(cfg.screens)?cfg.screens.map(s=>({id:String(s.id),name:s.name||("Screen "+s.id),playlist:s.playlist,orientation:s.orientation||"landscape",
+    const out={ playlists:{}, screens:Array.isArray(cfg.screens)?cfg.screens.map(s=>({id:String(s.id),name:s.name||("Screen "+s.id),playlist:s.playlist,orientation:s.orientation||"landscape",mirror:s.mirror||"",
       rules:Array.isArray(s.rules)?s.rules.map(r=>({playlist:r.playlist,days:Array.isArray(r.days)?r.days.slice():[0,1,2,3,4,5,6],start:r.start||"",end:r.end||""})):[]})):[] };
     for(const [id,p] of Object.entries(cfg.playlists)){
       out.playlists[id]={ name:p.name||id, fit:p.fit==="contain"?"contain":"cover", showClock:!!p.showClock,
@@ -974,6 +985,7 @@ function buildContent(){
   const out={ playlists:{}, screens:config.screens.map(s=>{
     const o={ id:s.id, name:s.name, playlist:s.playlist };
     if(s.orientation && s.orientation!=="landscape") o.orientation=s.orientation;
+    if(s.mirror && config.screens.some(x=>String(x.id)===String(s.mirror))) o.mirror=String(s.mirror);
     const rules=(s.rules||[]).filter(r=>r.playlist).map(r=>{
       const x={ playlist:r.playlist }; const days=Array.isArray(r.days)?r.days:[];
       if(days.length && days.length<7) x.days=days.slice().sort();

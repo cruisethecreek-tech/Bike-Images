@@ -356,6 +356,14 @@ after the first download they play and seek with no buffering — which also kee
 tight. Very large files (over ~150 MB) skip the cache and stream instead, so keep video
 exports reasonable (1080p at a few Mbps is plenty for signage).
 
+## Mirroring one screen to another (two TVs at one station)
+
+When two TVs always show the same thing — e.g. a landscape TV below and a portrait TV above —
+set the second screen's **Mirror another screen** dropdown to the first one. The mirroring
+screen then uses the other screen's **playlist, schedule, and override automatically**, so you
+only ever edit the first screen. It keeps its **own orientation**, so the portrait one still
+rotates. No need to re-point any TVs — each keeps its own screen assignment.
+
 ## Portrait / vertical screens
 
 Fire TV has no built-in screen-rotation setting, so rotation is done in the app. In the
