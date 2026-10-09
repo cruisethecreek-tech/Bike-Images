@@ -197,6 +197,41 @@
           "caption": "Breeze 1",
           "fit": "contain",
           "srcPortrait": "images/10904.jpg"
+        },
+        {
+          "src": "images/13395.jpg",
+          "seconds": 8,
+          "srcPortrait": "images/13396.jpg"
+        },
+        {
+          "src": "images/13393.jpg",
+          "seconds": 8,
+          "srcPortrait": "images/13394.jpg"
+        },
+        {
+          "src": "images/13391.jpg",
+          "seconds": 8,
+          "srcPortrait": "images/13392.jpg"
+        },
+        {
+          "src": "images/13388.jpg",
+          "seconds": 8,
+          "srcPortrait": "images/13389.jpg"
+        },
+        {
+          "src": "images/13386.jpg",
+          "seconds": 8,
+          "srcPortrait": "images/13387.jpg"
+        },
+        {
+          "src": "images/13384.jpg",
+          "seconds": 8,
+          "srcPortrait": "images/13385.jpg"
+        },
+        {
+          "src": "images/13382.jpg",
+          "seconds": 8,
+          "srcPortrait": "images/13383.jpg"
         }
       ]
     },
@@ -480,5 +515,6 @@
     "lon": -80.76091,
     "unit": "fahrenheit"
   },
-  "sync": true
+  "sync": true,
+  "timezone": "America/New_York"
 }
