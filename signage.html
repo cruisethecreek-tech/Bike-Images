@@ -282,10 +282,11 @@ const DEFAULT_SECS = 8;           // seconds per image if not specified
 // Bump this whenever signage.html changes, and set the same value in signage-version.json.
 // A running TV compares the two and reloads itself to pull the new code — so feature
 // updates reach every TV automatically instead of needing a manual relaunch.
-const APP_VERSION  = "2026-10-07-mirror1";
+const APP_VERSION  = "2026-10-09-nettime1";
 async function checkForUpdate() {
   try {
     const r = await fetch("signage-version.json?t=" + Date.now(), { cache: "no-store" });
+    noteServerTime(r);          // earliest network time source each cycle
     if (!r.ok) return;
     const v = (await r.json()).version;
     if (v && v !== APP_VERSION && sessionStorage.getItem("sg_upd") !== v) {
@@ -369,8 +370,10 @@ async function loadConfig() {
   try {
     // cache-bust so TVs always pull the newest content
     const res = await fetch(CONFIG_URL + "?t=" + Date.now(), { cache: "no-store" });
+    noteServerTime(res);        // trust the network's clock, not the TV's
     if (!res.ok) throw new Error("HTTP " + res.status);
     const cfg = await res.json();
+    scheduleTz = (cfg && cfg.timezone) || "America/New_York";   // evaluate schedules in the store time zone
     try { localStorage.setItem("lastContent", JSON.stringify(cfg)); } catch (_) {}  // remember for offline
     currentConfig = cfg;
     applyConfig(cfg);
@@ -497,6 +500,33 @@ function hm(str) {
   return h * 60 + m;
 }
 
+/* ---------- Network time ----------
+   Cheap TV sticks often have the wrong clock/time zone, which broke schedules. So we trust
+   the network, not the device: every fetch's "Date" response header gives accurate UTC, and
+   we evaluate the schedule in a fixed store time zone (so a wrong device time zone can't shift
+   it either). Falls back to the device clock only if neither is available. */
+let timeOffsetMs = 0;                       // serverUTC - deviceClock, from HTTP Date headers
+let scheduleTz = "America/New_York";        // store time zone (overridable via content.json "timezone")
+function noteServerTime(res) {
+  try { const h = res && res.headers && res.headers.get("Date");
+    if (h) { const t = new Date(h).getTime(); if (isFinite(t)) timeOffsetMs = t - Date.now(); }
+  } catch (_) {}
+}
+function netNow() { return Date.now() + timeOffsetMs; }   // accurate UTC epoch ms
+// Current {day 0-6, mins since midnight} in the store time zone — immune to a wrong device clock/zone.
+function nowParts() {
+  const d = new Date(netNow());
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", { timeZone: scheduleTz, hour12: false, weekday: "short", hour: "2-digit", minute: "2-digit" }).formatToParts(d);
+    let wd = "", hh = "", mm = "";
+    for (const p of parts) { if (p.type === "weekday") wd = p.value; else if (p.type === "hour") hh = p.value; else if (p.type === "minute") mm = p.value; }
+    const map = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+    let h = parseInt(hh, 10); if (h === 24) h = 0; const m = parseInt(mm, 10);
+    if (isFinite(h) && isFinite(m)) return { day: (wd in map) ? map[wd] : d.getDay(), mins: h * 60 + m };
+  } catch (_) {}
+  return { day: d.getDay(), mins: d.getHours() * 60 + d.getMinutes() };   // last-resort device clock
+}
+
 // Which playlist should this screen show *right now*, honoring schedule rules?
 // A rule matches when today's weekday is in rule.days and the current time is in
 // [start, end). First matching rule wins; otherwise the screen's default playlist.
@@ -504,9 +534,9 @@ function activePlaylistId(cfg, screen) {
   // A live manual override (flipped on from the dashboard) beats the schedule
   // until it's switched back off.
   if (screen.override && (cfg.playlists[screen.override] || screen.override === PL_OFF || screen.override === PL_ON)) return screen.override;
-  const now = new Date();
-  const day = now.getDay();                       // 0 = Sunday
-  const mins = now.getHours() * 60 + now.getMinutes();
+  const np = nowParts();                          // network time, in the store time zone
+  const day = np.day;                             // 0 = Sunday
+  const mins = np.mins;
   if (Array.isArray(screen.rules)) {
     for (const r of screen.rules) {
       if (!r || !r.playlist) continue;
@@ -832,7 +862,7 @@ function syncState() {
   const durs = items.map(effDur);
   const cycle = durs.reduce((a, b) => a + b, 0);
   if (!(cycle > 0)) return { index: 0, into: 0, dur: durs[0] || DEFAULT_SECS };
-  let t = (Date.now() / 1000) % cycle;              // seconds into the shared cycle
+  let t = (netNow() / 1000) % cycle;              // seconds into the shared cycle (network time → TVs stay in sync even with wrong clocks)
   for (let i = 0; i < durs.length; i++) {
     if (t < durs[i]) return { index: i, into: t, dur: durs[i] };
     t -= durs[i];
@@ -877,7 +907,11 @@ function showSyncSlide(force) {
 /* ---------- Clock ---------- */
 function tickClock() {
   if (!clockEl.classList.contains("on")) return;
-  const d = new Date();
+  try {
+    clockEl.textContent = new Date(netNow()).toLocaleTimeString("en-US", { timeZone: scheduleTz, hour: "numeric", minute: "2-digit" });
+    return;
+  } catch (_) {}
+  const d = new Date(netNow());
   let h = d.getHours(), m = d.getMinutes();
   const ampm = h >= 12 ? "PM" : "AM";
   h = h % 12 || 12;
