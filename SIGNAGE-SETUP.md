@@ -356,6 +356,14 @@ after the first download they play and seek with no buffering — which also kee
 tight. Very large files (over ~150 MB) skip the cache and stream instead, so keep video
 exports reasonable (1080p at a few Mbps is plenty for signage).
 
+## Scheduling & time
+
+Screen schedules run on **real network time in the store's time zone**, not the TV's own
+clock — so a Fire TV with a wrong clock or time zone still turns on/off at the right moment.
+Set the store time zone in the dashboard under **Ticker & Display → Store time zone** (default
+Eastern). The TVs get accurate time from the network automatically; nothing to configure on
+each TV.
+
 ## Mirroring one screen to another (two TVs at one station)
 
 When two TVs always show the same thing — e.g. a landscape TV below and a portrait TV above —

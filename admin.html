@@ -245,6 +245,19 @@
           <div class="check"><input type="checkbox" id="showClock" /><label for="showClock">Show clock in the corner</label></div>
         </div>
         <div class="card">
+          <label>Store time zone (used for screen schedules)</label>
+          <select id="tzSelect" style="max-width:320px;">
+            <option value="America/New_York">Eastern (New York)</option>
+            <option value="America/Chicago">Central (Chicago)</option>
+            <option value="America/Denver">Mountain (Denver)</option>
+            <option value="America/Phoenix">Arizona (no DST)</option>
+            <option value="America/Los_Angeles">Pacific (Los Angeles)</option>
+            <option value="America/Anchorage">Alaska</option>
+            <option value="Pacific/Honolulu">Hawaii</option>
+          </select>
+          <p class="muted" style="margin:8px 0 0;">Schedules use this time zone and real <strong>network time</strong>, so a TV with a wrong clock still turns on/off at the right time.</p>
+        </div>
+        <div class="card">
           <label>Ticker label (the yellow badge)</label>
           <input type="text" id="tickerLabel" placeholder="CRUISE THE CREEK" />
           <label>Ticker text (leave blank to hide the ticker)</label>
@@ -826,6 +839,7 @@ async function sendCommand(sid,command){
 /* ---------- ticker/display inputs -> current playlist ---------- */
 el("fit").addEventListener("change",()=>{ pl().fit=el("fit").value; setDirty(true); });
 el("showClock").addEventListener("change",()=>{ pl().showClock=el("showClock").checked; setDirty(true); });
+el("tzSelect").addEventListener("change",()=>{ config.timezone=el("tzSelect").value; setDirty(true); });
 el("tickerLabel").addEventListener("input",()=>{ pl().tickerLabel=el("tickerLabel").value; setDirty(true); });
 el("tickerText").addEventListener("input",()=>{ pl().tickerText=el("tickerText").value; setDirty(true); });
 el("tickerSpeed").addEventListener("input",()=>{ pl().tickerSpeed=Number(el("tickerSpeed").value)||30; setDirty(true); });
@@ -946,6 +960,7 @@ function migrate(cfg){
     if(!Object.keys(out.playlists).length) out.playlists.main={name:"Main",fit:"cover",showClock:true,tickerLabel:"",tickerText:"",tickerSpeed:30,slides:[]};
     out.weather=normWeather(cfg.weather);
     out.sync=cfg.sync!==false;   // default on
+    out.timezone=cfg.timezone||"America/New_York";
     return out;
   }
   const flat=cfg||{};
@@ -960,6 +975,7 @@ async function loadContent(){
   try{ const res=await fetch("content.json?t="+Date.now(),{cache:"no-store"}); if(res.ok) cfg=await res.json(); }catch(_){}
   config=migrate(cfg); curPl=Object.keys(config.playlists)[0]; refreshPl(); renderWeather();
   el("syncPlay").checked = config.sync!==false;
+  el("tzSelect").value = config.timezone || "America/New_York";
 }
 el("syncPlay").onchange=e=>{ config.sync=e.target.checked; setDirty(true); };
 
@@ -1005,6 +1021,7 @@ function buildContent(){
     out.weather={ enabled:true, place:w.place||"", lat:w.lat, lon:w.lon, unit:w.unit==="celsius"?"celsius":"fahrenheit" };
   }
   out.sync = config.sync!==false;   // clock-synced playback across screens (default on)
+  out.timezone = config.timezone || "America/New_York";
   return out;
 }
 
