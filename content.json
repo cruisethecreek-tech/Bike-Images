@@ -259,7 +259,7 @@
     {
       "id": "1",
       "name": "Screen 1",
-      "playlist": "closed",
+      "playlist": "sales-2-0",
       "rules": [
         {
           "playlist": "sales-2-0",
@@ -279,8 +279,7 @@
         {
           "playlist": "__off__",
           "start": "15:00",
-          "end": "17:59",
-          "skipIfCloudy": true
+          "end": "17:59"
         },
         {
           "playlist": "__off__",
@@ -312,8 +311,7 @@
         {
           "playlist": "__off__",
           "start": "15:00",
-          "end": "17:59",
-          "skipIfCloudy": true
+          "end": "17:59"
         },
         {
           "playlist": "__off__",
@@ -325,7 +323,7 @@
     {
       "id": "3",
       "name": "Screen 3",
-      "playlist": "closed",
+      "playlist": "sales-2-0",
       "rules": [
         {
           "playlist": "sales-2-0",
@@ -345,8 +343,7 @@
         {
           "playlist": "__off__",
           "start": "15:00",
-          "end": "17:59",
-          "skipIfCloudy": true
+          "end": "17:59"
         },
         {
           "playlist": "__off__",
@@ -358,7 +355,7 @@
     {
       "id": "4",
       "name": "Screen 4",
-      "playlist": "closed",
+      "playlist": "main",
       "rules": [
         {
           "playlist": "main",
@@ -378,8 +375,7 @@
         {
           "playlist": "__off__",
           "start": "15:00",
-          "end": "17:59",
-          "skipIfCloudy": true
+          "end": "17:59"
         },
         {
           "playlist": "__off__",
@@ -413,8 +409,7 @@
         {
           "playlist": "__off__",
           "start": "15:00",
-          "end": "17:59",
-          "skipIfCloudy": true
+          "end": "17:59"
         },
         {
           "playlist": "__off__",
@@ -448,8 +443,7 @@
         {
           "playlist": "__off__",
           "start": "15:00",
-          "end": "17:59",
-          "skipIfCloudy": true
+          "end": "17:59"
         },
         {
           "playlist": "__off__",
@@ -483,8 +477,7 @@
         {
           "playlist": "__off__",
           "start": "15:00",
-          "end": "17:59",
-          "skipIfCloudy": true
+          "end": "17:59"
         },
         {
           "playlist": "__off__",
@@ -518,8 +511,7 @@
         {
           "playlist": "__off__",
           "start": "15:00",
-          "end": "17:59",
-          "skipIfCloudy": true
+          "end": "17:59"
         },
         {
           "playlist": "__off__",
