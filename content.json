@@ -75,167 +75,175 @@
         {
           "src": "images/10379.jpg",
           "seconds": 12,
-          "caption": "Heybike Banner",
+          "caption": "Heybike",
           "fit": "contain",
           "srcPortrait": "images/10862.jpg"
         },
         {
           "src": "images/10381.jpg",
           "seconds": 12,
-          "caption": "Saturn",
+          "caption": "Heybike Saturn",
           "fit": "contain",
           "srcPortrait": "images/10860.jpg"
         },
         {
           "src": "images/10380.jpg",
           "seconds": 12,
-          "caption": "Villain",
+          "caption": "Heybike Villain",
           "fit": "contain",
           "srcPortrait": "images/10861.jpg"
         },
         {
           "src": "images/10382.jpg",
           "seconds": 12,
-          "caption": "Venus",
+          "caption": "Heybike Venus",
           "fit": "contain",
           "srcPortrait": "images/10870.jpg"
         },
         {
           "src": "images/10385.jpg",
           "seconds": 12,
-          "caption": "Hybrid",
+          "caption": "Heybike Hybrid",
           "fit": "contain",
           "srcPortrait": "images/10865.jpg"
         },
         {
           "src": "images/10393.jpg",
           "seconds": 12,
-          "caption": "Ranger 3.0",
+          "caption": "Heybike Ranger 3.0",
           "fit": "contain",
           "srcPortrait": "images/10857.jpg"
         },
         {
           "src": "images/10386.jpg",
           "seconds": 12,
-          "caption": "Mars 3.0",
+          "caption": "Heybike Mars 3.0",
           "fit": "contain",
           "srcPortrait": "images/10859.jpg"
         },
         {
           "src": "images/10665.jpg",
           "seconds": 12,
-          "caption": "Velotric Banner",
+          "caption": "Velotric",
           "fit": "contain",
           "srcPortrait": "images/10903.jpg"
         },
         {
           "src": "images/10666.jpg",
           "seconds": 12,
-          "caption": "Fold 1 Plus",
+          "caption": "Velotric Fold 1 Plus",
           "fit": "contain",
           "srcPortrait": "images/10901.jpg"
         },
         {
           "src": "images/10668.jpg",
           "seconds": 12,
-          "caption": "Triker",
+          "caption": "Velotric Triker",
           "fit": "contain",
           "srcPortrait": "images/10905.jpg"
         },
         {
           "src": "images/10669.jpg",
           "seconds": 12,
-          "caption": "Nomad 2",
+          "caption": "Velotric Nomad 2",
           "fit": "contain",
           "srcPortrait": "images/10906.jpg"
         },
         {
           "src": "images/10670.jpg",
           "seconds": 12,
-          "caption": "Nomad 2X",
+          "caption": "Velotric Nomad 2X",
           "fit": "contain",
           "srcPortrait": "images/10907.jpg"
         },
         {
           "src": "images/10672.jpg",
           "seconds": 12,
-          "caption": "Discover 3",
+          "caption": "Velotric Discover 3",
           "fit": "contain",
           "srcPortrait": "images/10908.jpg"
         },
         {
           "src": "images/10673.jpg",
           "seconds": 12,
-          "caption": "Tempo",
+          "caption": "Velotric Tempo",
           "fit": "contain",
           "srcPortrait": "images/10909.jpg"
         },
         {
           "src": "images/10674.jpg",
           "seconds": 12,
-          "caption": "Summit 2",
+          "caption": "Velotric Summit 2",
           "fit": "contain",
           "srcPortrait": "images/10910.jpg"
         },
         {
           "src": "images/10675.jpg",
           "seconds": 12,
-          "caption": "GoMad",
+          "caption": "Velotric GoMad",
           "fit": "contain",
           "srcPortrait": "images/10911.jpg"
         },
         {
           "src": "images/10676.jpg",
           "seconds": 12,
-          "caption": "Discover M",
+          "caption": "Velotric Discover M",
           "fit": "contain",
           "srcPortrait": "images/10912.jpg"
         },
         {
           "src": "images/10667.jpg",
           "seconds": 12,
-          "caption": "Breeze 1",
+          "caption": "Velotric Breeze 1",
           "fit": "contain",
           "srcPortrait": "images/10904.jpg"
         },
         {
           "src": "images/13395.jpg",
-          "seconds": 8,
+          "seconds": 12,
+          "caption": "Mokwheel Obsidian 2.0 ",
           "srcPortrait": "images/13396.jpg"
         },
         {
           "src": "images/13393.jpg",
-          "seconds": 8,
+          "seconds": 12,
+          "caption": "Mokwheel Granite",
           "srcPortrait": "images/13394.jpg"
         },
         {
           "src": "images/13391.jpg",
           "seconds": 8,
+          "caption": "Mokwheel Slate",
           "srcPortrait": "images/13392.jpg"
         },
         {
           "src": "images/13388.jpg",
           "seconds": 8,
+          "caption": "Mokwheel Flint",
           "srcPortrait": "images/13389.jpg"
         },
         {
           "src": "images/13386.jpg",
           "seconds": 8,
+          "caption": "Mokwheel Onyx",
           "srcPortrait": "images/13387.jpg"
         },
         {
           "src": "images/13384.jpg",
           "seconds": 8,
+          "caption": "Mokwheel Basalt 2.0",
           "srcPortrait": "images/13385.jpg"
         },
         {
           "src": "images/13382.jpg",
           "seconds": 8,
+          "caption": "Mokwheel Basalt 2.0",
           "srcPortrait": "images/13383.jpg"
         },
         {
           "src": "images/13398.jpg",
           "seconds": 8,
+          "caption": "Mokwheel Tarmac",
           "srcPortrait": "images/13397.jpg"
         }
       ]
