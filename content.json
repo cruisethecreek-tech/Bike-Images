@@ -49,6 +49,11 @@
           "src": "images/13446.jpg",
           "seconds": 20,
           "srcPortrait": "images/13445.jpg"
+        },
+        {
+          "src": "images/13403.jpg",
+          "seconds": 8,
+          "srcPortrait": "images/13447.jpg"
         }
       ]
     },
