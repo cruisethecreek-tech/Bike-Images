@@ -282,7 +282,7 @@ const DEFAULT_SECS = 8;           // seconds per image if not specified
 // Bump this whenever signage.html changes, and set the same value in signage-version.json.
 // A running TV compares the two and reloads itself to pull the new code — so feature
 // updates reach every TV automatically instead of needing a manual relaunch.
-const APP_VERSION  = "2026-10-09-nettime1";
+const APP_VERSION  = "2026-10-10-cloudy1";
 async function checkForUpdate() {
   try {
     const r = await fetch("signage-version.json?t=" + Date.now(), { cache: "no-store" });
@@ -311,6 +311,9 @@ const takeoverMsg= document.getElementById("takeoverMsg");
 
 /* ---------- Weather (Open-Meteo — free, no API key) ---------- */
 let wxCfg = null, wxTimer = null;
+let lastCloudCover = null;          // % cloud cover from the last weather fetch (null = unknown)
+let cloudyThreshold = 70;           // at/above this % counts as "overcast" (settable via content.json)
+function isOvercast(){ return lastCloudCover != null && lastCloudCover >= cloudyThreshold; }
 function wmo(code){
   const c = Number(code);
   if (c === 0) return { icon:"☀️", label:"Clear" };
@@ -331,11 +334,12 @@ async function fetchWeather(){
   try {
     const unit = wxCfg.unit === "celsius" ? "celsius" : "fahrenheit";
     const u = `https://api.open-meteo.com/v1/forecast?latitude=${wxCfg.lat}&longitude=${wxCfg.lon}`
-            + `&current=temperature_2m,weather_code&temperature_unit=${unit}&timezone=auto`;
+            + `&current=temperature_2m,weather_code,cloud_cover&temperature_unit=${unit}&timezone=auto`;
     const r = await fetch(u, { cache: "no-store" });
     if (!r.ok) throw new Error("HTTP " + r.status);
     const d = await r.json();
     const cur = d.current || {};
+    lastCloudCover = (typeof cur.cloud_cover === "number") ? cur.cloud_cover : null;
     const w = wmo(cur.weather_code);
     document.getElementById("wxIcon").textContent = w.icon;
     document.getElementById("wxTemp").textContent = Math.round(cur.temperature_2m) + "°" + (unit === "celsius" ? "C" : "F");
@@ -374,6 +378,7 @@ async function loadConfig() {
     if (!res.ok) throw new Error("HTTP " + res.status);
     const cfg = await res.json();
     scheduleTz = (cfg && cfg.timezone) || "America/New_York";   // evaluate schedules in the store time zone
+    cloudyThreshold = (cfg && Number(cfg.cloudyThreshold) > 0) ? Number(cfg.cloudyThreshold) : 70;
     try { localStorage.setItem("lastContent", JSON.stringify(cfg)); } catch (_) {}  // remember for offline
     currentConfig = cfg;
     applyConfig(cfg);
@@ -544,9 +549,15 @@ function activePlaylistId(cfg, screen) {
       const days = (Array.isArray(r.days) && r.days.length) ? r.days : [0,1,2,3,4,5,6];
       if (!days.includes(day)) continue;
       const s = hm(r.start), e = hm(r.end);
-      if (s == null || e == null) return r.playlist;      // no time bounds → all day
-      const inWindow = s <= e ? (mins >= s && mins < e) : (mins >= s || mins < e); // handles overnight
-      if (inWindow) return r.playlist;
+      const matches = (s == null || e == null)                 // no time bounds → all day
+        ? true
+        : (s <= e ? (mins >= s && mins < e) : (mins >= s || mins < e)); // in window (handles overnight)
+      if (matches) {
+        // "Keep on if overcast": an Off rule flagged skipIfCloudy is ignored while it's cloudy
+        // (that Off slot only exists to beat sun glare — no sun, no need to go dark).
+        if (r.playlist === PL_OFF && r.skipIfCloudy && isOvercast()) continue;
+        return r.playlist;
+      }
     }
   }
   return screen.playlist;
