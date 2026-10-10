@@ -279,7 +279,8 @@
         {
           "playlist": "__off__",
           "start": "15:00",
-          "end": "17:59"
+          "end": "17:59",
+          "skipIfCloudy": true
         },
         {
           "playlist": "__off__",
@@ -311,7 +312,8 @@
         {
           "playlist": "__off__",
           "start": "15:00",
-          "end": "17:59"
+          "end": "17:59",
+          "skipIfCloudy": true
         },
         {
           "playlist": "__off__",
@@ -343,7 +345,8 @@
         {
           "playlist": "__off__",
           "start": "15:00",
-          "end": "17:59"
+          "end": "17:59",
+          "skipIfCloudy": true
         },
         {
           "playlist": "__off__",
@@ -375,7 +378,8 @@
         {
           "playlist": "__off__",
           "start": "15:00",
-          "end": "17:59"
+          "end": "17:59",
+          "skipIfCloudy": true
         },
         {
           "playlist": "__off__",
