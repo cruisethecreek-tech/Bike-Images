@@ -124,6 +124,8 @@
   .scsum-chips{display:flex;flex-wrap:wrap;gap:6px;}
   .scsum-chip{display:inline-flex;align-items:center;gap:6px;background:#faf8f3;border:1px solid var(--line);border-radius:20px;padding:4px 10px;font-size:.8rem;}
   .rule{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:#faf8f3;border:1px solid var(--line);border-radius:10px;padding:8px;margin-bottom:8px;}
+  .cloudychk{display:inline-flex;align-items:center;gap:5px;font-size:.82rem;color:var(--muted);white-space:nowrap;cursor:pointer;}
+  .cloudychk input{width:auto;margin:0;}
   .rule select{width:auto;min-width:130px;padding:6px 8px;}
   .rule input[type=time]{width:auto;padding:6px 8px;}
   .days{display:flex;gap:3px;}
@@ -705,6 +707,7 @@ function renderScreens(){
         <input type="time" data-rk="start" data-i="${i}" data-j="${j}" value="${r.start||''}"/>
         <span class="sep">–</span>
         <input type="time" data-rk="end" data-i="${i}" data-j="${j}" value="${r.end||''}"/>
+        ${r.playlist==="__off__"?`<label class="cloudychk" title="When it's overcast (no sun glare), ignore this Off and keep the screen on"><input type="checkbox" data-cloudy="1" data-i="${i}" data-j="${j}" ${r.skipIfCloudy?'checked':''}/>☁ keep on if overcast</label>`:''}
         <button class="small danger" data-rmr="${i}" data-j="${j}">✕</button>
       </div>`;
     }).join("");
@@ -791,7 +794,11 @@ function renderScreens(){
     config.screens[+e.target.dataset.i][e.target.dataset.sk]=e.target.value; setDirty(true); }));
   box.querySelectorAll('select[data-sk="mirror"]').forEach(sel=>sel.addEventListener("change",()=>renderScreens()));
   box.querySelectorAll("[data-rk]").forEach(inp=>inp.addEventListener("input",e=>{
-    config.screens[+e.target.dataset.i].rules[+e.target.dataset.j][e.target.dataset.rk]=e.target.value; setDirty(true); }));
+    const i=+e.target.dataset.i,j=+e.target.dataset.j,k=e.target.dataset.rk;
+    config.screens[i].rules[j][k]=e.target.value; setDirty(true);
+    if(k==="playlist") renderScreens(); }));   // show/hide the overcast option as the rule type changes
+  box.querySelectorAll("[data-cloudy]").forEach(cb=>cb.addEventListener("change",e=>{
+    config.screens[+e.target.dataset.i].rules[+e.target.dataset.j].skipIfCloudy=e.target.checked; setDirty(true); }));
   box.querySelectorAll("[data-day]").forEach(b=>b.onclick=e=>{
     const i=+e.target.dataset.i,j=+e.target.dataset.j,d=+e.target.dataset.day;
     const days=config.screens[i].rules[j].days; const k=days.indexOf(d);
@@ -952,7 +959,7 @@ function normSlides(list){ return (list||[]).map(raw=>{ const it=typeof raw==="s
 function migrate(cfg){
   if(cfg && cfg.playlists && typeof cfg.playlists==="object"){
     const out={ playlists:{}, screens:Array.isArray(cfg.screens)?cfg.screens.map(s=>({id:String(s.id),name:s.name||("Screen "+s.id),playlist:s.playlist,orientation:s.orientation||"landscape",mirror:s.mirror||"",
-      rules:Array.isArray(s.rules)?s.rules.map(r=>({playlist:r.playlist,days:Array.isArray(r.days)?r.days.slice():[0,1,2,3,4,5,6],start:r.start||"",end:r.end||""})):[]})):[] };
+      rules:Array.isArray(s.rules)?s.rules.map(r=>({playlist:r.playlist,days:Array.isArray(r.days)?r.days.slice():[0,1,2,3,4,5,6],start:r.start||"",end:r.end||"",skipIfCloudy:!!r.skipIfCloudy})):[]})):[] };
     for(const [id,p] of Object.entries(cfg.playlists)){
       out.playlists[id]={ name:p.name||id, fit:p.fit==="contain"?"contain":"cover", showClock:!!p.showClock,
         tickerLabel:p.tickerLabel||"", tickerText:p.tickerText||"", tickerSpeed:Number(p.tickerSpeed)||30, slides:normSlides(p.slides||p.items||[]) }; }
@@ -1005,7 +1012,9 @@ function buildContent(){
     const rules=(s.rules||[]).filter(r=>r.playlist).map(r=>{
       const x={ playlist:r.playlist }; const days=Array.isArray(r.days)?r.days:[];
       if(days.length && days.length<7) x.days=days.slice().sort();
-      if(r.start) x.start=r.start; if(r.end) x.end=r.end; return x; });
+      if(r.start) x.start=r.start; if(r.end) x.end=r.end;
+      if(r.playlist==="__off__" && r.skipIfCloudy) x.skipIfCloudy=true;
+      return x; });
     if(rules.length) o.rules=rules;
     if(s.override && (config.playlists[s.override] || SPECIAL_PL[s.override])) o.override=s.override;
     return o;

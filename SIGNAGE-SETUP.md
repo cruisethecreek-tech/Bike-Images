@@ -364,6 +364,12 @@ Set the store time zone in the dashboard under **Ticker & Display → Store time
 Eastern). The TVs get accurate time from the network automatically; nothing to configure on
 each TV.
 
+**Keep a screen on when it's overcast:** on a schedule rule set to **🌙 Off**, tick **"☁ keep
+on if overcast."** If that Off slot only exists to beat sun glare, the screen will ignore it and
+stay on whenever the live weather is cloudy (cloud cover at/above ~70%, using the same Open-Meteo
+data as the weather widget — so the screen's **weather must be enabled**). When it's sunny again
+the Off resumes. (Updates within a few minutes as the weather refreshes.)
+
 ## Mirroring one screen to another (two TVs at one station)
 
 When two TVs always show the same thing — e.g. a landscape TV below and a portrait TV above —
