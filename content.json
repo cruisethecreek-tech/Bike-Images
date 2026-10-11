@@ -81,6 +81,9 @@
       "name": "sales 2.0",
       "fit": "cover",
       "showClock": true,
+      "tickerLabel": "INFO",
+      "tickerText": "For test rides Call or text 330-406-9682 or view our fleet online. ",
+      "tickerSpeed": 30,
       "slides": [
         {
           "src": "images/10379.jpg",
