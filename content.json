@@ -51,16 +51,16 @@
           "srcPortrait": "images/13352.jpg"
         },
         {
-          "src": "images/13403.jpg",
-          "seconds": 25,
-          "fit": "contain",
-          "srcPortrait": "images/13447.jpg"
-        },
-        {
           "src": "images/13583.jpg",
           "seconds": 25,
           "fit": "contain",
           "srcPortrait": "images/13582.jpg"
+        },
+        {
+          "src": "images/13403.jpg",
+          "seconds": 25,
+          "fit": "contain",
+          "srcPortrait": "images/13447.jpg"
         }
       ]
     },
@@ -229,6 +229,7 @@
           "src": "images/13582.jpg",
           "seconds": 12,
           "caption": "Need a bike rack? ",
+          "fit": "contain",
           "srcPortrait": "images/13583.jpg"
         },
         {
