@@ -145,6 +145,7 @@
           "src": "images/13583.jpg",
           "seconds": 12,
           "caption": "Need a bike rack? ",
+          "fit": "contain",
           "srcPortrait": "images/13582.jpg"
         },
         {
